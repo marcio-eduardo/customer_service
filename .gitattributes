@@ -1,0 +1,33 @@
+# Define LF como padrão para arquivos de código
+*.java text eol=lf
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.json text eol=lf
+*.yml text eol=lf
+*.xml text eol=lf
+*.css text eol=lf
+*.html text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+
+# Mantém CRLF para arquivos de script do Windows
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+# Evita conflitos com binários
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.mp4 binary
+*.mp3 binary
+
+# Git pode tratar arquivos do Docker como texto
+Dockerfile text eol=lf
+*.dockerignore text eol=lf
+
+# Spring Boot e Maven
+pom.xml text eol=lf
+*.properties text eol=lf
+*.yaml text eol=lf

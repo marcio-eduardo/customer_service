@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:latest
+    container_name: postgres_db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: serviceDB
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: always
+    networks:
+      - app_network
+
+  backend:
+    build:
+      context: ./customer_service_back
+      dockerfile: Dockerfile  # Certifique-se de que o Dockerfile está na pasta correta
+    container_name: customer_service_back
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres_db:5432/serviceDB  # Ajustado para corresponder ao nome do container
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: admin123
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    restart: always
+    networks:
+      - app_network
+
+  frontend:
+    build:
+      context: ./customer_service_front
+      dockerfile: Dockerfile
+    container_name: customer_service_front
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./customer_service_front:/app
+    environment:
+      - VITE_API_URL=http://customer_service_back:8080  # Ajusta a comunicação com o backend
+      - NODE_ENV=development
+    command: sh -c "npm install && npm run dev -- --host"
+    networks: 
+      - app_network
+
+volumes:
+  postgres_data:
+
+networks:
+  app_network:
+    driver: bridge
