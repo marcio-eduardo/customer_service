@@ -1,5 +1,7 @@
 // Localização sugerida: src/pages/LoginPage/LoginPage.tsx
 import React from 'react';
+import TASLogo from '../../assets/logo/TAS-logo.svg'; // Importe a logo do TAS se necessário
+import TrustAssisSystem from '../../assets/logo/TrustAssistSystem.svg';
 
 interface LoginPageProps {
   onLoginSuccess: () => void;
@@ -10,25 +12,22 @@ export function LoginPage({ onLoginSuccess, isDarkMode }: LoginPageProps) {
   // Classes de estilo condicionais baseadas no isDarkMode
   const pageBgClass = isDarkMode ? 'bg-slate-900' : 'bg-slate-200'; // Um cinza um pouco mais escuro para o fundo do login no modo escuro
   const cardBgClass = isDarkMode ? 'bg-slate-800' : 'bg-white';
-  const titleTextClass = isDarkMode ? 'text-slate-100' : 'text-gray-800';
-  const buttonBgClass = isDarkMode ? 'bg-sky-600 hover:bg-sky-700' : 'bg-[#4A90E2] hover:bg-[#3c7ddb]';
+  const buttonBgClass = 'bg-[#006086] hover:bg-[#3c7ddb]';
 
   return (
     <div className={`min-h-screen flex flex-col items-center justify-center p-4 font-['Poppins'] ${pageBgClass}`}>
       <div className={`p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md ${cardBgClass}`}>
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center mb-10 flex-col items-center gap-4">
           {/* Logo TAS */}
-          <div className="w-20 h-20 bg-[#4A90E2] rounded-full flex items-center justify-center text-3xl font-bold">
-            <span className="text-white">T</span>
-            <span className="text-[#3AB54A]">AS</span>
+          <div className="">
+            <img src={TASLogo} alt="" />
+          </div>
+          <div>
+            <img src={TrustAssisSystem} alt="" />
           </div>
         </div>
-        <h1 className={`text-2xl sm:text-3xl font-bold mb-2 text-center ${titleTextClass}`}>
-          Trust Assist System
-        </h1>
-        <p className={`text-center mb-6 ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-          Faça login para continuar
-        </p>
+            
+        
         
         {/* Formulário de Login (campos de exemplo) */}
         <form onSubmit={(e) => { e.preventDefault(); onLoginSuccess(); }}>
@@ -71,7 +70,7 @@ export function LoginPage({ onLoginSuccess, isDarkMode }: LoginPageProps) {
             <div className="text-right mt-1">
               <a 
                 href="#" 
-                className={`text-sm ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-[#4A90E2] hover:text-[#3c7ddb]'}`}
+                className={`text-sm ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-[#4A90E2] hover:text-[#005BC5]'}`}
               >
                 Esqueceu a senha?
               </a>
@@ -87,7 +86,7 @@ export function LoginPage({ onLoginSuccess, isDarkMode }: LoginPageProps) {
         {/* Link para criar conta (opcional) */}
         <p className={`mt-6 text-center text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
           Não tem uma conta?{' '}
-          <a href="#" className={`font-medium ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-[#3AB54A] hover:text-[#2f9e3c]'}`}>
+          <a href="#" className={`font-medium ${isDarkMode ? 'text-sky-400 hover:text-sky-300' : 'text-[#54B938] hover:text-[#1E8202]'}`}>
             Crie uma agora
           </a>
         </p>

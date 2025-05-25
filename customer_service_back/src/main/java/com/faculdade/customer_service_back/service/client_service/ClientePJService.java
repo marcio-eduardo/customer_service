@@ -1,7 +1,9 @@
 package com.faculdade.customer_service_back.service.client_service;
 
-import javax.persistence.EntityExistsException;
-import javax.persistence.EntityNotFoundException;
+//import javax.persistence.EntityExistsException;
+//import javax.persistence.EntityNotFoundException;
+import jakarta.persistence.EntityExistsException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
