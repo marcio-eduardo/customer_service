@@ -4,39 +4,31 @@ import { createBrowserRouter } from 'react-router-dom';
 import { ViewPFClientsPage } from "../pages/ViewClientsPage/ViewPFClientsPage";
 import { ViewPJClientsPage } from "../pages/ViewClientsPage/ViewPJClientsPage";
 import { AboutUsPage } from "../pages/AboutUsPage/AboutUsPage";
+import { LoginPage } from "../pages/LoginPage/LoginPage";
+import { ProtectedRoute } from "./ProtectedRoute";
 
 export const AppRouter = createBrowserRouter([
-  
-  { 
+  {
     path: '/',
-    element: <HomeLayout />, 
-    children: [
-      { path: '/', element: <DashboardPage /> },
-      //{ path: 'not-logged', element: <NotLoggedInPage />}
-    ]
+    element: <LoginPage isDarkMode={false} />
   },
   { 
     path: '/',
-    element: <HomeLayout/>, 
+    element: 
+    <ProtectedRoute>
+      <HomeLayout/>
+    </ProtectedRoute>, 
     children: [
-      { path: "/quem-somos",
-      element: <AboutUsPage isDarkMode={true} /> }
-    ]
-  },
-  { 
-    path: '/',
-    element: <HomeLayout />,
-    children: [
-      { path: "/clientes/pf",
-      element: <ViewPFClientsPage isDarkMode={true} /> }
-    ]
-  },
-  { 
-    path: '/',
-    element: <HomeLayout />, 
-    children: [
-      { path: "/clientes/pj",
-      element: <ViewPJClientsPage isDarkMode={true} /> }
+      { 
+        path: '/dashboard', 
+        element:  
+        
+          <DashboardPage />
+       
+      },
+      { path: '/clientes/pf', element: <ViewPFClientsPage isDarkMode={false} /> },
+      { path: '/clientes/pj', element: <ViewPJClientsPage isDarkMode={false} /> },
+      { path: '/about', element: <AboutUsPage isDarkMode={false} /> },
     ]
   }
 ]);

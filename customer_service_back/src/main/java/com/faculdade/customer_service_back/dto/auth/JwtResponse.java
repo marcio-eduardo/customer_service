@@ -1,20 +1,22 @@
 package com.faculdade.customer_service_back.dto.auth;
 
+import java.util.List;
+
 public class JwtResponse {
     private String token;
     private String type = "Bearer";
     private Long id;
     private String username;
     private String email;
-    // Podes adicionar uma lista de papéis (roles) se necessário
-    // private List<String> roles;
+    //Podes adicionar uma lista de papéis (roles) se necessário
+    private List<String> roles;
 
-    public JwtResponse(String accessToken, Long id, String username, String email /*, List<String> roles */) {
+    public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles ) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
-        // this.roles = roles;
+        this.roles = roles;
     }
 
     // Getters e Setters
@@ -58,7 +60,7 @@ public class JwtResponse {
         this.email = email;
     }
 
-    /*
+
     public List<String> getRoles() {
         return roles;
     }
@@ -66,5 +68,5 @@ public class JwtResponse {
     public void setRoles(List<String> roles) {
         this.roles = roles;
     }
-    */
+
 }

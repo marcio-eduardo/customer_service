@@ -3,12 +3,12 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-// Interface para os dados do usuário (exemplo)
+// Dentro de src/contexts/AuthContext.tsx
 interface User {
-  id: string;
-  nome: string;
+  id: number; // Backend envia Long, que é number em TS
+  username: string; // O backend envia 'username'
   email: string;
-  // Adicione outros campos do usuário conforme necessário
+  roles?: string[]; // Adicionar para guardar os papéis do utilizador
 }
 
 // Interface para o valor do contexto de autenticação
