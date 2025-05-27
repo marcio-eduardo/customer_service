@@ -1,8 +1,9 @@
 // Localização: src/pages/ViewClientsPage/ViewPJClientsPage.tsx
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { api } from '../../lib/axios'; // Importe a instância configurada do Axios
 
-// --- Interfaces (Idealmente, viriam de um ficheiro types/client.ts ou similar) ---
+// --- Interfaces (mantidas como no seu original de ViewPJClientsPage.tsx) ---
 interface ClientePjType {
   id: number;
   nomeFantasia: string;
@@ -52,9 +53,10 @@ interface PaginatedResponse<T> {
   empty: boolean;
 }
 
-interface ViewPJClientsPageProps {
-  isDarkMode: boolean;
-}
+// Removida a prop isDarkMode
+// interface ViewPJClientsPageProps {
+//   isDarkMode: boolean;
+// }
 
 const formatDate = (dateString: string) => {
   try {
@@ -72,7 +74,7 @@ const formatDate = (dateString: string) => {
   }
 };
 
-export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
+export function ViewPJClientsPage(/* { isDarkMode }: ViewPJClientsPageProps */) {
   const [clients, setClients] = useState<ClientePjType[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -111,71 +113,80 @@ export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
     };
 
     fetchPJClients();
-  }, []); // apiUrl é constante, então pode ser removido das dependências do useEffect
+  }, []); // apiUrl é constante
 
-  // --- Classes de Estilo Condicionais (mantidas como no seu original) ---
-  const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] ${isDarkMode ? 'bg-slate-800 text-gray-300' : 'bg-[#EAEAEA] text-gray-800'}`;
+  // --- Classes de estilo com a paleta "Confiança Moderna (Light) Final" ---
+  const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  const pageHeaderTextClasses = isDarkMode ? 'text-slate-100' : 'text-gray-800';
-  const pageSubHeaderTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-600';
-  const sectionCardBgClasses = isDarkMode ? 'bg-slate-700' : 'bg-white';
-  const clientCardBgClasses = isDarkMode ? 'bg-slate-600' : 'bg-gray-50';
-  const clientNameTextClasses = isDarkMode ? 'text-[#60A5FA]' : 'text-[#4A90E2]';
-  const clientDetailTextClasses = isDarkMode ? 'text-slate-300' : 'text-gray-600';
-  const clientLabelTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-500';
-  const errorTextClass = isDarkMode ? 'text-red-400 bg-red-900 bg-opacity-50' : 'text-red-600 bg-red-100';
-  const loadingTextClass = isDarkMode ? 'text-slate-400' : 'text-gray-600';
+  
+  const headerTitleClass = 'text-tas-primary'; 
+  const headerSubtitleClass = 'text-tas-text-secondary-on-card';
+
+  const sectionCardBgClasses = 'bg-tas-bg-card'; 
+  const clientCardBgClasses = 'bg-white'; // Cards de cliente individuais brancos para destaque
+  
+  const clientNameTextClasses = 'text-tas-primary font-semibold';
+  const clientDetailTextClasses = 'text-tas-text-secondary-on-card';
+  const clientLabelTextClasses = 'text-tas-text-secondary-on-card font-medium';
+  
+  const errorTextClass = 'bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium';
+  const loadingTextClass = 'text-tas-text-secondary-on-card italic text-center py-4';
 
   return (
-    <div className={pageWrapperClasses}>
-      <div className={contentContainerClasses}>
-        <header className="mb-10 text-center">
-          <h1 className={`text-3xl lg:text-4xl font-bold ${pageHeaderTextClasses}`}>Clientes Pessoa Jurídica (PJ)</h1>
-          <p className={`${pageSubHeaderTextClasses} mt-2 text-base lg:text-lg`}>
-            Consulte os dados dos seus clientes pessoa jurídica.
-          </p>
-        </header>
+    <>
+      <Helmet>
+        <title>Clientes Pessoa Jurídica - TAS</title>
+      </Helmet>
+      <div className={pageWrapperClasses}>
+        <div className={contentContainerClasses}>
+          <header className="mb-10 text-center">
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Clientes Pessoa Jurídica (PJ)</h1>
+            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
+              Consulte os dados dos seus clientes pessoa jurídica.
+            </p>
+          </header>
 
-        <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
-          {isLoading && <p className={`${loadingTextClass} italic text-center py-4`}>A carregar clientes PJ...</p>}
-          {error && <p className={`${errorTextClass} p-4 rounded-md text-center`}>{error}</p>}
+          <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
+            {isLoading && <p className={loadingTextClass}>A carregar clientes PJ...</p>}
+            {error && <p className={errorTextClass}>{error}</p>}
 
-          {!isLoading && !error && clients.length === 0 && (
-            <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhum cliente pessoa jurídica encontrado.</p>
-          )}
+            {!isLoading && !error && clients.length === 0 && (
+              <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhum cliente pessoa jurídica encontrado.</p>
+            )}
 
-          {!isLoading && !error && clients.length > 0 && (
-            <ul className="space-y-6">
-              {clients.map((cliente) => (
-                <li key={cliente.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border ${isDarkMode ? 'border-slate-500' : 'border-gray-200'} transition-shadow hover:shadow-lg`}>
-                  <h3 className={`text-xl font-semibold ${clientNameTextClasses} mb-1`}>{cliente.nomeFantasia}</h3>
-                  <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>CNPJ:</span> {cliente.cnpj}</p>
-                  <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Razão Social:</span> {cliente.razaoSocial}</p>
-                  <div className="mt-3 text-sm space-y-1">
-                    <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{cliente.email || 'N/A'}</span></p>
-                    <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{cliente.telefone || 'N/A'}</span></p>
-                    <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{cliente.endereco || 'N/A'}</span></p>
-                    <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(cliente.dataCadastro)}</span></p>
-                    {cliente.responsavel && (
-                      <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-slate-500' : 'border-gray-200'}`}>
-                        <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsável</h4>
-                        <p><span className={clientLabelTextClasses}>{cliente.responsavel.nome}</span> <span className={clientDetailTextClasses}>(CPF: {cliente.responsavel.cpf})</span></p>
-                      </div>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+            {!isLoading && !error && clients.length > 0 && (
+              <ul className="space-y-6">
+                {clients.map((cliente) => (
+                  <li key={cliente.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
+                    <h3 className={`text-xl ${clientNameTextClasses} mb-1`}>{cliente.nomeFantasia}</h3>
+                    <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>CNPJ:</span> {cliente.cnpj}</p>
+                    <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Razão Social:</span> {cliente.razaoSocial}</p>
+                    <div className="mt-3 text-sm space-y-1">
+                      <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{cliente.email || 'N/A'}</span></p>
+                      <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{cliente.telefone || 'N/A'}</span></p>
+                      <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{cliente.endereco || 'N/A'}</span></p>
+                      <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(cliente.dataCadastro)}</span></p>
+                      {cliente.responsavel && (
+                        <div className={`mt-3 pt-3 border-t border-gray-200`}>
+                          <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsável</h4>
+                          <p><span className={clientLabelTextClasses}>{cliente.responsavel.nome}</span> <span className={clientDetailTextClasses}>(CPF: {cliente.responsavel.cpf})</span></p>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
 
-          {paginationInfo && !isLoading && clients.length > 0 && (
-            <div className={`mt-8 text-center text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} clientes.
-              {/* TODO: Adicionar botões de paginação aqui, se necessário */}
-            </div>
-          )}
-        </section>
+            {paginationInfo && !isLoading && clients.length > 0 && (
+              <div className={`mt-8 text-center text-sm ${clientDetailTextClasses}`}>
+                Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} clientes.
+                {/* TODO: Adicionar botões de paginação aqui, se necessário */}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

@@ -1,7 +1,9 @@
 // Localização sugerida: src/pages/ViewClientsPage/ViewClientsPage.tsx
 import React, { useState, useEffect } from 'react';
+import { Helmet } from 'react-helmet-async'; // Adicionado para título da página
+import { api } from '../../lib/axios'; // Ajustado para usar a instância configurada do Axios
 
-// --- Interfaces (Idealmente, viriam de um ficheiro types/client.ts) ---
+// --- Interfaces (mantidas como no seu original) ---
 interface ClientePfType {
   id: number;
   nome: string;
@@ -22,12 +24,12 @@ interface ClientePjType {
   email?: string;
   dataCadastro: string; 
   responsavel?: { 
+    id?: number; // Adicionado ID do responsável, caso exista
     nome: string;
     cpf: string;
   };
 }
 
-// Interface para a estrutura de paginação da API, baseada no seu exemplo
 interface Pageable {
   pageNumber: number;
   pageSize: number;
@@ -41,7 +43,7 @@ interface Pageable {
   unpaged: boolean;
 }
 
-interface SortInfo { // Para o objeto sort de nível superior
+interface SortInfo { 
   sorted: boolean;
   empty: boolean;
   unsorted: boolean;
@@ -54,7 +56,7 @@ interface PaginatedResponse<T> {
   totalElements: number;
   last: boolean;
   size: number;
-  number: number; // Equivalente a pageNumber
+  number: number; 
   sort: SortInfo;
   numberOfElements: number;
   first: boolean;
@@ -62,7 +64,7 @@ interface PaginatedResponse<T> {
 }
 
 interface ViewClientsPageProps {
-  isDarkMode: boolean;
+  // isDarkMode foi removido
   clientType: 'pf' | 'pj'; 
 }
 
@@ -82,30 +84,25 @@ const formatDate = (dateString: string) => {
     }
 };
 
-export function ViewClientsPage({ isDarkMode, clientType }: ViewClientsPageProps) {
+export function ViewClientsPage({ clientType }: ViewClientsPageProps) {
   const [clients, setClients] = useState<Array<ClientePfType | ClientePjType>>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  // Estados para informação de paginação (opcional para exibição, mas útil para controles)
   const [paginationInfo, setPaginationInfo] = useState<Omit<PaginatedResponse<any>, 'content'> | null>(null);
 
-
   const pageTitle = clientType === 'pf' ? 'Clientes Pessoa Física (PF)' : 'Clientes Pessoa Jurídica (PJ)';
-  const apiUrl = clientType === 'pf' ? 'http://localhost:8080/api/clientes-pf' : 'http://localhost:8080/api/clientes-pj';
+  const apiUrl = clientType === 'pf' ? '/api/clientes-pf' : '/api/clientes-pj'; // Usando caminhos relativos
 
   useEffect(() => {
     const fetchClients = async () => {
       setIsLoading(true);
       setError(null);
-      setClients([]); // Limpa clientes anteriores ao buscar novos
+      setClients([]); 
       setPaginationInfo(null);
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Erro HTTP ${response.status} ao buscar clientes ${clientType.toUpperCase()}`);
-        }
-        
-        const data: PaginatedResponse<ClientePfType | ClientePjType> = await response.json();
+        // Usando a instância 'api' do axios
+        const response = await api.get<PaginatedResponse<ClientePfType | ClientePjType>>(apiUrl);
+        const data = response.data;
         
         if (data && Array.isArray(data.content)) {
           setClients(data.content);
@@ -118,7 +115,11 @@ export function ViewClientsPage({ isDarkMode, clientType }: ViewClientsPageProps
 
       } catch (err: any) {
         console.error(`Falha ao buscar clientes ${clientType.toUpperCase()}:`, err);
-        setError(err.message || `Ocorreu um erro desconhecido ao buscar clientes ${clientType.toUpperCase()}.`);
+        if (err.response && err.response.status === 401) {
+          setError("Erro 401: Não autorizado. Verifique se está logado ou se sua sessão expirou.");
+        } else {
+          setError(err.message || `Ocorreu um erro desconhecido ao buscar clientes ${clientType.toUpperCase()}.`);
+        }
       } finally {
         setIsLoading(false);
       }
@@ -127,91 +128,97 @@ export function ViewClientsPage({ isDarkMode, clientType }: ViewClientsPageProps
     fetchClients();
   }, [clientType, apiUrl]); 
 
-  // --- Classes de Estilo Condicionais ---
-  const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] ${isDarkMode ? 'bg-slate-800 text-gray-300' : 'bg-[#EAEAEA] text-gray-800'}`;
+  // --- Classes de estilo com a paleta "Confiança Moderna (Light) Final" ---
+  const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  const pageHeaderTextClasses = isDarkMode ? 'text-slate-100' : 'text-gray-800';
-  const pageSubHeaderTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-600';
-  const sectionCardBgClasses = isDarkMode ? 'bg-slate-700' : 'bg-white';
-  // const sectionTitleTextClasses = isDarkMode ? 'text-slate-100' : 'text-gray-700'; // Removido, pois o título da página está no header
-  const clientCardBgClasses = isDarkMode ? 'bg-slate-600' : 'bg-gray-50';
-  const clientNameTextClasses = isDarkMode ? 'text-[#60A5FA]' : 'text-[#4A90E2]'; 
-  const clientDetailTextClasses = isDarkMode ? 'text-slate-300' : 'text-gray-600';
-  const clientLabelTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-500';
-  const errorTextClass = isDarkMode ? 'text-red-400 bg-red-900 bg-opacity-50' : 'text-red-600 bg-red-100';
-  const loadingTextClass = isDarkMode ? 'text-slate-400' : 'text-gray-600';
+  
+  const headerTitleClass = 'text-tas-primary'; 
+  const headerSubtitleClass = 'text-tas-text-secondary-on-card'; 
+
+  const sectionCardBgClasses = 'bg-tas-bg-card'; 
+  const clientCardBgClasses = 'bg-white'; // Cards de cliente individuais podem ser brancos para maior destaque sobre o bg-tas-bg-card (#F2F2F2)
+  
+  const clientNameTextClasses = 'text-tas-primary font-semibold'; // Títulos dos clientes com a cor primária
+  const clientDetailTextClasses = 'text-tas-text-secondary-on-card';
+  const clientLabelTextClasses = 'text-tas-text-secondary-on-card font-medium';
+  
+  const errorTextClass = 'bg-tas-status-error text-tas-text-on-primary'; // Texto branco sobre fundo vermelho
+  const loadingTextClass = 'text-tas-text-secondary-on-card';
 
   return (
-    <div className={pageWrapperClasses}>
-      <div className={contentContainerClasses}>
-        <header className="mb-10 text-center">
-          <h1 className={`text-3xl lg:text-4xl font-bold ${pageHeaderTextClasses}`}>{pageTitle}</h1>
-          <p className={`${pageSubHeaderTextClasses} mt-2 text-base lg:text-lg`}>
-            Consulte os dados dos seus clientes.
-          </p>
-        </header>
+    <>
+      <Helmet>
+        <title>{pageTitle} - TAS</title>
+      </Helmet>
+      <div className={pageWrapperClasses}>
+        <div className={contentContainerClasses}>
+          <header className="mb-10 text-center">
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>{pageTitle}</h1>
+            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
+              Consulte os dados dos seus clientes.
+            </p>
+          </header>
 
-        {/* A secção agora é única, pois o tipo de cliente já está definido pela prop */}
-        <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
-          {isLoading && <p className={`${loadingTextClass} italic text-center py-4`}>A carregar clientes...</p>}
-          {error && <p className={`${errorTextClass} p-4 rounded-md text-center`}>{error}</p>}
-          
-          {!isLoading && !error && clients.length === 0 && (
-            <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhum cliente {clientType === 'pf' ? 'pessoa física' : 'pessoa jurídica'} encontrado.</p>
-          )}
+          <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
+            {isLoading && <p className={`${loadingTextClass} italic text-center py-4`}>A carregar clientes...</p>}
+            {error && <p className={`${errorTextClass} p-4 rounded-md text-center font-medium`}>{error}</p>}
+            
+            {!isLoading && !error && clients.length === 0 && (
+              <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhum cliente {clientType === 'pf' ? 'pessoa física' : 'pessoa jurídica'} encontrado.</p>
+            )}
 
-          {!isLoading && !error && clients.length > 0 && (
-            <ul className="space-y-6">
-              {clients.map((client) => {
-                if (clientType === 'pf' && 'cpf' in client) {
-                  const pfClient = client as ClientePfType;
-                  return (
-                    <li key={pfClient.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border ${isDarkMode ? 'border-slate-500' : 'border-gray-200'} transition-shadow hover:shadow-lg`}>
-                      <h3 className={`text-xl font-semibold ${clientNameTextClasses} mb-1`}>{pfClient.nome}</h3>
-                      <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>CPF:</span> {pfClient.cpf}</p>
-                      <div className="mt-3 text-sm space-y-1">
-                        <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{pfClient.email || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{pfClient.telefone || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{pfClient.endereco || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(pfClient.dataCadastro)}</span></p>
-                      </div>
-                    </li>
-                  );
-                } else if (clientType === 'pj' && 'cnpj' in client) {
-                  const pjClient = client as ClientePjType;
-                  return (
-                    <li key={pjClient.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border ${isDarkMode ? 'border-slate-500' : 'border-gray-200'} transition-shadow hover:shadow-lg`}>
-                      <h3 className={`text-xl font-semibold ${clientNameTextClasses} mb-1`}>{pjClient.nomeFantasia}</h3>
-                      <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>CNPJ:</span> {pjClient.cnpj}</p>
-                      <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Razão Social:</span> {pjClient.razaoSocial}</p>
-                      <div className="mt-3 text-sm space-y-1">
-                        <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{pjClient.email || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{pjClient.telefone || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{pjClient.endereco || 'N/A'}</span></p>
-                        <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(pjClient.dataCadastro)}</span></p>
-                        {pjClient.responsavel && (
-                          <div className={`mt-3 pt-3 border-t ${isDarkMode ? 'border-slate-500' : 'border-gray-200'}`}>
-                            <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsável</h4>
-                            <p><span className={clientLabelTextClasses}>{pjClient.responsavel.nome}</span> <span className={clientDetailTextClasses}>(CPF: {pjClient.responsavel.cpf})</span></p>
-                          </div>
-                        )}
-                      </div>
-                    </li>
-                  );
-                }
-                return null;
-              })}
-            </ul>
-          )}
-          {/* Aqui poderia adicionar controlos de paginação se paginationInfo for usado */}
-          {paginationInfo && !isLoading && clients.length > 0 && (
-            <div className={`mt-8 text-center text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
-              Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} clientes.
-              {/* Botões de paginação iriam aqui */}
-            </div>
-          )}
-        </section>
+            {!isLoading && !error && clients.length > 0 && (
+              <ul className="space-y-6">
+                {clients.map((client) => {
+                  if (clientType === 'pf' && 'cpf' in client) {
+                    const pfClient = client as ClientePfType;
+                    return (
+                      <li key={pfClient.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
+                        <h3 className={`text-xl ${clientNameTextClasses} mb-1`}>{pfClient.nome}</h3>
+                        <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>CPF:</span> {pfClient.cpf}</p>
+                        <div className="mt-3 text-sm space-y-1">
+                          <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{pfClient.email || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{pfClient.telefone || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{pfClient.endereco || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(pfClient.dataCadastro)}</span></p>
+                        </div>
+                      </li>
+                    );
+                  } else if (clientType === 'pj' && 'cnpj' in client) {
+                    const pjClient = client as ClientePjType;
+                    return (
+                      <li key={pjClient.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
+                        <h3 className={`text-xl ${clientNameTextClasses} mb-1`}>{pjClient.nomeFantasia}</h3>
+                        <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>CNPJ:</span> {pjClient.cnpj}</p>
+                        <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Razão Social:</span> {pjClient.razaoSocial}</p>
+                        <div className="mt-3 text-sm space-y-1">
+                          <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{pjClient.email || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{pjClient.telefone || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{pjClient.endereco || 'N/A'}</span></p>
+                          <p><span className={clientLabelTextClasses}>Data Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(pjClient.dataCadastro)}</span></p>
+                          {pjClient.responsavel && (
+                            <div className={`mt-3 pt-3 border-t border-gray-200`}>
+                              <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsável</h4>
+                              <p><span className={clientLabelTextClasses}>{pjClient.responsavel.nome}</span> <span className={clientDetailTextClasses}>(CPF: {pjClient.responsavel.cpf})</span></p>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  }
+                  return null;
+                })}
+              </ul>
+            )}
+            {paginationInfo && !isLoading && clients.length > 0 && (
+              <div className={`mt-8 text-center text-sm ${clientDetailTextClasses}`}>
+                Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} clientes.
+                {/* TODO: Adicionar botões de paginação aqui, se necessário */}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

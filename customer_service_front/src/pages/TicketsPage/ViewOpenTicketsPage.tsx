@@ -1,23 +1,22 @@
 // Localização: src/pages/TicketsPage/ViewOpenTicketsPage.tsx
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom'; // Para links para detalhes do ticket (futuro)
+import { Link } from 'react-router-dom'; 
 import { toast } from 'sonner';
-import { api } from '../../lib/axios'; // Nossa instância Axios configurada
+import { api } from '../../lib/axios'; 
 
-// Interface para o modelo de Ticket, conforme retornado pela API
-// Baseado em TicketModel.java
+// Interface para o modelo de Ticket
 interface Ticket {
   id: number;
   title: string;
   description: string;
-  status: string; // OPEN, IN_PROGRESS, RESOLVED
-  createdAt: string; // Formato de data string ISO (ex: "2024-05-26T10:00:00")
-  technical?: { // Técnico atribuído, pode ser null
+  status: string; 
+  createdAt: string; 
+  technical?: { 
     id: number;
     name: string;
   } | null;
-  closedByTechnical?: { // Técnico que fechou, pode ser null
+  closedByTechnical?: { 
     id: number;
     name: string;
   } | null;
@@ -25,7 +24,7 @@ interface Ticket {
   resolutionNotes?: string | null;
 }
 
-// Função para formatar a data (pode ser movida para um utilitário)
+// Função para formatar a data
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return 'N/A';
   try {
@@ -52,7 +51,7 @@ export function ViewOpenTicketsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await api.get<Ticket[]>('/api/tickets/status/open'); // Endpoint definido no backend
+        const response = await api.get<Ticket[]>('/api/tickets/status/open'); 
         setOpenTickets(response.data || []);
       } catch (err: any) {
         console.error("Falha ao buscar chamados abertos:", err);
@@ -75,30 +74,36 @@ export function ViewOpenTicketsPage() {
     fetchOpenTickets();
   }, []);
 
-  // Estilos (baseados no tema claro do dashboard e outras páginas)
-  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-branco-neutro text-tas-cinza-escuro font-['Poppins']"; //
+  // Classes de estilo com a paleta "Confiança Moderna (Light) Final"
+  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
   const contentContainerClasses = "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  const pageHeaderTextClasses = 'text-tas-cinza-escuro';
-  const pageSubHeaderTextClasses = 'text-gray-600';
-  const cardBgClasses = 'bg-white';
-  const cardTitleTextClasses = 'text-tas-azul-serenity font-semibold'; //
-  const cardDetailTextClasses = 'text-gray-600';
-  const cardLabelTextClasses = 'text-gray-500 font-medium';
-  const errorTextClass = 'text-red-600 bg-red-100';
-  const loadingTextClass = 'text-gray-600';
+  
+  const headerTitleClass = "text-tas-primary"; // Azul da navbar para o título principal
+  const headerSubtitleClass = "text-tas-text-secondary-on-card"; // Texto secundário para o subtítulo
+
+  const cardBgClasses = "bg-tas-bg-card"; // Fundo do card
+  const cardTitleTextClasses = "text-tas-primary font-semibold"; // Título do card com a cor primária
+  const cardDetailTextClasses = "text-tas-text-secondary-on-card"; // Detalhes do card
+  const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium"; // Rótulos dentro do card
+  
+  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary"; // Fundo vermelho com texto branco
+  const loadingTextClass = "text-tas-text-secondary-on-card";
+
+  const statusTagClasses = "bg-tas-status-info text-tas-text-on-primary"; // Tag de status "OPEN"
+  const buttonClasses = "bg-tas-secondary text-tas-text-on-primary hover:bg-tas-secondary-hover"; // Botão verde
 
   return (
     <>
       <Helmet>
-        <title>Chamados Abertos</title>
+        <title>Chamados Abertos - TAS</title>
       </Helmet>
       <div className={pageWrapperClasses}>
         <div className={contentContainerClasses}>
           <header className="mb-10 text-center">
-            <h1 className={`text-3xl lg:text-4xl font-bold ${pageHeaderTextClasses}`}>
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>
               Chamados Abertos
             </h1>
-            <p className={`${pageSubHeaderTextClasses} mt-2 text-base lg:text-lg`}>
+            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
               Lista de todos os chamados de suporte que aguardam atendimento.
             </p>
           </header>
@@ -127,8 +132,8 @@ export function ViewOpenTicketsPage() {
                       <h2 className={`text-xl ${cardTitleTextClasses} mb-1 sm:mb-0`}>
                         #{ticket.id}: {ticket.title}
                       </h2>
-                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
-                        {ticket.status}
+                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusTagClasses}`}>
+                        {ticket.status} 
                       </span>
                     </div>
                     <p className={`${cardDetailTextClasses} text-sm mb-3 leading-relaxed line-clamp-3`}>
@@ -145,11 +150,9 @@ export function ViewOpenTicketsPage() {
                       </p>
                     </div>
                     <div className="mt-4 flex justify-end space-x-3">
-                      {/* Futuro: Botão para técnico se atribuir */}
-                      {/* {!ticket.technical && <button className="text-xs bg-tas-verde-vibrante text-white px-3 py-1.5 rounded-md hover:bg-tas-verde-vibrante-dark transition-colors">Atribuir a mim</button>} */}
                       <Link 
-                        to={`/tickets/${ticket.id}`} // Futuro: rota para detalhes do chamado
-                        className="text-xs bg-tas-azul-serenity text-white px-3 py-1.5 rounded-md hover:bg-blue-700 transition-colors"
+                        to={`/tickets/${ticket.id}`} 
+                        className={`text-xs px-3 py-1.5 rounded-md transition-colors ${buttonClasses}`}
                       >
                         Ver Detalhes
                       </Link>

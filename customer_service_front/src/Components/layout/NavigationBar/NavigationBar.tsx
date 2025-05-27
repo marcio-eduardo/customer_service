@@ -1,11 +1,11 @@
 // src/Components/layout/NavigationBar/NavigationBar.tsx
 import { useState, useEffect, useRef, type Dispatch, type SetStateAction, type JSX } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext';
-import TASLogo from '../../../assets/logo/TAS-logo.svg';
-import TrustAssisSystem from '../../../assets/logo/TrustAssistSystem.svg';
+import { useAuth } from '../../../contexts/AuthContext'; // Ajuste o caminho se necessário
+import TASLogo from '../../../assets/logo/NuvemConfig-2.svg'; // Certifique-se que o logo SVG funcione bem em fundo escuro ou considere uma versão invertida
 
-// --- Ícones ---
+
+// --- Ícones (mantidos como antes, mas a cor será definida pelo contexto da classe) ---
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
@@ -16,7 +16,7 @@ const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const LogOutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 const ChevronDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>;
 
-// --- Interfaces para a Estrutura de Navegação ---
+// --- Interfaces para a Estrutura de Navegação (mantidas) ---
 interface NavLinkSimple {
   type: 'link';
   path: string;
@@ -92,19 +92,25 @@ export function NavigationBar() {
     setIsMobileMenuOpen(false);
   };
   
-  const navBgClass = 'bg-white';
-  const navTextClass = 'text-gray-700';
-  const navHoverBgClass = 'hover:bg-gray-100';
-  const navHoverTextClass = 'hover:text-[#3AB54A]';
-  const searchInputBgClass = 'bg-gray-100 placeholder-gray-500 text-gray-900 focus:bg-white';
-  const searchFocusRingClass = 'focus:ring-[#4A90E2] focus:border-[#4A90E2]';
-  const mobileMenuBgClass = 'bg-white';
+  // Novas classes de estilo baseadas na paleta "Confiança Moderna (Light) Final"
+  const navBgClass = 'bg-tas-primary'; // #293B44
+  const navTextClass = 'text-tas-text-on-primary'; // #FFFFFF
+  const navHoverTextClass = 'hover:text-tas-accent'; // #FFC107
   
-  const dropdownButtonRowStyle = `flex-1 text-xs py-1.5 px-2 rounded-md border border-gray-300 hover:bg-gray-200 ${navTextClass} hover:text-[#3AB54A] text-center transition-colors`;
-  const dropdownFullWidthButtonStyle = `block w-full text-center text-xs mt-2 py-1.5 px-2 rounded-md border border-gray-300 hover:bg-gray-200 ${navTextClass} hover:text-[#3AB54A] transition-colors`;
+  // Para inputs na navbar (ex: pesquisa)
+  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; // bg-[#22313A]
+  const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent'; // ring-[#FFC107] border-[#FFC107]
 
-  const navItemBaseClasses = `px-3 py-2 rounded-md text-sm font-medium ${navHoverBgClass} ${navHoverTextClass} transition-colors flex items-center ${navTextClass} cursor-pointer`;
-  const mobileNavItemBaseClasses = `w-full text-left block px-4 py-3 text-base font-medium ${navHoverBgClass} ${navHoverTextClass} transition-colors ${navTextClass}`;
+  const mobileMenuBgClass = 'bg-tas-primary'; // #293B44 (ou tas-primary-hover para leve variação)
+  
+  // Estilos para botões dentro do dropdown
+  const dropdownButtonBase = `flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors`;
+  const dropdownButtonRowStyle = `${dropdownButtonBase} border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent text-center`;
+  const dropdownFullWidthButtonStyle = `block w-full text-center text-xs mt-2 py-1.5 px-2 rounded-md border border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent transition-colors`;
+
+  // Estilos base para itens de navegação
+  const navItemBaseClasses = `px-3 py-2 rounded-md text-sm font-medium ${navHoverTextClass} transition-colors flex items-center ${navTextClass} cursor-pointer hover:bg-tas-primary-hover`;
+  const mobileNavItemBaseClasses = `w-full text-left block px-4 py-3 text-base font-medium ${navHoverTextClass} transition-colors ${navTextClass} hover:bg-tas-primary-hover`;
 
   const navigationStructure: NavigationItemConfig[] = [
     { type: 'link', path: '/dashboard', label: 'Dashboard', icon: <HomeIcon />, id: 'dashboard' },
@@ -133,7 +139,7 @@ export function NavigationBar() {
       id: 'clientes',
       filterState: clientFilter,
       setFilterState: setClientFilter,
-      filterPlaceholder: "--",
+      filterPlaceholder: "Nome/Documento...", // Ajustado
       filterLabel: "Filtrar por nome/doc.",
       items: [
         { type: 'row', subItems: [
@@ -147,30 +153,32 @@ export function NavigationBar() {
     { type: 'link', path: '/configuracoes', label: 'Configurações', icon: <CogIcon />, id: 'settings' },
   ];
 
-  const dropdownContainerClasses = `absolute right-0 md:left-0 top-full mt-0.5 w-64 rounded-md shadow-lg p-3 ${navBgClass} ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
+  // Fundo do container do dropdown
+  const dropdownContainerClasses = `absolute right-0 md:left-0 top-full mt-0.5 w-64 rounded-md shadow-lg p-3 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
 
   return (
-    <nav className={`w-full ${navBgClass} shadow-md fixed left-0 right-0 top-0 z-50 font-['Poppins']`}>
+    <nav className={`w-full ${navBgClass} shadow-2xl fixed left-0 right-0 top-0 z-50 font-['Poppins']`}>
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex-shrink-0" onClick={handleLinkClick}>
-              <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto" />
+              {/* Considerar um logo SVG que funcione bem em fundos escuros, ou aplicar filtro CSS se necessário */}
+              <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto bg-blue" />
             </Link>
-            <Link to="/about" className={`ml-3 text-xl font-semibold hidden md:block ${navTextClass} hover:${navHoverTextClass}`} onClick={handleLinkClick}>
-              <img src={TrustAssisSystem} alt="Trust Assist System" className="h-8" />
+            <Link to="/about" className={`ml-3 text-xl font-semibold hidden md:block ${navTextClass} ${navHoverTextClass}`} onClick={handleLinkClick}>
+               {/* O mesmo para este logo */}
+              <h2>Trust Assist System</h2>
             </Link>
           </div>
 
           <div className="hidden md:flex flex-grow items-center justify-end space-x-1">
-            <div className={`relative text-gray-400 focus-within:text-gray-600 mr-4`}>
+            <div className={`relative text-gray-400 focus-within:text-tas-accent mr-4`}>
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"> <SearchIcon /> </div>
               <input id="search-navbar" name="search"
                 className={`block w-full md:w-64 ${searchInputBgClass} border border-transparent rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none ${searchFocusRingClass} sm:text-sm transition-colors`}
                 placeholder="Pesquisar globalmente..." type="search" />
             </div>
 
-            {/* Renderização dos itens da navegação desktop com base na nova ordem */}
             {navigationStructure.map((item) => {
               if (item.type === 'link') {
                 return (
@@ -189,14 +197,14 @@ export function NavigationBar() {
                       <div className="space-y-2" role="menu" aria-orientation="vertical">
                         {item.filterLabel && item.setFilterState && (
                           <div>
-                            <label htmlFor={`${item.id}-filter-input`} className={`block text-xs font-medium text-gray-500 mb-1`}>
+                            <label htmlFor={`${item.id}-filter-input`} className={`block text-xs font-medium text-gray-400 mb-1`}> {/* Ajustado para melhor contraste */}
                               {item.filterLabel}
                             </label>
                             <input 
                               type="text" id={`${item.id}-filter-input`} value={item.filterState}
-                              onChange={(e) => item.setFilterState!(e.target.value)} // Non-null assertion pois verificamos setFilterState
+                              onChange={(e) => item.setFilterState!(e.target.value)}
                               placeholder={item.filterPlaceholder || "..."}
-                              className={`w-full text-xs ${searchInputBgClass} border border-gray-300 rounded-md py-1.5 px-2 focus:outline-none ${searchFocusRingClass} transition-colors`}
+                              className={`w-full text-xs ${searchInputBgClass} border border-tas-accent rounded-md py-1.5 px-2 focus:outline-none ${searchFocusRingClass} transition-colors`}
                             />
                           </div>
                         )}
@@ -243,7 +251,7 @@ export function NavigationBar() {
           </div>
 
           <div className="md:hidden flex items-center">
-            <button onClick={toggleMobileMenu} className={`${navTextClass} ${navHoverTextClass} p-2 rounded-md focus:outline-none`} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu-tas">
+            <button onClick={toggleMobileMenu} className={`${navTextClass} ${navHoverTextClass} p-2 rounded-md focus:outline-none hover:bg-tas-primary-hover`} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu-tas">
               {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
             </button>
           </div>
@@ -251,10 +259,10 @@ export function NavigationBar() {
       </div>
 
       {isMobileMenuOpen && (
-         <div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40`} id="mobile-menu-tas">
+         <div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40 border-t border-tas-primary-hover`} >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
               <div className="px-2 pb-2">
-                <div className={`relative text-gray-400 focus-within:text-gray-600`}>
+                <div className={`relative text-gray-400 focus-within:text-tas-accent`}>
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"> <SearchIcon /> </div>
                     <input id="search-mobile-navbar" name="search-mobile"
                       className={`block w-full ${searchInputBgClass} border border-transparent rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none ${searchFocusRingClass} sm:text-sm transition-colors`}
@@ -268,8 +276,8 @@ export function NavigationBar() {
                 }
                 if (item.type === 'dropdown') {
                   return (
-                    <div key={`mobile-dropdown-${item.id}`} className="border-t border-gray-200 mt-2 pt-2">
-                      <p className={`px-3 text-xs font-semibold uppercase text-gray-500 tracking-wider mb-1`}>{item.label}</p>
+                    <div key={`mobile-dropdown-${item.id}`} className="border-t border-tas-primary-hover mt-2 pt-2">
+                      <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p> {/* Ajustado para melhor contraste */}
                       {item.items.map((group, groupIndex) => {
                         if (group.type === 'row') {
                           return group.subItems.map(subItem => (
@@ -303,7 +311,7 @@ export function NavigationBar() {
               })}
 
               {auth.isAuthenticated && (
-                <div className="border-t border-gray-200 mt-2 pt-2">
+                <div className="border-t border-tas-primary-hover mt-2 pt-2">
                   <button onClick={handleLogout} className={mobileNavItemBaseClasses}> Sair </button>
                 </div>
               )}
