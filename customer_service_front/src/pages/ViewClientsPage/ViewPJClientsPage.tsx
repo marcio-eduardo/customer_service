@@ -1,7 +1,8 @@
-// Localização sugerida: src/pages/ViewClientsPage/ViewPJClientsPage.tsx
+// Localização: src/pages/ViewClientsPage/ViewPJClientsPage.tsx
 import React, { useState, useEffect } from 'react';
+import { api } from '../../lib/axios'; // Importe a instância configurada do Axios
 
-// --- Interfaces (Idealmente, viriam de um ficheiro types/client.ts) ---
+// --- Interfaces (Idealmente, viriam de um ficheiro types/client.ts ou similar) ---
 interface ClientePjType {
   id: number;
   nomeFantasia: string;
@@ -10,16 +11,14 @@ interface ClientePjType {
   endereco?: string;
   telefone?: string;
   email?: string;
-  dataCadastro: string; 
-  responsavel?: { // Ajuste esta interface conforme o seu modelo de dados real
-    id?: number; // ID do responsável, se houver
+  dataCadastro: string;
+  responsavel?: {
+    id?: number;
     nome: string;
     cpf: string;
-    // Outros campos do responsável, se necessário
   };
 }
 
-// Interface para a estrutura de paginação da API, baseada no seu exemplo
 interface Pageable {
   pageNumber: number;
   pageSize: number;
@@ -33,7 +32,7 @@ interface Pageable {
   unpaged: boolean;
 }
 
-interface SortInfo { 
+interface SortInfo {
   sorted: boolean;
   empty: boolean;
   unsorted: boolean;
@@ -46,7 +45,7 @@ interface PaginatedResponse<T> {
   totalElements: number;
   last: boolean;
   size: number;
-  number: number; 
+  number: number;
   sort: SortInfo;
   numberOfElements: number;
   first: boolean;
@@ -57,21 +56,20 @@ interface ViewPJClientsPageProps {
   isDarkMode: boolean;
 }
 
-// Função para formatar a data (Idealmente, viria de um ficheiro utils/formatDate.ts)
 const formatDate = (dateString: string) => {
-    try {
-      if (!dateString || !/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
-          return dateString || 'N/A';
-      }
-      return new Date(dateString).toLocaleDateString('pt-BR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      });
-    } catch (e) {
-      console.warn("Erro ao formatar data:", dateString, e);
-      return dateString;
+  try {
+    if (!dateString || !/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
+      return dateString || 'N/A';
     }
+    return new Date(dateString).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch (e) {
+    console.warn("Erro ao formatar data:", dateString, e);
+    return dateString;
+  }
 };
 
 export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
@@ -80,50 +78,49 @@ export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
   const [error, setError] = useState<string | null>(null);
   const [paginationInfo, setPaginationInfo] = useState<Omit<PaginatedResponse<any>, 'content'> | null>(null);
 
-  const apiUrl = 'http://localhost:8080/api/clientes-pj';
+  const apiUrl = '/api/clientes-pj'; // Endpoint relativo, baseURL está no axios
 
   useEffect(() => {
     const fetchPJClients = async () => {
       setIsLoading(true);
       setError(null);
-      setClients([]); 
+      setClients([]);
       setPaginationInfo(null);
       try {
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Erro HTTP ${response.status} ao buscar clientes PJ`);
-        }
-        
-        const data: PaginatedResponse<ClientePjType> = await response.json();
-        
+        const response = await api.get<PaginatedResponse<ClientePjType>>(apiUrl);
+        const data = response.data;
+
         if (data && Array.isArray(data.content)) {
           setClients(data.content);
           const { content, ...restOfPaginationData } = data;
           setPaginationInfo(restOfPaginationData);
         } else {
           console.warn("Estrutura de dados da API inesperada para clientes PJ. Campo 'content' não encontrado ou não é um array:", data);
-          setClients([]); 
+          setClients([]);
         }
-
       } catch (err: any) {
         console.error(`Falha ao buscar clientes PJ:`, err);
-        setError(err.message || `Ocorreu um erro desconhecido ao buscar clientes PJ.`);
+        if (err.response && err.response.status === 401) {
+          setError("Erro 401: Não autorizado. Verifique se está logado ou se sua sessão expirou.");
+        } else {
+          setError(err.message || `Ocorreu um erro desconhecido ao buscar clientes PJ.`);
+        }
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchPJClients();
-  }, [apiUrl]); // apiUrl é constante, mas mantido para clareza
+  }, []); // apiUrl é constante, então pode ser removido das dependências do useEffect
 
-  // --- Classes de Estilo Condicionais ---
+  // --- Classes de Estilo Condicionais (mantidas como no seu original) ---
   const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] ${isDarkMode ? 'bg-slate-800 text-gray-300' : 'bg-[#EAEAEA] text-gray-800'}`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
   const pageHeaderTextClasses = isDarkMode ? 'text-slate-100' : 'text-gray-800';
   const pageSubHeaderTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-600';
   const sectionCardBgClasses = isDarkMode ? 'bg-slate-700' : 'bg-white';
   const clientCardBgClasses = isDarkMode ? 'bg-slate-600' : 'bg-gray-50';
-  const clientNameTextClasses = isDarkMode ? 'text-[#60A5FA]' : 'text-[#4A90E2]'; 
+  const clientNameTextClasses = isDarkMode ? 'text-[#60A5FA]' : 'text-[#4A90E2]';
   const clientDetailTextClasses = isDarkMode ? 'text-slate-300' : 'text-gray-600';
   const clientLabelTextClasses = isDarkMode ? 'text-slate-400' : 'text-gray-500';
   const errorTextClass = isDarkMode ? 'text-red-400 bg-red-900 bg-opacity-50' : 'text-red-600 bg-red-100';
@@ -142,7 +139,7 @@ export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
         <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
           {isLoading && <p className={`${loadingTextClass} italic text-center py-4`}>A carregar clientes PJ...</p>}
           {error && <p className={`${errorTextClass} p-4 rounded-md text-center`}>{error}</p>}
-          
+
           {!isLoading && !error && clients.length === 0 && (
             <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhum cliente pessoa jurídica encontrado.</p>
           )}
@@ -170,11 +167,11 @@ export function ViewPJClientsPage({ isDarkMode }: ViewPJClientsPageProps) {
               ))}
             </ul>
           )}
-          
+
           {paginationInfo && !isLoading && clients.length > 0 && (
             <div className={`mt-8 text-center text-sm ${isDarkMode ? 'text-slate-400' : 'text-gray-600'}`}>
               Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} clientes.
-              {/* Botões de paginação iriam aqui */}
+              {/* TODO: Adicionar botões de paginação aqui, se necessário */}
             </div>
           )}
         </section>

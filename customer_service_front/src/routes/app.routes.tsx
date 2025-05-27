@@ -6,6 +6,8 @@ import { ViewPJClientsPage } from "../pages/ViewClientsPage/ViewPJClientsPage";
 import { AboutUsPage } from "../pages/AboutUsPage/AboutUsPage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
 import { ProtectedRoute } from "./ProtectedRoute";
+import { CreateTicketPage } from "../pages/TicketsPage/CreateTicketPage";
+import { ViewOpenTicketsPage } from "../pages/TicketsPage/ViewOpenTicketsPage";
 
 export const AppRouter = createBrowserRouter([
   {
@@ -19,16 +21,12 @@ export const AppRouter = createBrowserRouter([
       <HomeLayout/>
     </ProtectedRoute>, 
     children: [
-      { 
-        path: '/dashboard', 
-        element:  
-        
-          <DashboardPage />
-       
-      },
+      { path: '/dashboard', element: <DashboardPage /> },
       { path: '/clientes/pf', element: <ViewPFClientsPage isDarkMode={false} /> },
       { path: '/clientes/pj', element: <ViewPJClientsPage isDarkMode={false} /> },
       { path: '/about', element: <AboutUsPage isDarkMode={false} /> },
+      { path: '/tickets/novo', element: <CreateTicketPage /> },
+      { path: '/tickets/abertos', element: <ViewOpenTicketsPage /> },
     ]
   }
 ]);

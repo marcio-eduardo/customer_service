@@ -7,7 +7,7 @@ import { Toaster } from 'sonner'
 import { queryClient } from './lib/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppRouter } from './routes/app.routes'
-import { Footer } from './Components/footer';
+//import { Footer } from './Components/footer';
 
 
 
@@ -22,7 +22,7 @@ import { Footer } from './Components/footer';
             <RouterProvider router={AppRouter} />                  
           </AuthProvider>
       </QueryClientProvider>     
-      <Footer />
+      
     </HelmetProvider>
   )    
 }
