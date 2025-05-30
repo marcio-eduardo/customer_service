@@ -2,13 +2,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
-import { api } from '../../lib/axios'; // Ajuste o caminho se necessário
-import { toast } from 'sonner'; // Para notificações
+import { api } from '../../lib/axios'; 
+import { toast } from 'sonner'; 
 
-// Interface para o modelo de Ticket, conforme retornado pela API (simplificada para o dashboard)
 interface TicketModelSummary {
   id: number;
   status: string; 
+  resolvedAt?: string; 
 }
 
 export function DashboardPage() {
@@ -17,41 +17,57 @@ export function DashboardPage() {
   const chartInstancesRef = useRef<{ status?: any; priority?: any }>({});
 
   const [totalOpenTickets, setTotalOpenTickets] = useState<number>(0);
+  const [totalResolvedTickets, setTotalResolvedTickets] = useState<number>(0);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
-  // Cores da Paleta "Confiança Moderna (Light) Final"
+  // Paleta "Confiança Moderna (Light) Final"
   const colors = {
-    tasPrimary: '#293B44',        // Azul da Navbar e elementos primários
-    tasPrimaryHover: '#22313A',  // Hover para o azul primário
-    tasSecondary: '#00875A',      // Verde Esmeralda
-    tasSecondaryHover: '#007a50',// Hover para o verde secundário
-    tasAccent: '#FFC107',         // Âmbar/Dourado
-    tasAccentHover: '#ebb206',   // Hover para o âmbar
-    tasBgPage: '#DFE0E1',        // Fundo da Página
-    tasBgCard: '#F2F2F2',        // Fundo dos Cards
-    tasTextOnCard: '#212529',   // Texto principal nos cards
-    tasTextSecondaryOnCard: '#6C757D', // Texto secundário nos cards
-    tasTextOnPrimary: '#FFFFFF', // Texto sobre fundos da cor primária
-    tasStatusSuccess: '#28A745',
-    tasStatusWarning: '#FF8C00',
-    tasStatusError: '#DC3545',
-    tasStatusInfo: '#17A2B8',
+    tasPrimary: '#293B44',        // Usado para títulos principais da página, fundo da navbar/rodapé
+    tasPrimaryHover: '#22313A',  
+    tasSecondary: '#00875A',      // Verde Esmeralda para botões de ação, destaques positivos
+    tasSecondaryHover: '#007a50',
+    tasAccent: '#FFC107',         // Âmbar/Dourado para CTAs secundários ou destaques visuais
+    tasAccentHover: '#ebb206',   
+    tasBgPage: '#DFE0E1',        // Fundo principal da página
+    tasBgCard: '#F2F2F2',        // Fundo dos cards
+    tasTextOnCard: '#212529',   // Texto principal dentro dos cards
+    tasTextSecondaryOnCard: '#6C757D', // Texto secundário dentro dos cards
+    tasTextOnPrimary: '#FFFFFF', // Texto sobre fundos da cor primária (ex: Navbar, Rodapé)
+    tasStatusSuccess: '#28A745', // Verde para sucesso
+    tasStatusWarning: '#FF8C00', // Laranja para alerta/pendente
+    tasStatusError: '#DC3545',   // Vermelho para erro/urgente
+    tasStatusInfo: '#17A2B8',    // Azul para informação/aberto
   };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
       setIsLoadingData(true);
       try {
-        const openTicketsResponse = await api.get<TicketModelSummary[]>('/api/tickets/status/open');
+        const openTicketsPromise = api.get<TicketModelSummary[]>('/api/tickets/status/open');
+        const resolvedTicketsPromise = api.get<TicketModelSummary[]>('/api/tickets/status/resolved');
+
+        const [openTicketsResponse, resolvedTicketsResponse] = await Promise.all([
+          openTicketsPromise,
+          resolvedTicketsPromise
+        ]);
+
         if (openTicketsResponse.data && Array.isArray(openTicketsResponse.data)) {
           setTotalOpenTickets(openTicketsResponse.data.length);
         } else {
           setTotalOpenTickets(0);
         }
+
+        if (resolvedTicketsResponse.data && Array.isArray(resolvedTicketsResponse.data)) {
+          setTotalResolvedTickets(resolvedTicketsResponse.data.length);
+        } else {
+          setTotalResolvedTickets(0);
+        }
+
       } catch (error: any) {
         console.error("Falha ao buscar dados para o dashboard:", error);
         toast.error("Não foi possível carregar os dados do dashboard.");
         setTotalOpenTickets(0);
+        setTotalResolvedTickets(0);
       } finally {
         setIsLoadingData(false);
       }
@@ -75,22 +91,19 @@ export function DashboardPage() {
       destroyCharts();
       
       const legendTextColor = colors.tasTextOnCard;
-      const gridColor = 'rgba(108, 117, 125, 0.2)'; 
       const chartCardBgColor = colors.tasBgCard;
-
-      // Cores do Tooltip CORRIGIDAS
-      const tooltipBackgroundColor = colors.tasBgCard; // Fundo claro para o tooltip
-      const tooltipTitleColor = colors.tasTextOnCard;    // Texto escuro para o título
-      const tooltipBodyColor = colors.tasTextOnCard;     // Texto escuro para o corpo
+      const tooltipBackgroundColor = colors.tasBgCard; 
+      const tooltipTitleColor = colors.tasTextOnCard;    
+      const tooltipBodyColor = colors.tasTextOnCard;    
 
       if (statusChartRef.current && (window as any).Chart) {
         const statusCtx = statusChartRef.current.getContext('2d');
         if (statusCtx) {
           const openCount = totalOpenTickets;
-          const inProgressCount = 19; 
-          const pendingCount = 8;    
-          const resolvedCount = 5;   
-
+          const resolvedCount = totalResolvedTickets; 
+          const inProgressCount = 19; // Fictício, idealmente viria do backend
+          const pendingCount = 8;     // Fictício, idealmente viria do backend
+          
           chartInstancesRef.current.status = new (window as any).Chart(statusCtx, {
             type: 'pie',
             data: {
@@ -121,12 +134,12 @@ export function DashboardPage() {
                     font: { family: "'Inter', sans-serif", size: 12 }
                   }
                 },
-                tooltip: { // CONFIGURAÇÃO DO TOOLTIP ATUALIZADA
+                tooltip: { 
                   backgroundColor: tooltipBackgroundColor,
                   titleColor: tooltipTitleColor,
                   bodyColor: tooltipBodyColor,
-                  borderColor: colors.tasTextSecondaryOnCard, // Opcional: borda sutil
-                  borderWidth: 0.5, // Opcional
+                  borderColor: colors.tasTextSecondaryOnCard, 
+                  borderWidth: 0.5, 
                   titleFont: { family: "'Inter', sans-serif", weight: 'bold' },
                   bodyFont: { family: "'Inter', sans-serif" },
                   padding: 10,
@@ -145,10 +158,10 @@ export function DashboardPage() {
             chartInstancesRef.current.priority = new (window as any).Chart(priorityCtx, {
             type: 'doughnut',
             data: {
-              labels: ['Urgente', 'Alta', 'Média', 'Baixa'],
+              labels: ['Urgente', 'Alta', 'Média', 'Baixa'], // Dados fictícios
               datasets: [{
                 label: 'Chamados por Prioridade',
-                data: [3, 12, 25, 40],
+                data: [3, 12, 25, 40], // Dados fictícios
                 backgroundColor: [
                   colors.tasStatusError,   
                   colors.tasStatusWarning, 
@@ -169,12 +182,12 @@ export function DashboardPage() {
                   position: 'top',
                   labels: { color: legendTextColor, font: { family: "'Inter', sans-serif", size: 12 } }
                 },
-                tooltip: { // CONFIGURAÇÃO DO TOOLTIP ATUALIZADA
+                tooltip: { 
                   backgroundColor: tooltipBackgroundColor,
                   titleColor: tooltipTitleColor,
                   bodyColor: tooltipBodyColor,
-                  borderColor: colors.tasTextSecondaryOnCard, // Opcional
-                  borderWidth: 0.5, // Opcional
+                  borderColor: colors.tasTextSecondaryOnCard, 
+                  borderWidth: 0.5, 
                   titleFont: { family: "'Inter', sans-serif", weight: 'bold' },
                   bodyFont: { family: "'Inter', sans-serif" },
                   padding: 10,
@@ -200,7 +213,7 @@ export function DashboardPage() {
     } else {
         destroyCharts(); 
     }
-  }, [isLoadingData, totalOpenTickets, colors]);
+  }, [isLoadingData, totalOpenTickets, totalResolvedTickets, colors]);
 
   const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"; 
@@ -215,12 +228,13 @@ export function DashboardPage() {
       <Helmet>
         <title>Dashboard - TAS</title>
       </Helmet>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js" async defer></script>
+      {/* O script do Chart.js é idealmente carregado no index.html ou via import de um pacote npm */}
+      {/* <script src="https://cdn.jsdelivr.net/npm/chart.js" async defer></script> */}
 
       <div className={pageWrapperClasses}> 
         <div className={contentContainerClasses}>
           <header className="mb-8 text-center"> 
-            <h1 className={`text-3xl font-bold ${pageHeaderTextClasses}`}>Dashboard de Chamados</h1> 
+            <h1 className={`text-3xl lg:text-4xl font-bold ${pageHeaderTextClasses}`}>Dashboard de Chamados</h1> 
             <p className={`${pageSubHeaderTextClasses} mt-1`}>Visão geral do status dos chamados.</p>
           </header>
 
@@ -237,17 +251,25 @@ export function DashboardPage() {
               </div>
             </Link>
             
-            <div className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 cursor-default border border-gray-200`}>
-                <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Resolvidos Hoje</h3>
-                <p className={`text-4xl font-bold text-tas-status-success mt-2`}>5</p>
-            </div>
+            <Link
+              to="/tickets/resolvidos" 
+              className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-xl border border-gray-200`}
+            >
+                <div>
+                    <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Total Resolvidos</h3> 
+                    <p className={`text-4xl font-bold text-tas-status-success mt-2`}>
+                    {isLoadingData ? '...' : totalResolvedTickets}
+                    </p>
+                </div>
+            </Link>
+
             <div className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 cursor-default border border-gray-200`}>
                 <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Pendentes</h3>
-                <p className={`text-4xl font-bold text-tas-status-warning mt-2`}>8</p>
+                <p className={`text-4xl font-bold text-tas-status-warning mt-2`}>8</p> {/* Dado Fictício */}
             </div>
             <div className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 cursor-default border border-gray-200`}>
                 <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Urgentes</h3>
-                <p className={`text-4xl font-bold text-tas-status-error mt-2`}>3</p>
+                <p className={`text-4xl font-bold text-tas-status-error mt-2`}>3</p> {/* Dado Fictício */}
             </div>
           </div>
 

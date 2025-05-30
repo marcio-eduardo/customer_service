@@ -1,11 +1,10 @@
 // src/Components/layout/NavigationBar/NavigationBar.tsx
 import { useState, useEffect, useRef, type Dispatch, type SetStateAction, type JSX } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../../contexts/AuthContext'; // Ajuste o caminho se necessário
-import TASLogo from '../../../assets/logo/NuvemConfig-2.svg'; // Certifique-se que o logo SVG funcione bem em fundo escuro ou considere uma versão invertida
+import { useAuth } from '../../../contexts/AuthContext'; 
+import TASLogo from '../../../assets/logo/NuvemConfig-2.svg'; 
 
-
-// --- Ícones (mantidos como antes, mas a cor será definida pelo contexto da classe) ---
+// --- Icons ---
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
@@ -16,7 +15,7 @@ const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const LogOutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 const ChevronDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>;
 
-// --- Interfaces para a Estrutura de Navegação (mantidas) ---
+// --- Navigation Structure Interfaces ---
 interface NavLinkSimple {
   type: 'link';
   path: string;
@@ -92,23 +91,20 @@ export function NavigationBar() {
     setIsMobileMenuOpen(false);
   };
   
-  // Novas classes de estilo baseadas na paleta "Confiança Moderna (Light) Final"
-  const navBgClass = 'bg-tas-primary'; // #293B44
-  const navTextClass = 'text-tas-text-on-primary'; // #FFFFFF
-  const navHoverTextClass = 'hover:text-tas-accent'; // #FFC107
+  // Style classes based on "Confiança Moderna (Light) Final" palette
+  const navBgClass = 'bg-tas-primary'; 
+  const navTextClass = 'text-tas-text-on-primary'; 
+  const navHoverTextClass = 'hover:text-tas-accent'; 
   
-  // Para inputs na navbar (ex: pesquisa)
-  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; // bg-[#22313A]
-  const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent'; // ring-[#FFC107] border-[#FFC107]
+  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; 
+  const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent'; 
 
-  const mobileMenuBgClass = 'bg-tas-primary'; // #293B44 (ou tas-primary-hover para leve variação)
+  const mobileMenuBgClass = 'bg-tas-primary'; 
   
-  // Estilos para botões dentro do dropdown
   const dropdownButtonBase = `flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors`;
   const dropdownButtonRowStyle = `${dropdownButtonBase} border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent text-center`;
   const dropdownFullWidthButtonStyle = `block w-full text-center text-xs mt-2 py-1.5 px-2 rounded-md border border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent transition-colors`;
 
-  // Estilos base para itens de navegação
   const navItemBaseClasses = `px-3 py-2 rounded-md text-sm font-medium ${navHoverTextClass} transition-colors flex items-center ${navTextClass} cursor-pointer hover:bg-tas-primary-hover`;
   const mobileNavItemBaseClasses = `w-full text-left block px-4 py-3 text-base font-medium ${navHoverTextClass} transition-colors ${navTextClass} hover:bg-tas-primary-hover`;
 
@@ -129,7 +125,8 @@ export function NavigationBar() {
             { path: '/tickets/abertos', label: 'Abertos', style: dropdownButtonRowStyle },
           ]
         },
-        { type: 'fullwidth-button', path: '/tickets/gerenciar', label: 'Fechar Chamado', style: dropdownFullWidthButtonStyle, condition: canManageTickets },
+        // UPDATED: Changed path to /tickets/encerrar
+        { type: 'fullwidth-button', path: '/tickets/encerrar', label: 'Encerrar Chamado', style: dropdownFullWidthButtonStyle, condition: canManageTickets },
       ]
     },
     { 
@@ -139,7 +136,7 @@ export function NavigationBar() {
       id: 'clientes',
       filterState: clientFilter,
       setFilterState: setClientFilter,
-      filterPlaceholder: "Nome/Documento...", // Ajustado
+      filterPlaceholder: "Nome/Documento...", 
       filterLabel: "Filtrar por nome/doc.",
       items: [
         { type: 'row', subItems: [
@@ -153,21 +150,23 @@ export function NavigationBar() {
     { type: 'link', path: '/configuracoes', label: 'Configurações', icon: <CogIcon />, id: 'settings' },
   ];
 
-  // Fundo do container do dropdown
   const dropdownContainerClasses = `absolute right-0 md:left-0 top-full mt-0.5 w-64 rounded-md shadow-lg p-3 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
 
   return (
-    <nav className={`w-full ${navBgClass} shadow-2xl fixed left-0 right-0 top-0 z-50 font-['Poppins']`}>
+    <nav className={`w-full ${navBgClass} shadow-lg fixed left-0 right-0 top-0 z-50 font-['Poppins']`}>
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <Link to="/dashboard" className="flex-shrink-0" onClick={handleLinkClick}>
-              {/* Considerar um logo SVG que funcione bem em fundos escuros, ou aplicar filtro CSS se necessário */}
-              <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto bg-blue" />
+              <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto" />
             </Link>
-            <Link to="/about" className={`ml-3 text-xl font-semibold hidden md:block ${navTextClass} ${navHoverTextClass}`} onClick={handleLinkClick}>
-               {/* O mesmo para este logo */}
-              <h2>Trust Assist System</h2>
+            <Link 
+              to="/about" 
+              className={`ml-3 text-xl font-semibold hidden md:flex items-center ${navTextClass} ${navHoverTextClass}`} 
+              onClick={handleLinkClick}
+            >
+              <h2 className="hidden lg:block">Trust Assist System</h2> 
+              <span className="hidden md:block lg:hidden">TAS</span>   
             </Link>
           </div>
 
@@ -183,7 +182,8 @@ export function NavigationBar() {
               if (item.type === 'link') {
                 return (
                   <Link key={item.id} to={item.path} className={navItemBaseClasses} aria-label={item.label} onClick={handleLinkClick}>
-                    {item.icon} <span className="ml-2 hidden lg:inline">{item.label}</span>
+                    {item.icon} 
+                    <span className="ml-2 hidden 2xl:inline">{item.label}</span>
                   </Link>
                 );
               }
@@ -191,13 +191,14 @@ export function NavigationBar() {
                 return (
                   <div key={item.id} className="relative group">
                     <button className={`${navItemBaseClasses} cursor-default`}>
-                      {item.icon} <span className="ml-2 hidden lg:inline">{item.label}</span> <ChevronDownIcon />
+                      {item.icon} 
+                      <span className="ml-2 hidden 2xl:inline">{item.label}</span> <ChevronDownIcon />
                     </button>
                     <div className={dropdownContainerClasses}>
                       <div className="space-y-2" role="menu" aria-orientation="vertical">
                         {item.filterLabel && item.setFilterState && (
                           <div>
-                            <label htmlFor={`${item.id}-filter-input`} className={`block text-xs font-medium text-gray-400 mb-1`}> {/* Ajustado para melhor contraste */}
+                            <label htmlFor={`${item.id}-filter-input`} className={`block text-xs font-medium text-gray-400 mb-1`}> 
                               {item.filterLabel}
                             </label>
                             <input 
@@ -245,7 +246,8 @@ export function NavigationBar() {
 
             {auth.isAuthenticated && (
               <button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair">
-                <LogOutIcon /> <span className="ml-2 hidden lg:inline">Sair</span>
+                <LogOutIcon /> 
+                <span className="ml-2 hidden 2xl:inline">Sair</span>
               </button>
             )}
           </div>
@@ -277,7 +279,7 @@ export function NavigationBar() {
                 if (item.type === 'dropdown') {
                   return (
                     <div key={`mobile-dropdown-${item.id}`} className="border-t border-tas-primary-hover mt-2 pt-2">
-                      <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p> {/* Ajustado para melhor contraste */}
+                      <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p> 
                       {item.items.map((group, groupIndex) => {
                         if (group.type === 'row') {
                           return group.subItems.map(subItem => (
