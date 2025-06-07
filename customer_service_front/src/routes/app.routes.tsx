@@ -9,12 +9,17 @@ import { ProtectedRoute } from "./ProtectedRoute";
 import { CreateTicketPage } from "../pages/TicketsPage/CreateTicketPage";
 import { ViewOpenTicketsPage } from "../pages/TicketsPage/ViewOpenTicketsPage";
 import { CloseTicketPage } from "../pages/TicketsPage/CloseTicketPage"; 
-import { ViewResolvedTicketsPage } from "../pages/TicketsPage/ViewResolvedTicketsPage"; // Importação da nova página
+import { ViewResolvedTicketsPage } from "../pages/TicketsPage/ViewResolvedTicketsPage";
+import { SignUpPage } from "../pages/SignUpPage/SignUpPage"; // Importar a nova página
 
 export const AppRouter = createBrowserRouter([
   {
     path: '/',
     element: <LoginPage /> 
+  },
+  {
+    path: '/signup', // Rota pública para a página de registo
+    element: <SignUpPage />
   },
   { 
     path: '/',
@@ -30,7 +35,9 @@ export const AppRouter = createBrowserRouter([
       { path: '/tickets/novo', element: <CreateTicketPage /> },
       { path: '/tickets/abertos', element: <ViewOpenTicketsPage /> },
       { path: '/tickets/encerrar', element: <CloseTicketPage /> }, 
-      { path: '/tickets/resolvidos', element: <ViewResolvedTicketsPage /> }, // Rota para a nova página
+      { path: '/tickets/resolvidos', element: <ViewResolvedTicketsPage /> },
+      // Rota protegida para um admin criar novos utilizadores
+      { path: '/admin/criar-utilizador', element: <SignUpPage /> }, 
     ]
   }
 ]);

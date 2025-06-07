@@ -1,7 +1,7 @@
 package com.faculdade.customer_service_back.model.client_model;
 
 import jakarta.persistence.*;
-import lombok.Setter;
+import lombok.Setter; // Certifique-se que esta importação está correta para o seu projeto Lombok
 
 import java.time.LocalDate;
 
@@ -10,10 +10,13 @@ import java.time.LocalDate;
 public class ClientePf {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "clientes_pf_seq")
-    @SequenceGenerator(name = "clientes_pf_seq", sequenceName = "seq_clientes_fisicos", allocationSize = 1)
+    // Alterado para GenerationType.IDENTITY e removido o generator
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_cliente")
     private Long id;
+
+    // A anotação @SequenceGenerator foi removida
+    // @SequenceGenerator(name = "clientes_pf_seq", sequenceName = "seq_clientes_fisicos", allocationSize = 1)
 
     @Setter
     @Column(nullable = false)
@@ -25,8 +28,10 @@ public class ClientePf {
 
     @Setter
     private String endereco;
+
     @Setter
     private String telefone;
+
     @Setter
     private String email;
 
@@ -42,10 +47,9 @@ public class ClientePf {
         this.endereco = endereco;
         this.telefone = telefone;
         this.email = email;
-        this.dataCadastro = LocalDate.now();
     }
 
-    // Getters e setters
+    // Getters
     public Long getId() {
         return id;
     }
@@ -73,4 +77,6 @@ public class ClientePf {
     public LocalDate getDataCadastro() {
         return dataCadastro;
     }
+
+    // Se não estiver a usar @Setter do Lombok para todos os campos, adicione os setters aqui.
 }

@@ -1,10 +1,10 @@
 // src/Components/layout/NavigationBar/NavigationBar.tsx
-import { useState, useEffect, useRef, type Dispatch, type SetStateAction, type JSX } from 'react';
+import { useState, type Dispatch, type SetStateAction, type JSX, type KeyboardEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext'; 
 import TASLogo from '../../../assets/logo/NuvemConfig-2.svg'; 
 
-// --- Icons ---
+// --- Ícones ---
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
 const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
@@ -15,91 +15,62 @@ const CloseIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" view
 const LogOutIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>;
 const ChevronDownIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 ml-1"><path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.25 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clipRule="evenodd" /></svg>;
 
-// --- Navigation Structure Interfaces ---
-interface NavLinkSimple {
-  type: 'link';
-  path: string;
-  label: string;
-  icon?: JSX.Element;
-  id: string;
-}
+// --- Interfaces para a Estrutura de Navegação ---
+interface NavLinkSimple { type: 'link'; path: string; label: string; icon?: JSX.Element; id: string; }
+interface DropdownSubItemLink { path: string; label: string; style: string; condition?: boolean; }
+interface DropdownSubItemButton { action: () => void; label: string; style: string; condition?: boolean; }
+interface DropdownItemGroupRow { type: 'row'; subItems: (DropdownSubItemLink | DropdownSubItemButton)[]; }
+interface DropdownItemGroupFullWidthButton { type: 'fullwidth-button'; path?: string; action?: () => void; label: string; style: string; condition?: boolean; }
+interface DropdownItemGroupSearch { type: 'search'; condition?: boolean; } 
 
-interface DropdownSubItemLink {
-  path: string;
-  label: string;
-  style: string;
-}
+type DropdownItemGroup = DropdownItemGroupRow | DropdownItemGroupFullWidthButton | DropdownItemGroupSearch;
 
-interface DropdownSubItemButton {
-  action: () => void;
-  label: string;
-  style: string;
-  condition?: boolean;
-}
-
-interface DropdownItemGroupRow {
-  type: 'row';
-  subItems: DropdownSubItemLink[];
-}
-
-interface DropdownItemGroupFullWidthButton {
-  type: 'fullwidth-button';
-  path?: string; 
-  action?: () => void;
-  label: string;
-  style: string;
-  condition?: boolean;
-}
-
-type DropdownItemGroup = DropdownItemGroupRow | DropdownItemGroupFullWidthButton;
-
-interface NavDropdown {
-  type: 'dropdown';
-  label: string;
-  icon?: JSX.Element;
-  id: string;
-  filterState?: string;
-  setFilterState?: Dispatch<SetStateAction<string>>;
-  filterPlaceholder?: string;
-  filterLabel?: string;
-  items: DropdownItemGroup[];
-}
-
+interface NavDropdown { type: 'dropdown'; label: string; icon?: JSX.Element; id: string; items: DropdownItemGroup[]; }
 type NavigationItemConfig = NavLinkSimple | NavDropdown;
-
 
 export function NavigationBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [clientFilter, setClientFilter] = useState('');
-  const [ticketFilter, setTicketFilter] = useState('');
+  const [ticketIdFilter, setTicketIdFilter] = useState(''); 
   
   const auth = useAuth();
   const navigate = useNavigate();
 
   const userRoles = auth.user?.roles || [];
-  const canManageTickets = userRoles.includes('ROLE_ADMIN') || userRoles.includes('ROLE_MODERATOR');
+  const isAdmin = userRoles.includes('ROLE_ADMIN');
+  const isModerator = userRoles.includes('ROLE_MODERATOR');
+  const canManageTickets = isAdmin || isModerator;
+  const isCustomer = auth.isAuthenticated && !canManageTickets;
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
-  
-  const handleLinkClick = () => {
-    setIsMobileMenuOpen(false);
-  };
+  const handleLinkClick = () => setIsMobileMenuOpen(false);
 
   const handleLogout = () => {
     auth.logout();
     navigate('/');
     setIsMobileMenuOpen(false);
   };
+
+  const handleTicketSearch = () => {
+    if (ticketIdFilter.trim() && !isNaN(Number(ticketIdFilter))) {
+      handleLinkClick();
+      navigate(`/tickets/${ticketIdFilter}`);
+      setTicketIdFilter('');
+    }
+  };
+
+  const handleSearchKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') {
+      handleTicketSearch();
+    }
+  };
   
-  // Style classes based on "Confiança Moderna (Light) Final" palette
+  // Classes de estilo
   const navBgClass = 'bg-tas-primary'; 
   const navTextClass = 'text-tas-text-on-primary'; 
   const navHoverTextClass = 'hover:text-tas-accent'; 
-  
-  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; 
-  const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent'; 
-
   const mobileMenuBgClass = 'bg-tas-primary'; 
+  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; 
+  const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent';
   
   const dropdownButtonBase = `flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors`;
   const dropdownButtonRowStyle = `${dropdownButtonBase} border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent text-center`;
@@ -108,24 +79,20 @@ export function NavigationBar() {
   const navItemBaseClasses = `px-3 py-2 rounded-md text-sm font-medium ${navHoverTextClass} transition-colors flex items-center ${navTextClass} cursor-pointer hover:bg-tas-primary-hover`;
   const mobileNavItemBaseClasses = `w-full text-left block px-4 py-3 text-base font-medium ${navHoverTextClass} transition-colors ${navTextClass} hover:bg-tas-primary-hover`;
 
-  const navigationStructure: NavigationItemConfig[] = [
+  const adminModeratorNav: NavigationItemConfig[] = [
     { type: 'link', path: '/dashboard', label: 'Dashboard', icon: <HomeIcon />, id: 'dashboard' },
     { 
       type: 'dropdown', 
       label: 'Chamados', 
       icon: <ListChecksIcon />, 
       id: 'chamados',
-      filterState: ticketFilter,
-      setFilterState: setTicketFilter,
-      filterPlaceholder: "ID, título...",
-      filterLabel: "Filtrar Chamados",
       items: [
+        { type: 'search', condition: canManageTickets }, 
         { type: 'row', subItems: [
             { path: '/tickets/novo', label: '+ Novo', style: dropdownButtonRowStyle },
             { path: '/tickets/abertos', label: 'Abertos', style: dropdownButtonRowStyle },
           ]
         },
-        // UPDATED: Changed path to /tickets/encerrar
         { type: 'fullwidth-button', path: '/tickets/encerrar', label: 'Encerrar Chamado', style: dropdownFullWidthButtonStyle, condition: canManageTickets },
       ]
     },
@@ -134,30 +101,54 @@ export function NavigationBar() {
       label: 'Clientes', 
       icon: <UsersIcon />, 
       id: 'clientes',
-      filterState: clientFilter,
-      setFilterState: setClientFilter,
-      filterPlaceholder: "Nome/Documento...", 
-      filterLabel: "Filtrar por nome/doc.",
       items: [
         { type: 'row', subItems: [
             { path: '/clientes/pf', label: 'Pessoa Física', style: dropdownButtonRowStyle },
             { path: '/clientes/pj', label: 'Pessoa Jurídica', style: dropdownButtonRowStyle },
           ] 
         },
-        { type: 'fullwidth-button', action: () => { navigate('/clientes/novo'); handleLinkClick(); }, label: '+ Cadastrar Novo Cliente', style: dropdownFullWidthButtonStyle },
+        { type: 'fullwidth-button', path: '/clientes/novo', label: '+ Cadastrar Novo Cliente', style: dropdownFullWidthButtonStyle },
       ]
     },
-    { type: 'link', path: '/configuracoes', label: 'Configurações', icon: <CogIcon />, id: 'settings' },
+    { 
+      type: 'dropdown', 
+      label: 'Configurações', 
+      icon: <CogIcon />, 
+      id: 'settings',
+      items: [
+        { type: 'fullwidth-button', path: '/configuracoes', label: 'Minhas Configurações', style: dropdownFullWidthButtonStyle },
+        { type: 'fullwidth-button', path: '/admin/criar-utilizador', label: 'Criar Utilizador', style: dropdownFullWidthButtonStyle, condition: isAdmin },
+      ]
+    },
   ];
 
+  const customerNav: NavigationItemConfig[] = [
+    { type: 'link', path: '/tickets/novo', label: 'Criar Chamado', icon: <ListChecksIcon />, id: 'customer-new-ticket' },
+    { type: 'link', path: '/tickets/abertos', label: 'Meus Chamados', icon: <HomeIcon />, id: 'customer-view-tickets' },
+    { type: 'link', path: '/configuracoes', label: 'Minha Conta', icon: <CogIcon />, id: 'customer-account' }
+  ];
+
+  const navigationStructure = isCustomer ? customerNav : adminModeratorNav;
   const dropdownContainerClasses = `absolute right-0 md:left-0 top-full mt-0.5 w-64 rounded-md shadow-lg p-3 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
 
   return (
     <nav className={`w-full ${navBgClass} shadow-lg fixed left-0 right-0 top-0 z-50 font-['Poppins']`}>
+      <style>{`
+        /* Oculta as setas em inputs do tipo number nos navegadores baseados em Webkit */
+        input[type='number']::-webkit-inner-spin-button,
+        input[type='number']::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        /* Oculta as setas em inputs do tipo number no Firefox */
+        input[type='number'] {
+          -moz-appearance: textfield;
+        }
+      `}</style>
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to="/dashboard" className="flex-shrink-0" onClick={handleLinkClick}>
+            <Link to={isCustomer ? "/tickets/abertos" : "/dashboard"} className="flex-shrink-0" onClick={handleLinkClick}>
               <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto" />
             </Link>
             <Link 
@@ -171,53 +162,49 @@ export function NavigationBar() {
           </div>
 
           <div className="hidden md:flex flex-grow items-center justify-end space-x-1">
-            <div className={`relative text-gray-400 focus-within:text-tas-accent mr-4`}>
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"> <SearchIcon /> </div>
-              <input id="search-navbar" name="search"
-                className={`block w-full md:w-64 ${searchInputBgClass} border border-transparent rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none ${searchFocusRingClass} sm:text-sm transition-colors`}
-                placeholder="Pesquisar globalmente..." type="search" />
-            </div>
-
             {navigationStructure.map((item) => {
               if (item.type === 'link') {
-                return (
-                  <Link key={item.id} to={item.path} className={navItemBaseClasses} aria-label={item.label} onClick={handleLinkClick}>
-                    {item.icon} 
-                    <span className="ml-2 hidden 2xl:inline">{item.label}</span>
-                  </Link>
-                );
+                return ( <Link key={item.id} to={item.path} className={navItemBaseClasses} aria-label={item.label} onClick={handleLinkClick}> {item.icon} <span className="ml-2 hidden xl:inline">{item.label}</span> </Link> );
               }
               if (item.type === 'dropdown') {
                 return (
                   <div key={item.id} className="relative group">
-                    <button className={`${navItemBaseClasses} cursor-default`}>
-                      {item.icon} 
-                      <span className="ml-2 hidden 2xl:inline">{item.label}</span> <ChevronDownIcon />
-                    </button>
+                    <button className={`${navItemBaseClasses} cursor-default`}> {item.icon} <span className="ml-2 hidden xl:inline">{item.label}</span> <ChevronDownIcon /> </button>
                     <div className={dropdownContainerClasses}>
                       <div className="space-y-2" role="menu" aria-orientation="vertical">
-                        {item.filterLabel && item.setFilterState && (
-                          <div>
-                            <label htmlFor={`${item.id}-filter-input`} className={`block text-xs font-medium text-gray-400 mb-1`}> 
-                              {item.filterLabel}
-                            </label>
-                            <input 
-                              type="text" id={`${item.id}-filter-input`} value={item.filterState}
-                              onChange={(e) => item.setFilterState!(e.target.value)}
-                              placeholder={item.filterPlaceholder || "..."}
-                              className={`w-full text-xs ${searchInputBgClass} border border-tas-accent rounded-md py-1.5 px-2 focus:outline-none ${searchFocusRingClass} transition-colors`}
-                            />
-                          </div>
-                        )}
                         {item.items.map((group, groupIndex) => {
+                          if (group.type === 'search' && (group.condition === undefined || group.condition)) {
+                            return (
+                              <div key={`search-${item.id}-${groupIndex}`} className="relative flex items-center mb-1">
+                                <input 
+                                  // Alterado para 'text' e adicionado pattern para melhor compatibilidade mobile
+                                  type="text"
+                                  pattern="[0-9]*"
+                                  inputMode="numeric"
+                                  id={`${item.id}-filter-input`} value={ticketIdFilter}
+                                  onChange={(e) => setTicketIdFilter(e.target.value)}
+                                  onKeyDown={handleSearchKeyDown}
+                                  placeholder="Pesquisar Chamado por ID..."
+                                  className={`w-full text-xs ${searchInputBgClass} border border-tas-accent rounded-md py-1.5 pl-2 pr-8 focus:outline-none ${searchFocusRingClass} transition-colors`}
+                                />
+                                <button onClick={handleTicketSearch} className="absolute inset-y-0 right-0 px-2 flex items-center text-gray-400 hover:text-tas-accent">
+                                  <SearchIcon />
+                                </button>
+                              </div>
+                            );
+                          }
                           if (group.type === 'row') {
                             return (
                               <div key={`group-${item.id}-${groupIndex}`} className="flex space-x-2">
-                                {group.subItems.map(subItem => (
-                                  <Link key={subItem.label} to={subItem.path} className={subItem.style} onClick={handleLinkClick}>
-                                    {subItem.label}
-                                  </Link>
-                                ))}
+                                {group.subItems.map(subItem => {
+                                  if ('path' in subItem) {
+                                      return (subItem.condition === undefined || subItem.condition) && <Link key={subItem.label} to={subItem.path} className={subItem.style} onClick={handleLinkClick}>{subItem.label}</Link>;
+                                  }
+                                  if ('action' in subItem) {
+                                      return (subItem.condition === undefined || subItem.condition) && <button key={subItem.label} onClick={() => { if (subItem.action) subItem.action(); handleLinkClick(); }} className={subItem.style}>{subItem.label}</button>;
+                                  }
+                                  return null;
+                                })}
                               </div>
                             );
                           }
@@ -243,15 +230,8 @@ export function NavigationBar() {
               }
               return null;
             })}
-
-            {auth.isAuthenticated && (
-              <button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair">
-                <LogOutIcon /> 
-                <span className="ml-2 hidden 2xl:inline">Sair</span>
-              </button>
-            )}
+            {auth.isAuthenticated && ( <button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair"> <LogOutIcon /> <span className="ml-2 hidden xl:inline">Sair</span> </button> )}
           </div>
-
           <div className="md:hidden flex items-center">
             <button onClick={toggleMobileMenu} className={`${navTextClass} ${navHoverTextClass} p-2 rounded-md focus:outline-none hover:bg-tas-primary-hover`} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu-tas">
               {isMobileMenuOpen ? <CloseIcon /> : <MenuIcon />}
@@ -259,19 +239,10 @@ export function NavigationBar() {
           </div>
         </div>
       </div>
-
-      {isMobileMenuOpen && (
-         <div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40 border-t border-tas-primary-hover`} >
+      {isMobileMenuOpen && ( <div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40 border-t border-tas-primary-hover`} >
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <div className="px-2 pb-2">
-                <div className={`relative text-gray-400 focus-within:text-tas-accent`}>
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"> <SearchIcon /> </div>
-                    <input id="search-mobile-navbar" name="search-mobile"
-                      className={`block w-full ${searchInputBgClass} border border-transparent rounded-md py-2 pl-10 pr-3 text-sm focus:outline-none ${searchFocusRingClass} sm:text-sm transition-colors`}
-                      placeholder="Pesquisar..." type="search" />
-                </div>
-              </div>
-
+              {/* O menu móvel renderizará os itens de acordo com a navigationStructure */}
+              {/* Para simplificar, o campo de pesquisa não é adicionado aqui */}
               {navigationStructure.map(item => {
                 if (item.type === 'link') {
                   return ( <Link key={`mobile-${item.id}`} to={item.path} className={mobileNavItemBaseClasses} onClick={handleLinkClick}> {item.label} </Link> );
@@ -281,11 +252,10 @@ export function NavigationBar() {
                     <div key={`mobile-dropdown-${item.id}`} className="border-t border-tas-primary-hover mt-2 pt-2">
                       <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p> 
                       {item.items.map((group, groupIndex) => {
+                         if (group.type === 'search') return null; // Não mostra a pesquisa no menu móvel
                         if (group.type === 'row') {
                           return group.subItems.map(subItem => (
-                            <Link key={`mobile-sub-${item.id}-${subItem.label}-${groupIndex}`} to={subItem.path} className={mobileNavItemBaseClasses} onClick={handleLinkClick}>
-                              {subItem.label}
-                            </Link>
+                             (subItem.condition === undefined || subItem.condition) && 'path' in subItem && <Link key={`mobile-sub-${item.id}-${subItem.label}-${groupIndex}`} to={subItem.path} className={mobileNavItemBaseClasses} onClick={handleLinkClick}>{subItem.label}</Link>
                           ));
                         }
                         if (group.type === 'fullwidth-button') {
@@ -318,8 +288,7 @@ export function NavigationBar() {
                 </div>
               )}
             </div>
-         </div>
-      )}
+      </div> )}
     </nav>
   );
 };

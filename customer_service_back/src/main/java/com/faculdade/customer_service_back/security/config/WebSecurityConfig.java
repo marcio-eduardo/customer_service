@@ -6,6 +6,7 @@ import com.faculdade.customer_service_back.security.services.UserDetailsServiceI
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod; // Adicionado para especificar o método HTTP
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -64,22 +65,30 @@ public class WebSecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**").permitAll()  // Endpoints de autenticação são públicos
-                        .requestMatchers("/api/test/**").permitAll()  // Exemplo de outros endpoints públicos (ajuste ou remova se não usar)
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()
 
-                        // --- NOVAS REGRAS DE AUTORIZAÇÃO ADICIONADAS ABAIXO ---
-                        // Endpoints de Clientes (PF e PJ) - para qualquer utilizador autenticado
                         .requestMatchers("/api/clientes-pf/**").authenticated()
                         .requestMatchers("/api/clientes-pj/**").authenticated()
-
-                        // Endpoints de Técnicos - apenas para utilizadores com papel "ADMIN"
                         .requestMatchers("/api/technical/**").hasRole("ADMIN")
 
-                        // Endpoints de Tickets - para utilizadores com papel "MODERATOR" ou "ADMIN"
+                        // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**
+                        // 1. Permitir que qualquer usuário autenticado abra um chamado
+                        .requestMatchers(HttpMethod.POST, "/api/tickets/open").authenticated()
+                        // 2. Manter ou ajustar outras operações de tickets:
+                        //    - Fechar (POST /api/tickets/close) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
+                        //    - Listar todos (GET /api/tickets) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
+                        //    - Buscar por ID (GET /api/tickets/{id}) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
+                        //      (Se precisar que usuários vejam seus próprios tickets, precisaremos de uma regra mais específica ou lógica no serviço)
+                        //    - Alterar (PUT) e Excluir (DELETE) chamados devem ser apenas para ADMIN.
+                        //      Se esses endpoints forem, por exemplo, PUT /api/tickets/{id} e DELETE /api/tickets/{id}
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
+                        // Regra geral para outros GETs em tickets (como listar e buscar por ID) e POST /api/tickets/close:
                         .requestMatchers("/api/tickets/**").hasAnyRole("MODERATOR", "ADMIN")
-                        // --- FIM DAS NOVAS REGRAS DE AUTORIZAÇÃO ---
+                        // **FIM DAS ALTERAÇÕES PARA TICKETS**
 
-                        .anyRequest().authenticated() // Todas as outras requisições exigem autenticação
+                        .anyRequest().authenticated()
                 );
 
         http.authenticationProvider(authenticationProvider());
@@ -96,7 +105,7 @@ public class WebSecurityConfig {
                 "http://localhost:4200",
                 "http://localhost:8081",
                 "http://localhost:5173"
-        )); // Adicione as origens do teu frontend
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
