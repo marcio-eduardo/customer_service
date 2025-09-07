@@ -10,7 +10,7 @@ services:
       MYSQL_USER: admin # Utilizador da aplicação (será criado com esta senha)
       MYSQL_PASSWORD: admin123 # Senha para o utilizador da aplicação
     ports:
-      - "3306:3306" # Porta padrão do MySQL
+      - "3307:3307" # Porta padrão do MySQL
     volumes:
       - mysql_data:/var/lib/mysql # Volume para persistência de dados do MySQL
     networks:
@@ -54,7 +54,7 @@ services:
       - /app/node_modules # Adiciona este volume para evitar que node_modules local sobrescreva o do container
     environment:
       # VITE_API_URL aponta para o serviço backend dentro da rede Docker
-      VITE_API_URL: http://backend:8080 
+      # VITE_API_URL: http://backend:8080 
       NODE_ENV: development
     command: sh -c "npm install && npm run dev -- --host"
     networks: 
