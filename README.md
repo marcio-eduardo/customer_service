@@ -1,4 +1,4 @@
-# Análise do Projeto: Trust Assist System (TAS)
+# Trust Assist System (TAS)
 
 ### 1. Do que se trata o projeto?
 
