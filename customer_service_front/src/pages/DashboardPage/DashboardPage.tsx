@@ -5,10 +5,11 @@ import { Link } from 'react-router-dom';
 import { api } from '../../lib/axios'; 
 import { toast } from 'sonner'; 
 
-interface TicketModelSummary {
-  id: number;
-  status: string; 
-  resolvedAt?: string; 
+interface DashboardStats {
+  statusCounts: { [key: string]: number };
+  priorityCounts: { [key: string]: number };
+  totalOpenTickets: number;
+  totalResolvedTickets: number;
 }
 
 export function DashboardPage() {
@@ -16,8 +17,7 @@ export function DashboardPage() {
   const priorityChartRef = useRef<HTMLCanvasElement>(null);
   const chartInstancesRef = useRef<{ status?: any; priority?: any }>({});
 
-  const [totalOpenTickets, setTotalOpenTickets] = useState<number>(0);
-  const [totalResolvedTickets, setTotalResolvedTickets] = useState<number>(0);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
   const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
 
   // Paleta "Confiança Moderna (Light) Final"
@@ -43,31 +43,12 @@ export function DashboardPage() {
     const fetchDashboardData = async () => {
       setIsLoadingData(true);
       try {
-        const openTicketsPromise = api.get<TicketModelSummary[]>('/api/tickets/status/open');
-        const resolvedTicketsPromise = api.get<TicketModelSummary[]>('/api/tickets/status/resolved');
-
-        const [openTicketsResponse, resolvedTicketsResponse] = await Promise.all([
-          openTicketsPromise,
-          resolvedTicketsPromise
-        ]);
-
-        if (openTicketsResponse.data && Array.isArray(openTicketsResponse.data)) {
-          setTotalOpenTickets(openTicketsResponse.data.length);
-        } else {
-          setTotalOpenTickets(0);
-        }
-
-        if (resolvedTicketsResponse.data && Array.isArray(resolvedTicketsResponse.data)) {
-          setTotalResolvedTickets(resolvedTicketsResponse.data.length);
-        } else {
-          setTotalResolvedTickets(0);
-        }
-
+        const response = await api.get<DashboardStats>('/api/dashboard/stats');
+        setStats(response.data);
       } catch (error: any) {
         console.error("Falha ao buscar dados para o dashboard:", error);
         toast.error("Não foi possível carregar os dados do dashboard.");
-        setTotalOpenTickets(0);
-        setTotalResolvedTickets(0);
+        setStats(null);
       } finally {
         setIsLoadingData(false);
       }
@@ -88,6 +69,7 @@ export function DashboardPage() {
     };
 
     const initCharts = () => {
+      if (!stats) return;
       destroyCharts();
       
       const legendTextColor = colors.tasTextOnCard;
@@ -96,26 +78,24 @@ export function DashboardPage() {
       const tooltipTitleColor = colors.tasTextOnCard;    
       const tooltipBodyColor = colors.tasTextOnCard;    
 
+      // Gráfico de Status
       if (statusChartRef.current && (window as any).Chart) {
         const statusCtx = statusChartRef.current.getContext('2d');
         if (statusCtx) {
-          const openCount = totalOpenTickets;
-          const resolvedCount = totalResolvedTickets; 
-          const inProgressCount = 19; // Fictício, idealmente viria do backend
-          const pendingCount = 8;     // Fictício, idealmente viria do backend
-          
+          const statusLabels = Object.keys(stats.statusCounts);
+          const statusData = Object.values(stats.statusCounts);
+
           chartInstancesRef.current.status = new (window as any).Chart(statusCtx, {
             type: 'pie',
             data: {
-              labels: ['Aberto', 'Em Andamento', 'Pendente', 'Resolvido'],
+              labels: statusLabels,
               datasets: [{
                 label: 'Chamados por Status',
-                data: [openCount, inProgressCount, pendingCount, resolvedCount],
+                data: statusData,
                 backgroundColor: [
-                  colors.tasStatusInfo,    
-                  colors.tasAccent,        
-                  colors.tasStatusWarning, 
-                  colors.tasStatusSuccess  
+                  colors.tasStatusInfo,    // OPEN
+                  colors.tasStatusSuccess, // RESOLVED
+                  // Adicione mais cores se tiver mais status
                 ],
                 borderColor: chartCardBgColor, 
                 borderWidth: 2,
@@ -152,21 +132,25 @@ export function DashboardPage() {
         }
       }
 
+      // Gráfico de Prioridade
       if (priorityChartRef.current && (window as any).Chart) {
         const priorityCtx = priorityChartRef.current.getContext('2d');
          if (priorityCtx) {
+            const priorityLabels = Object.keys(stats.priorityCounts);
+            const priorityData = Object.values(stats.priorityCounts);
+
             chartInstancesRef.current.priority = new (window as any).Chart(priorityCtx, {
             type: 'doughnut',
             data: {
-              labels: ['Urgente', 'Alta', 'Média', 'Baixa'], // Dados fictícios
+              labels: priorityLabels,
               datasets: [{
                 label: 'Chamados por Prioridade',
-                data: [3, 12, 25, 40], // Dados fictícios
+                data: priorityData,
                 backgroundColor: [
-                  colors.tasStatusError,   
-                  colors.tasStatusWarning, 
-                  colors.tasStatusInfo,    
-                  colors.tasStatusSuccess  
+                  colors.tasStatusError,   // URGENT
+                  colors.tasStatusWarning, // HIGH
+                  colors.tasStatusInfo,    // MEDIUM
+                  colors.tasStatusSuccess  // LOW
                 ],
                 borderColor: chartCardBgColor,
                 borderWidth: 2,
@@ -202,7 +186,7 @@ export function DashboardPage() {
       }
     };
     
-    if (!isLoadingData && typeof (window as any).Chart !== 'undefined') {
+    if (!isLoadingData && stats && typeof (window as any).Chart !== 'undefined') {
         const timer = setTimeout(() => { initCharts(); }, 0); 
         return () => { 
           clearTimeout(timer);
@@ -213,7 +197,7 @@ export function DashboardPage() {
     } else {
         destroyCharts(); 
     }
-  }, [isLoadingData, totalOpenTickets, totalResolvedTickets, colors]);
+  }, [isLoadingData, stats, colors]);
 
   const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"; 
@@ -238,7 +222,7 @@ export function DashboardPage() {
             <p className={`${pageSubHeaderTextClasses} mt-1`}>Visão geral do status dos chamados.</p>
           </header>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 mb-8"> {/* Alterado para 2 colunas */}
             <Link 
               to="/tickets/abertos" 
               className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-xl border border-gray-200`}
@@ -246,7 +230,7 @@ export function DashboardPage() {
               <div>
                 <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Total Abertos</h3>
                 <p className={`text-4xl font-bold text-tas-status-info mt-2`}>
-                  {isLoadingData ? '...' : totalOpenTickets}
+                  {isLoadingData ? '...' : stats?.totalOpenTickets ?? 0}
                 </p>
               </div>
             </Link>
@@ -258,19 +242,10 @@ export function DashboardPage() {
                 <div>
                     <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Total Resolvidos</h3> 
                     <p className={`text-4xl font-bold text-tas-status-success mt-2`}>
-                    {isLoadingData ? '...' : totalResolvedTickets}
+                    {isLoadingData ? '...' : stats?.totalResolvedTickets ?? 0}
                     </p>
                 </div>
             </Link>
-
-            <div className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 cursor-default border border-gray-200`}>
-                <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Pendentes</h3>
-                <p className={`text-4xl font-bold text-tas-status-warning mt-2`}>8</p> {/* Dado Fictício */}
-            </div>
-            <div className={`${cardBgClasses} p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 cursor-default border border-gray-200`}>
-                <h3 className={`text-lg font-semibold ${cardTitleTextClasses}`}>Urgentes</h3>
-                <p className={`text-4xl font-bold text-tas-status-error mt-2`}>3</p> {/* Dado Fictício */}
-            </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

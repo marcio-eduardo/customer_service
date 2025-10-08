@@ -5,13 +5,11 @@ import com.faculdade.customer_service_back.model.client_model.ClientePJ; // Impo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import com.faculdade.customer_service_back.model.technical_model.Technical;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Setter
-@Getter
+@Data
 @Entity
 @Table(name = "tickets")
 public class TicketModel {
@@ -28,6 +26,9 @@ public class TicketModel {
 
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
+
+    @Enumerated(EnumType.STRING)
+    private TicketPriority priority;
 
     // --- NOVOS RELACIONAMENTOS ADICIONADOS ---
     // Um chamado pode pertencer a um Cliente PF.
