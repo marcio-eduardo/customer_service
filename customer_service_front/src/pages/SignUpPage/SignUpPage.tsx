@@ -1,5 +1,5 @@
 // src/pages/SignUpPage/SignUpPage.tsx
-import React, { useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
@@ -83,28 +83,16 @@ export function SignUpPage() {
     }
   };
 
-  // Classes de estilo
-  const pageBgClass = 'bg-tas-bg-page';
-  const cardBgClass = 'bg-tas-bg-card';
-  const labelTextClass = 'text-tas-text-secondary-on-card';
-  const inputBgClass = 'bg-white';
-  const inputTextClass = 'text-tas-text-on-card';
-  const inputBorderClass = 'border-gray-300';
-  const inputFocusRingClass = 'focus:ring-tas-secondary focus:border-tas-secondary';
-  const primaryButtonBgClass = 'bg-tas-secondary';
-  const primaryButtonTextClass = 'text-tas-text-on-primary';
-  const primaryButtonHoverBgClass = 'hover:bg-tas-secondary-hover';
-  const secondaryLinkTextClass = 'text-tas-secondary';
-  const secondaryLinkHoverTextClass = 'hover:text-tas-secondary-hover';
-  const disabledButtonBgClass = 'bg-gray-400';
+  const inputClasses = "w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary";
+  const labelClasses = "block text-sm font-medium mb-1 text-tas-text-secondary-on-card";
 
   return (
     <>
       <Helmet>
         <title>Criar Conta - TAS</title>
       </Helmet>
-      <div className={`min-h-screen flex flex-col items-center justify-center p-4 font-['Poppins'] ${pageBgClass}`}>
-        <div className={`p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md ${cardBgClass}`}>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 font-['Poppins'] bg-tas-bg-page">
+        <div className="p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card">
           <div className="flex justify-center mb-10 flex-col items-center gap-4">
             <Link to="/">
               <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
@@ -115,63 +103,60 @@ export function SignUpPage() {
           </div>
               
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Se for um cliente a registar-se, pede primeiro os dados pessoais */}
             {!isAdmin && (
               <>
                 <div>
-                  <label htmlFor="nome" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo </label>
+                  <label htmlFor="nome" className={labelClasses}> Nome Completo </label>
                   <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="O seu nome completo"
-                    className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                    className={inputClasses}
                     required disabled={isLoading} />
                 </div>
                 <div>
-                  <label htmlFor="cpf" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> CPF </label>
+                  <label htmlFor="cpf" className={labelClasses}> CPF </label>
                   <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="Seu CPF (apenas números)"
-                    className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                    className={inputClasses}
                     required disabled={isLoading} />
                 </div>
               </>
             )}
             
-            {/* Campos de login */}
             <div>
-              <label htmlFor="username" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome de Utilizador </label>
+              <label htmlFor="username" className={labelClasses}> Nome de Utilizador </label>
               <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} placeholder="Escolha um nome de utilizador"
-                className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                className={inputClasses}
                 required disabled={isLoading} />
             </div>
             <div>
-              <label htmlFor="email" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Email </label>
+              <label htmlFor="email" className={labelClasses}> Email </label>
               <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="o.seu.email@exemplo.com"
-                className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                className={inputClasses}
                 required disabled={isLoading} />
             </div>
             <div>
-              <label htmlFor="password" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Senha </label>
+              <label htmlFor="password" className={labelClasses}> Senha </label>
               <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Crie uma senha segura"
-                className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                className={inputClasses}
                 required disabled={isLoading} />
             </div>
             
-            {/* Campo de seleção de papel (role) - Visível apenas para Admins */}
             {isAdmin && (
               <>
                  <div>
-                  <label htmlFor="nome" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo (para Técnico/Moderador) </label>
+                  <label htmlFor="nome" className={labelClasses}> Nome Completo (para Técnico/Moderador) </label>
                   <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome completo do novo utilizador"
-                    className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                    className={inputClasses}
                     required disabled={isLoading} />
                 </div>
                 <div>
-                  <label htmlFor="cpf" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> CPF (para Técnico/Moderador) </label>
+                  <label htmlFor="cpf" className={labelClasses}> CPF (para Técnico/Moderador) </label>
                   <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="CPF do novo utilizador"
-                    className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                    className={inputClasses}
                     required disabled={isLoading} />
                 </div>
                 <div>
-                  <label htmlFor="role" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Papel do Utilizador </label>
+                  <label htmlFor="role" className={labelClasses}> Papel do Utilizador </label>
                   <select id="role" name="role" value={formData.role} onChange={handleChange}
-                    className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
+                    className={inputClasses}
                     disabled={isLoading}>
                     <option value="user">Utilizador (User)</option>
                     <option value="moderator">Moderador (Moderator)</option>
@@ -182,7 +167,7 @@ export function SignUpPage() {
             )}
 
             <div className="pt-2">
-              <button type="submit" className={`w-full px-4 py-2.5 rounded-lg ${primaryButtonTextClass} font-semibold transition-colors ${isLoading ? disabledButtonBgClass : `${primaryButtonBgClass} ${primaryButtonHoverBgClass}`}`}
+              <button type="submit" className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors bg-tas-secondary hover:bg-tas-secondary-hover disabled:bg-gray-400"
                 disabled={isLoading}>
                 {isLoading ? 'A Criar Conta...' : 'Criar Conta'}
               </button>
@@ -190,8 +175,8 @@ export function SignUpPage() {
           </form>
           
           {!isAdmin && (
-            <p className={`mt-6 text-center text-sm ${labelTextClass}`}> Já tem uma conta?{' '}
-              <Link to="/" className={`font-medium ${secondaryLinkTextClass} ${secondaryLinkHoverTextClass}`}> Faça login aqui </Link>
+            <p className="mt-6 text-center text-sm text-tas-text-secondary-on-card"> Já tem uma conta?{' '}
+              <Link to="/" className="font-medium text-tas-secondary hover:text-tas-secondary-hover"> Faça login aqui </Link>
             </p>
           )}
         </div>

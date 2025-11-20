@@ -1,5 +1,6 @@
 package com.faculdade.customer_service_back.model.client_model;
 
+import com.faculdade.customer_service_back.model.user_model.User;
 import jakarta.persistence.*;
 import lombok.Setter; // Certifique-se que esta importação está correta para o seu projeto Lombok
 
@@ -37,6 +38,10 @@ public class ClientePf {
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDate dataCadastro = LocalDate.now();
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", referencedColumnName = "id")
+    private User user;
 
     // Construtores
     public ClientePf() {}
@@ -78,5 +83,11 @@ public class ClientePf {
         return dataCadastro;
     }
 
-    // Se não estiver a usar @Setter do Lombok para todos os campos, adicione os setters aqui.
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

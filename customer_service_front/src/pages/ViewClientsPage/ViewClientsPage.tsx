@@ -1,5 +1,5 @@
 // Localização sugerida: src/pages/ViewClientsPage/ViewClientsPage.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async'; // Adicionado para título da página
 import { api } from '../../lib/axios'; // Ajustado para usar a instância configurada do Axios
 

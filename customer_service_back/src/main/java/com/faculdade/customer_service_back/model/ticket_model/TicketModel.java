@@ -29,6 +29,9 @@ public class TicketModel {
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
+    @Enumerated(EnumType.STRING)
+    private TicketPriority priority;
+
     // --- NOVOS RELACIONAMENTOS ADICIONADOS ---
     // Um chamado pode pertencer a um Cliente PF.
     @ManyToOne(fetch = FetchType.LAZY)
