@@ -51,11 +51,11 @@ export function CreateTicketPage() {
       const fetchAllClients = async () => {
         setIsFetchingClients(true);
         try {
-          const pfPromise = api.get<{ content: ClientePf[] }>('/api/clientes-pf');
-          const pjPromise = api.get<{ content: ClientePj[] }>('/api/clientes-pj');
+          const pfPromise = api.get<ClientePf[]>('/api/clientes-pf/all');
+          const pjPromise = api.get<ClientePj[]>('/api/clientes-pj/all');
           const [pfResponse, pjResponse] = await Promise.all([pfPromise, pjPromise]);
-          const pfClients: Client[] = pfResponse.data.content.map(c => ({ ...c, type: 'pf' }));
-          const pjClients: Client[] = pjResponse.data.content.map(c => ({ ...c, type: 'pj' }));
+          const pfClients: Client[] = pfResponse.data.map(c => ({ ...c, type: 'pf' }));
+          const pjClients: Client[] = pjResponse.data.map(c => ({ ...c, type: 'pj' }));
           setClients([...pfClients, ...pjClients]);
         } catch (error: any) {
           console.error("Falha ao buscar clientes:", error);

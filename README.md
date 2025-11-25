@@ -78,16 +78,13 @@ O projeto está bem encaminhado, mas identifiquei alguns pontos que podem ser me
 
 #### Possíveis Erros / Pontos de Atenção
 
-1. **Credenciais no Código:** O ficheiro `application.properties` contém a senha da base de dados (`M@#$2020`) diretamente no código. Isto é uma vulnerabilidade de segurança.
-2. **Segredo JWT no Código:** Da mesma forma, o segredo para assinar os tokens JWT está no `application.properties`. Se este código for para um repositório público, qualquer pessoa poderá gerar tokens válidos.
-3. **Dados Fictícios no Dashboard:** A página do Dashboard (`DashboardPage.tsx`) está a usar alguns dados estáticos ("fictícios") para os gráficos de "Chamados por Status" e "Prioridade". O ideal é que estes dados venham da API.
+No momento, não há erros críticos ou pontos de atenção pendentes que requeiram ação imediata. As questões previamente identificadas em relação a credenciais e dados estáticos no dashboard foram resolvidas.
 
 #### Sugestões de Melhoria
 
-1. **Usar Variáveis de Ambiente:** Mova as informações sensíveis (credenciais da base de dados, segredo JWT) dos ficheiros de propriedades para variáveis de ambiente. O `docker-compose.yml` já está preparado para isso; basta remover os valores dos ficheiros e configurá-los na secção `environment` do `docker-compose.yml`.
-2. **Tratamento de Erros no Frontend:** Melhorar o feedback ao utilizador. Por exemplo, na página de login, em vez de apenas registar o erro na consola, mostrar uma mensagem mais clara na própria página (ex: "Utilizador ou senha inválidos"). A biblioteca `sonner` já está a ser usada para isso, o que é ótimo! Pode expandir o seu uso.
-3. **Validação de Dados:** Adicionar mais validações, tanto no frontend (ex: verificar se um CPF tem o formato correto antes de enviar) como no backend (usando anotações como `@Size`, `@Pattern` nas DTOs e Models).
-4. **Endpoint para o Dashboard:** Criar um novo endpoint no backend (ex: `/api/dashboard/stats`) que retorne um resumo dos dados necessários para os gráficos do frontend, em vez de o frontend ter de fazer múltiplos pedidos e calcular os totais.
+1. **Manter o uso de Variáveis de Ambiente:** É crucial continuar a mover informações sensíveis (se houver novas) dos ficheiros de propriedades diretamente no código para variáveis de ambiente. O `docker-compose.yml` já está preparado para isso, garantindo uma maior segurança.
+2. **Tratamento de Erros no Frontend:** Melhorar o feedback ao utilizador em caso de falhas na comunicação com o backend ou erros de validação. A biblioteca `sonner` já está em uso e pode ser expandida para exibir mensagens mais claras e amigáveis ao usuário (ex: "Utilizador ou senha inválidos" em vez de apenas registrar na consola).
+3. **Validação de Dados Abrangente:** Implementar validações robustas tanto no frontend (antes do envio de dados, com feedback imediato ao usuário) quanto no backend (para garantir a integridade dos dados na API, usando anotações como `@Size`, `@Pattern`, etc., nas DTOs e Models). Isso reduz erros e melhora a segurança.
 
 ### 4. Ideias de Implementação Futura
 
@@ -101,3 +98,28 @@ Com a base que já tem, aqui ficam algumas ideias para expandir as funcionalidad
 6. **Recuperação de Senha:** Implementar a funcionalidade de "Esqueceu a senha?".
 7. **Perfil do Utilizador:** Uma página onde os utilizadores possam ver e editar as suas informações.
 
+## Log de Desenvolvimento
+
+### 20 de Novembro de 2025
+
+Uma série de atualizações foram implementadas para melhorar o processo de criação de chamados e corrigir problemas de configuração inicial.
+
+#### Backend
+- **Melhoria no Modelo de Ticket**:
+  - Adicionado um campo dedicado `openDate` ao `TicketModel.java` para rastrear explicitamente a data de abertura do chamado.
+  - O método `@PrePersist` foi atualizado para preencher automaticamente este campo na criação do chamado.
+- **Novos Endpoints de API para Clientes**:
+  - Para suportar a busca de todos os clientes para listas suspensas na interface do usuário, novos endpoints foram adicionados para retornar listas não paginadas:
+    - `GET /api/clientes-pf/all`: Retorna uma lista completa de todos os clientes `ClientePf`.
+    - `GET /api/clientes-pj/all`: Retorna uma lista completa de todos os clientes `ClientePj`.
+  - As camadas de serviço correspondentes (`ClientePfService` e `ClientePJService`) foram atualizadas com os métodos `listarTodosSemPaginacao()`.
+
+#### Frontend
+- **Página de Criação de Chamado Melhorada**:
+  - O arquivo `CreateTicketPage.tsx` foi atualizado para usar os novos endpoints `/all` (`/api/clientes-pf/all` e `/api/clientes-pj/all`).
+  - Isso garante que a lista suspensa de seleção de cliente agora liste corretamente **todos** os clientes disponíveis, e não apenas a primeira página de um resultado paginado.
+
+#### Ambiente e Configuração
+- **Correção no Docker Compose para Login**:
+  - Resolvido um erro `net::ERR_NAME_NOT_RESOLVED` que ocorria durante o login ao executar a aplicação com o Docker Compose.
+  - A variável de ambiente `VITE_API_URL` para o serviço `frontend` no `docker-compose.yml` foi alterada de `http://backend:8080` para `http://localhost:8080`. Isso permite que o navegador resolva corretamente o endereço da API do backend.

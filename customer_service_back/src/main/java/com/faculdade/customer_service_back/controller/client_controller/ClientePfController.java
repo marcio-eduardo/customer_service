@@ -33,6 +33,12 @@ public class ClientePfController {
          return ResponseEntity.ok(clientes);
      }
 
+    @GetMapping("/all")
+    public ResponseEntity<List<ClientePf>> listarTodosSemPaginacao() {
+        List<ClientePf> clientes = clientePfService.listarTodosSemPaginacao();
+        return ResponseEntity.ok(clientes);
+    }
+
     // Buscar cliente por ID
     @GetMapping("/{id}")
     public ResponseEntity<ClientePf> buscarPorId(@PathVariable Long id) {

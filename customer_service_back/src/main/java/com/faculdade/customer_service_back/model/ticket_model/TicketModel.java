@@ -59,6 +59,9 @@ public class TicketModel {
     private String resolutionNotes; // Texto da resolução
 
     @Column
+    private LocalDateTime openDate;
+
+    @Column
     private LocalDateTime createdAt;
 
     @Column
@@ -67,6 +70,7 @@ public class TicketModel {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        openDate = LocalDateTime.now(); // Set openDate on creation
         status = TicketStatus.OPEN;
     }
 }
