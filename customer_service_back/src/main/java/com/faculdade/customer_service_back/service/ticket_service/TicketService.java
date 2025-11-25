@@ -1,6 +1,11 @@
 package com.faculdade.customer_service_back.service.ticket_service;
 
-import com.faculdade.customer_service_back.dto.dashboard.DashboardStatsDTO;
+import com.faculdade.customer_service_back.dto.DashboardStatsDTO;
+import com.faculdade.customer_service_back.dto.projection.PriorityCount;
+import com.faculdade.customer_service_back.dto.projection.StatusCount;
+import com.faculdade.customer_service_back.model.client_model.ClientePf;
+import com.faculdade.customer_service_back.model.client_model.ClientePJ;
+import com.faculdade.customer_service_back.model.technical_model.Technical;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
 import com.faculdade.customer_service_back.model.ticket_model.TicketOpenRequest;
 import com.faculdade.customer_service_back.model.ticket_model.TicketPriority;
@@ -13,7 +18,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TicketService {
@@ -22,6 +29,8 @@ public class TicketService {
     private final ClientePfRepository clientePfRepository;
     private final ClientePJRepository clientePjRepository;
     private final TechnicalRepository technicalRepository;
+    private final ClientePfRepository clientePfRepository;
+    private final ClientePJRepository clientePjRepository;
 
     public TicketService(TicketRepository ticketRepository,
                          ClientePfRepository clientePfRepository,
@@ -33,20 +42,46 @@ public class TicketService {
         this.technicalRepository = technicalRepository;
     }
 
+    public DashboardStatsDTO getDashboardStats() {
+        List<StatusCount> statusCountsList = ticketRepository.countTicketsByStatus();
+        List<PriorityCount> priorityCountsList = ticketRepository.countTicketsByPriority();
+
+        Map<TicketStatus, Long> statusCounts = statusCountsList.stream()
+                .collect(Collectors.toMap(StatusCount::getStatus, StatusCount::getCount));
+
+        for (TicketStatus status : TicketStatus.values()) {
+            statusCounts.putIfAbsent(status, 0L);
+        }
+
+        Map<TicketPriority, Long> priorityCounts = priorityCountsList.stream()
+                .collect(Collectors.toMap(PriorityCount::getPriority, PriorityCount::getCount));
+        
+        for (TicketPriority priority : TicketPriority.values()) {
+            priorityCounts.putIfAbsent(priority, 0L);
+        }
+
+        long totalOpenTickets = statusCounts.getOrDefault(TicketStatus.OPEN, 0L);
+        long totalResolvedTickets = statusCounts.getOrDefault(TicketStatus.RESOLVED, 0L);
+
+        return new DashboardStatsDTO(statusCounts, priorityCounts, totalOpenTickets, totalResolvedTickets);
+    }
+
     public TicketModel openTicket(TicketOpenRequest request) {
         TicketModel ticket = new TicketModel();
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
+        ticket.setPriority(request.getPriority());
 
-        // Lógica para associar o cliente (PF ou PJ)
         if (request.getClientePfId() != null) {
             clientePfRepository.findById(request.getClientePfId()).ifPresent(ticket::setClientePf);
         } else if (request.getClientePjId() != null) {
-            clientePjRepository.findById(request.getClientePjId()).ifPresent(ticket::setClientePj);
+            ClientePJ cliente = clientePjRepository.findById(request.getClientePjId())
+                    .orElseThrow(() -> new RuntimeException("Cliente PJ nao encontrado com o ID: " + request.getClientePjId()));
+            ticket.setClientePj(cliente);
+        } else {
+            throw new IllegalArgumentException("É necessário fornecer o ID de um Cliente PF ou PJ para abrir um chamado.");
         }
 
-        // A atribuição inicial a um técnico foi removida. O ticket é criado sem técnico.
-        // ticket.setTechnical(technical);
         ticket.setStatus(TicketStatus.OPEN);
         ticket.setCreatedAt(LocalDateTime.now());
 
@@ -80,28 +115,5 @@ public class TicketService {
 
     public List<TicketModel> getResolvedTickets() {
         return ticketRepository.findResolvedTickets();
-    }
-
-    public DashboardStatsDTO getDashboardStats() {
-        // Contagens por status
-        long totalOpen = ticketRepository.countByStatus(TicketStatus.OPEN);
-        long totalResolved = ticketRepository.countByStatus(TicketStatus.RESOLVED);
-        long totalInProgress = ticketRepository.countByStatus(TicketStatus.IN_PROGRESS);
-
-        // Contagens por prioridade
-        long totalUrgent = ticketRepository.countByPriority(TicketPriority.URGENT);
-        long totalHigh = ticketRepository.countByPriority(TicketPriority.HIGH);
-        long totalMedium = ticketRepository.countByPriority(TicketPriority.MEDIUM);
-        long totalLow = ticketRepository.countByPriority(TicketPriority.LOW);
-
-        return new DashboardStatsDTO(
-            totalOpen,
-            totalResolved,
-            totalInProgress,
-            totalUrgent,
-            totalHigh,
-            totalMedium,
-            totalLow
-        );
     }
 }

@@ -2,12 +2,13 @@ package com.faculdade.customer_service_back.model.client_model;
 
 import com.faculdade.customer_service_back.model.user_model.User;
 import jakarta.persistence.*;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDate;
 
 @Entity
 @Table(name = "clientes_pj")
+@Data
 public class ClientePJ {
 
     @Id
@@ -15,40 +16,28 @@ public class ClientePJ {
     @Column(name = "id_cliente")
     private Long id;
 
-    @Setter
     @Column(nullable = false)
     private String nomeFantasia;
 
-    @Setter
     @Column(unique = true, nullable = false, length = 18)
     private String cnpj;
 
-    @Setter
     @Column(nullable = false)
     private String razaoSocial;
 
-    @Setter
     private String endereco;
 
-    @Setter
     private String telefone;
 
-    @Setter
     private String email;
 
     @Column(name = "data_cadastro", nullable = false, updatable = false)
     private LocalDate dataCadastro = LocalDate.now();
 
-    @Setter
     @ManyToOne
     @JoinColumn(name = "responsavel_id", nullable = false)
     private ClientePf responsavel;
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name = "user_id", referencedColumnName = "id")
-    private User user;
-
-    // Construtores
     public ClientePJ() {}
 
     public ClientePJ(String nomeFantasia, String cnpj, String razaoSocial, String endereco, String telefone, String email, ClientePf responsavel) {
@@ -59,50 +48,5 @@ public class ClientePJ {
         this.telefone = telefone;
         this.email = email;
         this.responsavel = responsavel;
-    }
-
-    // Getters
-    public Long getId() {
-        return id;
-    }
-
-    public String getNomeFantasia() {
-        return nomeFantasia;
-    }
-
-    public String getCnpj() {
-        return cnpj;
-    }
-
-    public String getRazaoSocial() {
-        return razaoSocial;
-    }
-
-    public String getEndereco() {
-        return endereco;
-    }
-
-    public String getTelefone() {
-        return telefone;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public LocalDate getDataCadastro() {
-        return dataCadastro;
-    }
-
-    public ClientePf getResponsavel() {
-        return responsavel;
-    }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
     }
 }

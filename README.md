@@ -48,41 +48,78 @@ A forma mais simples de colocar todo o sistema a funcionar é utilizando o Docke
 - Ter o [Docker](https://www.docker.com/get-started) e o Docker Compose instalados.
 
 **Passo a Passo:**
-1.  Na raiz do projeto, execute:
-    ```bash
-    docker-compose up --build
-    ```
-2.  Aguarde a inicialização dos containers.
-3.  Aceda à Aplicação:
-    -   **Frontend:** `http://localhost:5173`
-    -   **Backend (API):** `http://localhost:8080`
-4.  Para parar a aplicação, pressione `Ctrl + C` no terminal e depois execute `docker-compose down`.
 
-### 3. Novas Funcionalidades e Melhorias Recentes
+1. **Navegue até à Raiz do Projeto:** Abra o terminal e certifique-se de que está na pasta principal do projeto (a que contém o ficheiro `docker-compose.yml`).
 
-- **Dashboard com Dados Reais:** O dashboard foi completamente refeito para consumir dados em tempo real do backend, eliminando os dados fictícios. Agora, os gráficos e cartões refletem o estado atual dos tickets no sistema.
-- **Implementação da Prioridade de Tickets:** Foi adicionada a lógica de "prioridade" aos chamados no backend.
-- **Fluxo de Cadastro de Cliente:** O processo de cadastro foi corrigido e agora, ao criar uma conta de usuário, um perfil de cliente (Pessoa Física) é automaticamente criado e vinculado.
-- **Fluxo de Abertura de Chamados:** A funcionalidade foi implementada e refinada:
-  - **Clientes Finais:** Abrem chamados para si mesmos de forma automática.
-  - **Administradores/Moderadores:** Utilizam uma interface aprimorada com um filtro de dois passos para selecionar primeiro o tipo de cliente (PF/PJ) e depois o cliente específico.
-- **Refatoração e Qualidade de Código (Frontend):** As principais páginas (`Dashboard`, `Login`, `SignUp`, `CreateTicket`) foram refatoradas para seguir as melhores práticas de React e Tailwind CSS, resultando em um código mais limpo, organizado e profissional.
+2. **Construa e Suba os Containers:** Execute o seguinte comando:
 
-### 4. Pontos de Atenção Atuais
+   ```
+   docker-compose up --build
+   ```
 
-1.  **Dados Fictícios no Dashboard:** RESOLVIDO. Os dados agora vêm da API. (Nota: O status "Pendente" ainda é um valor estático no gráfico e pode ser implementado no futuro).
-2.  **Endpoint para o Dashboard:** IMPLEMENTADO. O endpoint `/api/dashboard/stats` foi criado e está em uso.
-3.  **Validação de Dados:** Adicionar mais validações, tanto no frontend (ex: verificar se um CPF tem o formato correto antes de enviar) como no backend (usando anotações como `@Size`, `@Pattern`).
-4.  **Cadastro de Cliente PJ:** O fluxo de autocadastro atualmente suporta apenas clientes PF. A lógica para cadastro de clientes PJ precisa ser implementada.
+   - `--build`: Este argumento força o Docker a reconstruir as imagens do backend e do frontend a partir dos `Dockerfiles`. É importante usá-lo sempre que fizer alterações no código.
 
-### 5. Ideias de Implementação Futura
+3. **Aguarde a Inicialização:** O Docker irá descarregar a imagem do MySQL, construir as imagens do seu backend e frontend, e iniciar os três containers. O processo pode demorar alguns minutos na primeira vez. Poderá acompanhar os logs de cada serviço no terminal.
+
+4. **Aceda à Aplicação:**
+
+   - O **frontend** estará acessível no seu navegador em: `http://localhost:5173`
+   - O **backend** (API) estará a responder em: `http://localhost:8080`
+
+5. **Para Parar a Aplicação:** Pressione `Ctrl + C` no terminal onde o `docker-compose` está a ser executado. Para parar e remover os containers, pode executar:
+
+   ```
+   docker-compose down
+   ```
+
+### 3. Possíveis Erros e Melhorias
+
+O projeto está bem encaminhado, mas identifiquei alguns pontos que podem ser melhorados para aumentar a segurança e a funcionalidade.
+
+#### Possíveis Erros / Pontos de Atenção
+
+No momento, não há erros críticos ou pontos de atenção pendentes que requeiram ação imediata. As questões previamente identificadas em relação a credenciais e dados estáticos no dashboard foram resolvidas.
+
+#### Sugestões de Melhoria
+
+1. **Manter o uso de Variáveis de Ambiente:** É crucial continuar a mover informações sensíveis (se houver novas) dos ficheiros de propriedades diretamente no código para variáveis de ambiente. O `docker-compose.yml` já está preparado para isso, garantindo uma maior segurança.
+2. **Tratamento de Erros no Frontend:** Melhorar o feedback ao utilizador em caso de falhas na comunicação com o backend ou erros de validação. A biblioteca `sonner` já está em uso e pode ser expandida para exibir mensagens mais claras e amigáveis ao usuário (ex: "Utilizador ou senha inválidos" em vez de apenas registrar na consola).
+3. **Validação de Dados Abrangente:** Implementar validações robustas tanto no frontend (antes do envio de dados, com feedback imediato ao usuário) quanto no backend (para garantir a integridade dos dados na API, usando anotações como `@Size`, `@Pattern`, etc., nas DTOs e Models). Isso reduz erros e melhora a segurança.
+
+### 4. Ideias de Implementação Futura
 
 Com a base que já tem, aqui ficam algumas ideias para expandir as funcionalidades do sistema:
 
-1.  **Página de Detalhes do Ticket:** Criar uma rota (ex: `/tickets/:id`) onde se possa ver todo o histórico de um chamado, adicionar comentários e, principalmente, **definir ou alterar a prioridade** de um chamado (função para admins/mods).
-2.  **Atribuição de Tickets:** Implementar a lógica para que um técnico (Moderator/Admin) possa atribuir um ticket a si mesmo ou a outro técnico.
-3.  **Sistema de Comentários nos Tickets:** Permitir que clientes e técnicos troquem mensagens dentro de um ticket.
-4.  **Notificações por Email:** Enviar emails automáticos quando um ticket é aberto, atualizado ou resolvido.
-5.  **Filtros e Pesquisa Avançada:** Adicionar filtros nas páginas de listagem de tickets e clientes.
-6.  **Recuperação de Senha:** Implementar a funcionalidade de "Esqueceu a senha?".
-7.  **Perfil do Utilizador:** Uma página onde os utilizadores possam ver e editar as suas informações.
+1. **Página de Detalhes do Ticket:** Criar uma rota (ex: `/tickets/:id`) onde se possa ver todo o histórico de um chamado, adicionar comentários, ver quem é o técnico responsável, etc.
+2. **Atribuição de Tickets:** Implementar a lógica para que um técnico (Moderator/Admin) possa atribuir um ticket a si mesmo ou a outro técnico.
+3. **Sistema de Comentários nos Tickets:** Permitir que clientes e técnicos troquem mensagens dentro de um ticket, criando um histórico de conversação.
+4. **Notificações por Email:** Enviar emails automáticos quando um ticket é aberto, atualizado com um novo comentário ou resolvido.
+5. **Filtros e Pesquisa Avançada:** Adicionar filtros nas páginas de listagem de tickets e clientes (filtrar por data, status, cliente, etc.).
+6. **Recuperação de Senha:** Implementar a funcionalidade de "Esqueceu a senha?".
+7. **Perfil do Utilizador:** Uma página onde os utilizadores possam ver e editar as suas informações.
+
+## Log de Desenvolvimento
+
+### 20 de Novembro de 2025
+
+Uma série de atualizações foram implementadas para melhorar o processo de criação de chamados e corrigir problemas de configuração inicial.
+
+#### Backend
+- **Melhoria no Modelo de Ticket**:
+  - Adicionado um campo dedicado `openDate` ao `TicketModel.java` para rastrear explicitamente a data de abertura do chamado.
+  - O método `@PrePersist` foi atualizado para preencher automaticamente este campo na criação do chamado.
+- **Novos Endpoints de API para Clientes**:
+  - Para suportar a busca de todos os clientes para listas suspensas na interface do usuário, novos endpoints foram adicionados para retornar listas não paginadas:
+    - `GET /api/clientes-pf/all`: Retorna uma lista completa de todos os clientes `ClientePf`.
+    - `GET /api/clientes-pj/all`: Retorna uma lista completa de todos os clientes `ClientePj`.
+  - As camadas de serviço correspondentes (`ClientePfService` e `ClientePJService`) foram atualizadas com os métodos `listarTodosSemPaginacao()`.
+
+#### Frontend
+- **Página de Criação de Chamado Melhorada**:
+  - O arquivo `CreateTicketPage.tsx` foi atualizado para usar os novos endpoints `/all` (`/api/clientes-pf/all` e `/api/clientes-pj/all`).
+  - Isso garante que a lista suspensa de seleção de cliente agora liste corretamente **todos** os clientes disponíveis, e não apenas a primeira página de um resultado paginado.
+
+#### Ambiente e Configuração
+- **Correção no Docker Compose para Login**:
+  - Resolvido um erro `net::ERR_NAME_NOT_RESOLVED` que ocorria durante o login ao executar a aplicação com o Docker Compose.
+  - A variável de ambiente `VITE_API_URL` para o serviço `frontend` no `docker-compose.yml` foi alterada de `http://backend:8080` para `http://localhost:8080`. Isso permite que o navegador resolva corretamente o endereço da API do backend.

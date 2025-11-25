@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 import com.faculdade.customer_service_back.model.client_model.ClientePf;
 import com.faculdade.customer_service_back.repository.client_repository.ClientePfRepository;
 
+import java.util.List;
+
 @Service
 public class ClientePfService {
 
@@ -18,6 +20,10 @@ public class ClientePfService {
     // Listar clientes com paginação
     public Page<ClientePf> listarTodos(Pageable pageable) {
         return clientePfRepository.findAll(pageable);
+    }
+
+    public List<ClientePf> listarTodosSemPaginacao() {
+        return clientePfRepository.findAll();
     }
 
     // Buscar cliente por ID

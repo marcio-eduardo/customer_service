@@ -5,13 +5,11 @@ import com.faculdade.customer_service_back.model.client_model.ClientePJ; // Impo
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import com.faculdade.customer_service_back.model.technical_model.Technical;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
-@Setter
-@Getter
+@Data
 @Entity
 @Table(name = "tickets")
 public class TicketModel {
@@ -61,6 +59,9 @@ public class TicketModel {
     private String resolutionNotes; // Texto da resolução
 
     @Column
+    private LocalDateTime openDate;
+
+    @Column
     private LocalDateTime createdAt;
 
     @Column
@@ -69,6 +70,7 @@ public class TicketModel {
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        openDate = LocalDateTime.now(); // Set openDate on creation
         status = TicketStatus.OPEN;
     }
 }

@@ -1,14 +1,13 @@
 package com.faculdade.customer_service_back.model.ticket_model;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
-@Setter
-@Getter
+@Data
 public class TicketOpenRequest {
 
     private String title;
     private String description;
+    private TicketPriority priority; // Adicionando o campo de prioridade
 
     // IDs para identificar o cliente que está a abrir o chamado.
     // A lógica de negócio espera que apenas um deles seja preenchido.

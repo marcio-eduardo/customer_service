@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import com.faculdade.customer_service_back.model.client_model.ClientePJ;
 import com.faculdade.customer_service_back.repository.client_repository.ClientePJRepository;
 
+import java.util.List;
+
 @Service
 public class ClientePJService {
 
@@ -20,6 +22,10 @@ public class ClientePJService {
     // Listar clientes PJ com paginação
     public Page<ClientePJ> listarTodos(Pageable pageable) {
         return clientePJRepository.findAll(pageable);
+    }
+
+    public List<ClientePJ> listarTodosSemPaginacao() {
+        return clientePJRepository.findAll();
     }
 
     // Buscar cliente PJ por ID
