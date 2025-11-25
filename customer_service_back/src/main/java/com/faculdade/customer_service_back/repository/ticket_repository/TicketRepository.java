@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Query;
 import com.faculdade.customer_service_back.dto.projection.PriorityCount;
 import com.faculdade.customer_service_back.dto.projection.StatusCount;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
+import com.faculdade.customer_service_back.model.ticket_model.TicketPriority;
+import com.faculdade.customer_service_back.model.ticket_model.TicketStatus; // Import TicketStatus
 
 public interface TicketRepository extends JpaRepository<TicketModel, Long> {
 

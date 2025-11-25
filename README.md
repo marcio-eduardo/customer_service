@@ -7,12 +7,13 @@ O projeto é um **Sistema de Atendimento ao Cliente (Customer Service)**, nomead
 As principais funcionalidades já implementadas ou em desenvolvimento são:
 
 - **Autenticação de Utilizadores:** Controlo de acesso com diferentes níveis de permissão (USER, MODERATOR, ADMIN).
+- **Cadastro de Clientes:** O sistema agora suporta o autocadastro de clientes (Pessoa Física), vinculando a conta de usuário a um perfil de cliente.
 - **Gestão de Clientes:** CRUD (Criar, Ler, Atualizar, Apagar) para clientes do tipo Pessoa Física (PF) e Pessoa Jurídica (PJ).
 - **Gestão de Tickets (Chamados):**
-  - Abertura de novos tickets associados a um cliente.
+  - Abertura de novos tickets associados a um cliente, com fluxos diferentes para clientes e administradores.
   - Encerramento de tickets com notas de resolução.
   - Visualização de tickets abertos e resolvidos.
-- **Dashboard:** Uma página inicial que exibe métricas sobre os tickets, como o total de chamados abertos e resolvidos, com gráficos para visualização de dados.
+- **Dashboard:** Uma página inicial que exibe métricas em tempo real sobre os tickets, como total de chamados abertos, resolvidos, em andamento e por prioridade.
 
 ### 2. Tecnologias Utilizadas
 
@@ -20,32 +21,31 @@ O projeto está dividido em duas partes principais: `customer_service_back` (o b
 
 #### Tecnologias do Backend
 
-- **Java 21:** A linguagem de programação principal, utilizando uma versão moderna e de longo suporte (LTS).
-- **Spring Boot 3:** O framework principal que simplifica a criação de aplicações Java robustas e autónomas. Ele gere a configuração, segurança e a criação de APIs.
-- **Spring Data JPA (Hibernate):** Para a persistência de dados. Facilita a comunicação com a base de dados, mapeando objetos Java para tabelas na base de dados (ORM).
-- **Spring Security:** Utilizado para implementar a autenticação e autorização, protegendo os endpoints da API.
-- **JWT (JSON Web Tokens):** A estratégia de autenticação usada. Após o login, um token é gerado e enviado ao frontend para autenticar os pedidos subsequentes.
-- **MySQL:** A base de dados relacional escolhida para armazenar os dados da aplicação (utilizadores, clientes, tickets).
-- **Maven:** A ferramenta de gestão de dependências e de construção (build) do projeto backend.
-- **Docker:** O backend está configurado para ser "containerizado", o que facilita a sua execução em qualquer ambiente de forma consistente.
+- **Java 21:** A linguagem de programação principal.
+- **Spring Boot 3:** Framework para a criação de APIs.
+- **Spring Data JPA (Hibernate):** Para a persistência de dados (ORM).
+- **Spring Security:** Para autenticação e autorização.
+- **JWT (JSON Web Tokens):** Estratégia de autenticação stateless.
+- **MySQL:** Base de dados relacional.
+- **Maven:** Gestão de dependências e build.
+- **Docker:** O backend está "containerizado" para facilitar a execução.
 
 #### Tecnologias do Frontend
 
-- **React 18:** A biblioteca JavaScript para construir a interface do utilizador de forma componentizada e reativa.
-- **TypeScript:** Uma extensão do JavaScript que adiciona tipagem estática, tornando o código mais seguro e fácil de manter.
-- **Vite:** A ferramenta de construção e servidor de desenvolvimento. É conhecida pela sua extrema rapidez.
-- **Tailwind CSS:** Um framework de CSS "utility-first" para estilizar a aplicação de forma rápida e consistente diretamente no HTML/JSX.
-- **React Router DOM:** Para gerir a navegação e as rotas da aplicação (ex: `/dashboard`, `/clientes/pf`).
-- **Axios:** Um cliente HTTP para fazer os pedidos à API do backend.
-- **Docker:** Assim como o backend, o frontend também está preparado para ser executado num container Docker.
+- **React 18:** Biblioteca para a construção da interface.
+- **TypeScript:** Superset do JavaScript com tipagem estática.
+- **Vite:** Ferramenta de build e servidor de desenvolvimento.
+- **Tailwind CSS:** Framework de CSS "utility-first" para estilização.
+- **React Router DOM:** Para gestão de rotas.
+- **Axios:** Cliente HTTP para comunicação com a API.
+- **Docker:** O frontend também está preparado para ser executado num container.
 
 #### Como Inicializar o Projeto Completo com Docker
 
-A forma mais simples de colocar todo o sistema a funcionar é utilizando o Docker Compose, que orquestra todos os serviços (backend, frontend e base de dados).
+A forma mais simples de colocar todo o sistema a funcionar é utilizando o Docker Compose.
 
 **Pré-requisitos:**
-
-- Ter o [Docker](https://www.docker.com/get-started) e o Docker Compose instalados na sua máquina.
+- Ter o [Docker](https://www.docker.com/get-started) e o Docker Compose instalados.
 
 **Passo a Passo:**
 

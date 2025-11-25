@@ -1,5 +1,6 @@
 package com.faculdade.customer_service_back.model.client_model;
 
+import com.faculdade.customer_service_back.model.user_model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 

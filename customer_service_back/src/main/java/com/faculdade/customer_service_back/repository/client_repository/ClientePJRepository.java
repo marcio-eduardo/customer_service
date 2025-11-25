@@ -1,11 +1,11 @@
 package com.faculdade.customer_service_back.repository.client_repository;
 
-import java.util.List;
-
+import com.faculdade.customer_service_back.model.client_model.ClientePJ;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.faculdade.customer_service_back.model.client_model.ClientePJ;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface ClientePJRepository extends JpaRepository<ClientePJ, Long> {
@@ -16,4 +16,7 @@ public interface ClientePJRepository extends JpaRepository<ClientePJ, Long> {
 
     // Buscar clientes por nome fantasia (caso queira permitir pesquisas por nome)
     List<ClientePJ> findByNomeFantasiaContainingIgnoreCase(String nomeFantasia);
+
+    // Buscar cliente pelo ID do usuário associado
+    Optional<ClientePJ> findByUserId(Long userId);
 }

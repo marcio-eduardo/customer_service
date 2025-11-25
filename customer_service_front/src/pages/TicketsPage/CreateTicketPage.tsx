@@ -1,35 +1,25 @@
 // src/pages/TicketsPage/CreateTicketPage.tsx
-import React, { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
-import { useAuth } from '../../contexts/AuthContext'; // Importar o useAuth
+import { useAuth } from '../../contexts/AuthContext';
 
-// Interfaces para os tipos de cliente que esperamos da API
-interface ClientePf {
-  id: number;
-  nome: string;
-}
-
-interface ClientePj {
-  id: number;
-  nomeFantasia: string;
-}
-
-// Interface combinada para a lista de clientes no estado
+// Tipos
+interface ClientePf { id: number; nome: string; }
+interface ClientePj { id: number; nomeFantasia: string; }
 type Client = (ClientePf & { type: 'pf' }) | (ClientePj & { type: 'pj' });
 
-// Interface para os dados do formulário
 interface TicketFormData {
   title: string;
   description: string;
-  selectedClient: string; 
+  selectedClient: string;
 }
 
 export function CreateTicketPage() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Obter o utilizador autenticado do contexto
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<TicketFormData>({
     title: '',
@@ -37,19 +27,18 @@ export function CreateTicketPage() {
     selectedClient: '',
   });
   
-  const [clients, setClients] = useState<Client[]>([]);
+  const [allClients, setAllClients] = useState<Client[]>([]);
+  const [clientTypeFilter, setClientTypeFilter] = useState<'pf' | 'pj' | ''>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isFetchingClients, setIsFetchingClients] = useState(false);
+  const [isFetchingInitialData, setIsFetchingInitialData] = useState(true);
   const [loggedInClientInfo, setLoggedInClientInfo] = useState<string | null>(null);
 
-  // Determinar se o utilizador é um gestor (Admin/Moderator)
   const isManager = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_MODERATOR');
 
   useEffect(() => {
-    // Se for um gestor, busca a lista de todos os clientes para o dropdown
     if (isManager) {
       const fetchAllClients = async () => {
-        setIsFetchingClients(true);
+        setIsFetchingInitialData(true);
         try {
           const pfPromise = api.get<ClientePf[]>('/api/clientes-pf/all');
           const pjPromise = api.get<ClientePj[]>('/api/clientes-pj/all');
@@ -58,20 +47,16 @@ export function CreateTicketPage() {
           const pjClients: Client[] = pjResponse.data.map(c => ({ ...c, type: 'pj' }));
           setClients([...pfClients, ...pjClients]);
         } catch (error: any) {
-          console.error("Falha ao buscar clientes:", error);
           toast.error("Não foi possível carregar a lista de clientes.");
         } finally {
-          setIsFetchingClients(false);
+          setIsFetchingInitialData(false);
         }
       };
       fetchAllClients();
     } else {
-      // Se for um cliente normal, busca as suas próprias informações de cliente
-      // ASSUMINDO QUE EXISTE UM ENDPOINT /api/me/client-info
       const fetchMyClientInfo = async () => {
-        setIsFetchingClients(true);
+        setIsFetchingInitialData(true);
         try {
-          // Exemplo: O endpoint retorna { "clientePfId": 123 } ou { "clientePjId": 456 }
           const response = await api.get('/api/me/client-info'); 
           if (response.data.clientePfId) {
             setLoggedInClientInfo(`pf-${response.data.clientePfId}`);
@@ -81,16 +66,12 @@ export function CreateTicketPage() {
             toast.error("Não foi possível encontrar uma conta de cliente associada a este utilizador.");
           }
         } catch (error) {
-           console.error("Falha ao buscar informações do cliente:", error);
-           toast.error("Erro ao buscar as suas informações de cliente.");
+           toast.error("Erro ao buscar as suas informações de cliente para abrir um chamado.");
         } finally {
-           setIsFetchingClients(false);
+           setIsFetchingInitialData(false);
         }
       };
-      // fetchMyClientInfo(); // Descomentar quando o endpoint existir
-      // Para fins de teste, pode simular a informação:
-      // setLoggedInClientInfo('pf-1'); // Simulação para um cliente PF com ID 1
-      setIsFetchingClients(false); // Remover esta linha quando a chamada real for usada
+      fetchMyClientInfo();
     }
   }, [isManager]);
 
@@ -99,13 +80,18 @@ export function CreateTicketPage() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleClientTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setClientTypeFilter(e.target.value as 'pf' | 'pj' | '');
+    setFormData(prev => ({ ...prev, selectedClient: '' }));
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
     const clientIdentifier = isManager ? formData.selectedClient : loggedInClientInfo;
 
     if (!formData.title || !formData.description || !clientIdentifier) {
-      toast.error('Por favor, preencha todos os campos. A associação com um cliente é obrigatória.');
+      toast.error('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
 
@@ -133,82 +119,82 @@ export function CreateTicketPage() {
     }
   };
 
-  // Classes de estilo
-  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
-  const contentContainerClasses = "max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  const headerTitleClass = "text-tas-primary";
-  const headerSubtitleClass = "text-tas-text-secondary-on-card";
-  const formCardClasses = "bg-tas-bg-card shadow-xl rounded-xl p-6 md:p-8";
-  const labelClasses = "block text-sm font-medium mb-1 text-tas-text-secondary-on-card";
-  const inputBaseClasses = "w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm transition-colors text-tas-text-on-card focus:ring-tas-secondary focus:border-tas-secondary";
-  const buttonClasses = `w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors ${isLoading || isFetchingClients ? 'bg-gray-400 cursor-not-allowed' : 'bg-tas-secondary hover:bg-tas-secondary-hover'}`;
-
+  const filteredClients = allClients.filter(c => c.type === clientTypeFilter);
 
   return (
     <>
       <Helmet>
         <title>Abrir Novo Chamado - TAS</title>
       </Helmet>
-      <div className={pageWrapperClasses}>
-        <div className={contentContainerClasses}>
+      <div className="min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <header className="mb-10 text-center">
-            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Abrir Novo Chamado</h1>
-            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
-              {isManager ? "Selecione o cliente e descreva o problema." : "Descreva o problema para registrar um novo chamado."}
+            <h1 className="text-3xl lg:text-4xl font-bold text-tas-primary">Abrir Novo Chamado</h1>
+            <p className="text-tas-text-secondary-on-card mt-2 text-base lg:text-lg">
+              {isManager ? "Selecione o tipo de cliente e o cliente para registrar o chamado." : "Descreva o problema para registrar um novo chamado."}
             </p>
           </header>
 
-          <section className={formCardClasses}>
+          <section className="bg-tas-bg-card shadow-xl rounded-xl p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* O seletor de cliente só é exibido se o utilizador for um gestor */}
-              {isManager && (
-                <div>
-                  <label htmlFor="selectedClient" className={labelClasses}>
-                    Cliente <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="selectedClient"
-                    name="selectedClient"
-                    value={formData.selectedClient}
-                    onChange={handleChange}
-                    className={inputBaseClasses}
-                    required
-                    disabled={isFetchingClients || isLoading}
-                  >
-                    <option value="" disabled>
-                      {isFetchingClients ? 'A carregar clientes...' : '-- Selecione um cliente --'}
-                    </option>
-                    <optgroup label="Pessoa Física">
-                      {clients.filter(c => c.type === 'pf').map(client => (
-                        <option key={`pf-${client.id}`} value={`pf-${client.id}`}>
-                          {(client as ClientePf).nome}
-                        </option>
-                      ))}
-                    </optgroup>
-                    <optgroup label="Pessoa Jurídica">
-                       {clients.filter(c => c.type === 'pj').map(client => (
-                        <option key={`pj-${client.id}`} value={`pj-${client.id}`}>
-                          {(client as ClientePj).nomeFantasia}
-                        </option>
-                      ))}
-                    </optgroup>
-                  </select>
-                </div>
-              )}
+              {isManager ? (
+                <>
+                  <div>
+                    <label htmlFor="clientTypeFilter" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
+                      Tipo de Cliente <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      id="clientTypeFilter"
+                      name="clientTypeFilter"
+                      value={clientTypeFilter}
+                      onChange={handleClientTypeChange}
+                      className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
+                      required
+                      disabled={isFetchingInitialData || isLoading}
+                    >
+                      <option value="" disabled>-- Selecione o tipo --</option>
+                      <option value="pf">Pessoa Física</option>
+                      <option value="pj">Pessoa Jurídica</option>
+                    </select>
+                  </div>
 
-              {/* Se o utilizador for um cliente e sua informação já foi carregada, poderia exibir o nome dele aqui */}
-              {!isManager && loggedInClientInfo && (
-                <div>
-                    <label className={labelClasses}>Cliente</label>
+                  {clientTypeFilter && (
+                    <div>
+                      <label htmlFor="selectedClient" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
+                        Cliente <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        id="selectedClient"
+                        name="selectedClient"
+                        value={formData.selectedClient}
+                        onChange={handleChange}
+                        className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
+                        required
+                        disabled={isFetchingInitialData || isLoading || filteredClients.length === 0}
+                      >
+                        <option value="" disabled>
+                          {isFetchingInitialData ? 'A carregar...' : `-- Selecione um cliente ${clientTypeFilter === 'pf' ? 'Físico' : 'Jurídico'} --`}
+                        </option>
+                        {filteredClients.map(client => (
+                          <option key={`${client.type}-${client.id}`} value={`${client.type}-${client.id}`}>
+                            {client.type === 'pf' ? (client as ClientePf).nome : (client as ClientePj).nomeFantasia}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                </>
+              ) : (
+                 <div>
+                    <label className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">Cliente</label>
                     <p className="px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-tas-text-secondary-on-card">
-                        {/* Lógica para exibir o nome do cliente logado - precisa buscar o nome */}
-                        Chamado será aberto em seu nome.
+                        {isFetchingInitialData ? 'A verificar dados do cliente...' : 'Chamado será aberto em seu nome.'}
                     </p>
                 </div>
               )}
 
               <div>
-                <label htmlFor="title" className={labelClasses}>
+                <label htmlFor="title" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
                   Título do Chamado <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -217,7 +203,7 @@ export function CreateTicketPage() {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className={inputBaseClasses}
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
                   placeholder="Ex: Problema ao acessar o sistema"
                   required
                   disabled={isLoading}
@@ -225,7 +211,7 @@ export function CreateTicketPage() {
               </div>
 
               <div>
-                <label htmlFor="description" className={labelClasses}>
+                <label htmlFor="description" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
                   Descrição Detalhada <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -233,7 +219,7 @@ export function CreateTicketPage() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className={`${inputBaseClasses} min-h-[120px]`}
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm min-h-[120px]"
                   placeholder="Descreva o problema ou solicitação em detalhes..."
                   required
                   disabled={isLoading}
@@ -242,8 +228,8 @@ export function CreateTicketPage() {
 
               <button
                 type="submit"
-                className={buttonClasses}
-                disabled={isLoading || isFetchingClients}
+                className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors disabled:bg-gray-400 bg-tas-secondary hover:bg-tas-secondary-hover"
+                disabled={isLoading || isFetchingInitialData}
               >
                 {isLoading ? 'A Abrir Chamado...' : 'Abrir Chamado'}
               </button>
@@ -254,4 +240,5 @@ export function CreateTicketPage() {
     </>
   );
 }
+
 

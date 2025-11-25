@@ -1,5 +1,5 @@
 // Localização: src/pages/ViewClientsPage/ViewPFClientsPage.tsx
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { api } from '../../lib/axios'; // Importe a instância configurada do Axios
 

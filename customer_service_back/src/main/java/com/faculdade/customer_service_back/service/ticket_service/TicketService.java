@@ -26,18 +26,20 @@ import java.util.stream.Collectors;
 public class TicketService {
 
     private final TicketRepository ticketRepository;
+    private final ClientePfRepository clientePfRepository;
+    private final ClientePJRepository clientePjRepository;
     private final TechnicalRepository technicalRepository;
     private final ClientePfRepository clientePfRepository;
     private final ClientePJRepository clientePjRepository;
 
     public TicketService(TicketRepository ticketRepository,
-                         TechnicalRepository technicalRepository,
                          ClientePfRepository clientePfRepository,
-                         ClientePJRepository clientePjRepository) {
+                         ClientePJRepository clientePjRepository,
+                         TechnicalRepository technicalRepository) {
         this.ticketRepository = ticketRepository;
-        this.technicalRepository = technicalRepository;
         this.clientePfRepository = clientePfRepository;
         this.clientePjRepository = clientePjRepository;
+        this.technicalRepository = technicalRepository;
     }
 
     public DashboardStatsDTO getDashboardStats() {
@@ -71,9 +73,7 @@ public class TicketService {
         ticket.setPriority(request.getPriority());
 
         if (request.getClientePfId() != null) {
-            ClientePf cliente = clientePfRepository.findById(request.getClientePfId())
-                    .orElseThrow(() -> new RuntimeException("Cliente PF nao encontrado com o ID: " + request.getClientePfId()));
-            ticket.setClientePf(cliente);
+            clientePfRepository.findById(request.getClientePfId()).ifPresent(ticket::setClientePf);
         } else if (request.getClientePjId() != null) {
             ClientePJ cliente = clientePjRepository.findById(request.getClientePjId())
                     .orElseThrow(() -> new RuntimeException("Cliente PJ nao encontrado com o ID: " + request.getClientePjId()));
@@ -92,12 +92,10 @@ public class TicketService {
         TicketModel ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
 
-        Technical technical = technicalRepository.findById(closedByTechnicalId)
-                .orElseThrow(() -> new RuntimeException("Technical not found with ID: " + closedByTechnicalId));
+        technicalRepository.findById(closedByTechnicalId).ifPresent(ticket::setClosedByTechnical);
 
         ticket.setStatus(TicketStatus.RESOLVED);
         ticket.setResolvedAt(LocalDateTime.now());
-        ticket.setClosedByTechnical(technical);
         ticket.setResolutionNotes(resolutionNotes);
 
         return ticketRepository.save(ticket);

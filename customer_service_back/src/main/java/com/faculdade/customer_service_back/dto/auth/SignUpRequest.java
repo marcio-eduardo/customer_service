@@ -6,7 +6,8 @@ public class SignUpRequest {
     private String email;
     private String password;
     private String role;
-    // Podes adicionar outros campos como 'nome', 'roles', etc.
+    private String nome;
+    private String cpf;
 
     // Getters e Setters
     public String getUsername() {
@@ -33,8 +34,6 @@ public class SignUpRequest {
         this.password = password;
     }
 
-
-
     public String getRole() {
         return role;
     }
@@ -43,4 +42,19 @@ public class SignUpRequest {
         this.role = role;
     }
 
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
 }

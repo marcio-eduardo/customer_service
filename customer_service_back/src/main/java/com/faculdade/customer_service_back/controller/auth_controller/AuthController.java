@@ -4,9 +4,11 @@ import com.faculdade.customer_service_back.dto.auth.LoginRequest;
 import com.faculdade.customer_service_back.dto.auth.SignUpRequest;
 import com.faculdade.customer_service_back.dto.auth.JwtResponse;
 import com.faculdade.customer_service_back.dto.auth.MessageResponse;
+import com.faculdade.customer_service_back.model.client_model.ClientePf;
 import com.faculdade.customer_service_back.model.user_model.ERole;
 import com.faculdade.customer_service_back.model.user_model.Role;
 import com.faculdade.customer_service_back.model.user_model.User;
+import com.faculdade.customer_service_back.repository.client_repository.ClientePfRepository;
 import com.faculdade.customer_service_back.repository.user_repository.RoleRepository;
 import com.faculdade.customer_service_back.repository.user_repository.UserRepository;
 import com.faculdade.customer_service_back.security.jwt.JwtUtils;
@@ -42,15 +44,16 @@ public class AuthController {
     RoleRepository roleRepository;
 
     @Autowired
+    ClientePfRepository clientePfRepository; // Injetado
+
+    @Autowired
     PasswordEncoder encoder;
 
     @Autowired
     JwtUtils jwtUtils;
 
-    // Endpoint de Login
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
@@ -62,43 +65,32 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        List<String> rolesList = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())
-                .collect(Collectors.toList());
-
         return ResponseEntity.ok(new JwtResponse(jwt,
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
-                rolesList)); // <--- Passar rolesList aqui
+                roles));
     }
 
-    // Endpoint de Registo
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
         if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Erro: Nome de utilizador já está em uso!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("Erro: Nome de utilizador já está em uso!"));
         }
 
         if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Erro: Email já está em uso!"));
+            return ResponseEntity.badRequest().body(new MessageResponse("Erro: Email já está em uso!"));
         }
 
-        // Criar nova conta de utilizador
         User user = new User(signUpRequest.getUsername(),
                 signUpRequest.getEmail(),
                 encoder.encode(signUpRequest.getPassword()));
 
         Set<Role> roles = new HashSet<>();
-        String strRole = signUpRequest.getRole(); // Supondo que SignUpRequest tenha um campo getRole()
+        String strRole = signUpRequest.getRole();
         Role userRole;
 
-        if (strRole == null || strRole.isEmpty()) {
-            // Papel padrão se nenhum for especificado
+        if (strRole == null || strRole.isEmpty() || strRole.equalsIgnoreCase("user")) {
             userRole = roleRepository.findByName(ERole.ROLE_USER)
                     .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_USER não encontrado."));
         } else {
@@ -113,13 +105,27 @@ public class AuthController {
                             .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_MODERATOR não encontrado."));
                     break;
                 default:
-                    userRole = roleRepository.findByName(ERole.ROLE_USER)
-                            .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_USER não encontrado."));
+                    return ResponseEntity.badRequest().body(new MessageResponse("Erro: Papel '" + strRole + "' não é válido."));
             }
         }
         roles.add(userRole);
         user.setRoles(roles);
-        userRepository.save(user);
+        
+        // Salva o User primeiro para obter o ID
+        User savedUser = userRepository.save(user);
+
+        // Se for um utilizador padrão, cria também a entidade ClientePf
+        if (userRole.getName() == ERole.ROLE_USER) {
+            if (signUpRequest.getNome() == null || signUpRequest.getCpf() == null) {
+                return ResponseEntity.badRequest().body(new MessageResponse("Erro: Nome e CPF são obrigatórios para utilizadores."));
+            }
+            ClientePf clientePf = new ClientePf();
+            clientePf.setNome(signUpRequest.getNome());
+            clientePf.setCpf(signUpRequest.getCpf());
+            clientePf.setEmail(signUpRequest.getEmail());
+            clientePf.setUser(savedUser); // Associa o User ao ClientePf
+            clientePfRepository.save(clientePf);
+        }
 
         return ResponseEntity.ok(new MessageResponse("Utilizador registado com sucesso!"));
     }
