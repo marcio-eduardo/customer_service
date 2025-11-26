@@ -1,5 +1,5 @@
 // src/pages/SignUpPage/SignUpPage.tsx
-import React, { useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
@@ -7,15 +7,16 @@ import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import TASLogo from '../../assets/logo/NuvemConfig-2.svg';
 
-// Interface para os dados do formulário de registo atualizada
+
 interface SignUpFormData {
   username: string;
   email: string;
   password: string;
   role: string;
-  nome: string; // Novo campo para o nome completo do ClientePf
-  cpf: string;  // Novo campo para o CPF do ClientePf
+  nome: string;
+  cpf: string;
 }
+
 
 export function SignUpPage() {
   const navigate = useNavigate();

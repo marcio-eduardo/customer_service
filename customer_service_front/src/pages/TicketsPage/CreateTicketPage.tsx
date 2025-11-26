@@ -4,93 +4,65 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
-import { useAuth } from '../../contexts/AuthContext'; // Importar o useAuth
+import { useAuth } from '../../contexts/AuthContext';
 
-// Interfaces para os tipos de cliente que esperamos da API
-interface ClientePf {
+interface CompanyUser {
   id: number;
-  nome: string;
+  name: string;
 }
 
-interface ClientePj {
+interface Company {
   id: number;
-  nomeFantasia: string;
+  tradingName: string;
 }
 
-// Interface combinada para a lista de clientes no estado
-type Client = (ClientePf & { type: 'pf' }) | (ClientePj & { type: 'pj' });
+type Client = (CompanyUser & { type: 'user' }) | (Company & { type: 'company' });
 
-// Interface para os dados do formulário
 interface TicketFormData {
   title: string;
   description: string;
-  selectedClient: string; 
+  priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
+  selectedClient: string;
 }
 
 export function CreateTicketPage() {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Obter o utilizador autenticado do contexto
+  const { user } = useAuth();
 
   const [formData, setFormData] = useState<TicketFormData>({
     title: '',
     description: '',
+    priority: 'MEDIUM',
     selectedClient: '',
   });
   
   const [clients, setClients] = useState<Client[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingClients, setIsFetchingClients] = useState(false);
-  const [loggedInClientInfo, setLoggedInClientInfo] = useState<string | null>(null);
 
-  // Determinar se o utilizador é um gestor (Admin/Moderator)
   const isManager = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_MODERATOR');
 
   useEffect(() => {
-    // Se for um gestor, busca a lista de todos os clientes para o dropdown
     if (isManager) {
       const fetchAllClients = async () => {
         setIsFetchingClients(true);
         try {
-          const pfPromise = api.get<ClientePf[]>('/api/clientes-pf/all');
-          const pjPromise = api.get<ClientePj[]>('/api/clientes-pj/all');
-          const [pfResponse, pjResponse] = await Promise.all([pfPromise, pjPromise]);
-          const pfClients: Client[] = pfResponse.data.map(c => ({ ...c, type: 'pf' }));
-          const pjClients: Client[] = pjResponse.data.map(c => ({ ...c, type: 'pj' }));
-          setClients([...pfClients, ...pjClients]);
+          const userPromise = api.get<CompanyUser[]>('/api/company-users/all');
+          const companyPromise = api.get<Company[]>('/api/companies/all');
+          const [userResponse, companyResponse] = await Promise.all([userPromise, companyPromise]);
+          
+          const companyUsers: Client[] = userResponse.data.map(u => ({ ...u, type: 'user' }));
+          const companies: Client[] = companyResponse.data.map(c => ({ ...c, type: 'company' }));
+          
+          setClients([...companyUsers, ...companies]);
         } catch (error: any) {
-          console.error("Falha ao buscar clientes:", error);
-          toast.error("Não foi possível carregar a lista de clientes.");
+          console.error("Failed to fetch clients:", error);
+          toast.error("Could not load the client list.");
         } finally {
           setIsFetchingClients(false);
         }
       };
       fetchAllClients();
-    } else {
-      // Se for um cliente normal, busca as suas próprias informações de cliente
-      // ASSUMINDO QUE EXISTE UM ENDPOINT /api/me/client-info
-      const fetchMyClientInfo = async () => {
-        setIsFetchingClients(true);
-        try {
-          // Exemplo: O endpoint retorna { "clientePfId": 123 } ou { "clientePjId": 456 }
-          const response = await api.get('/api/me/client-info'); 
-          if (response.data.clientePfId) {
-            setLoggedInClientInfo(`pf-${response.data.clientePfId}`);
-          } else if (response.data.clientePjId) {
-            setLoggedInClientInfo(`pj-${response.data.clientePjId}`);
-          } else {
-            toast.error("Não foi possível encontrar uma conta de cliente associada a este utilizador.");
-          }
-        } catch (error) {
-           console.error("Falha ao buscar informações do cliente:", error);
-           toast.error("Erro ao buscar as suas informações de cliente.");
-        } finally {
-           setIsFetchingClients(false);
-        }
-      };
-      // fetchMyClientInfo(); // Descomentar quando o endpoint existir
-      // Para fins de teste, pode simular a informação:
-      // setLoggedInClientInfo('pf-1'); // Simulação para um cliente PF com ID 1
-      setIsFetchingClients(false); // Remover esta linha quando a chamada real for usada
     }
   }, [isManager]);
 
@@ -102,38 +74,53 @@ export function CreateTicketPage() {
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     
-    const clientIdentifier = isManager ? formData.selectedClient : loggedInClientInfo;
-
-    if (!formData.title || !formData.description || !clientIdentifier) {
-      toast.error('Por favor, preencha todos os campos. A associação com um cliente é obrigatória.');
+    if (!formData.title || !formData.description) {
+      toast.error('Please fill out all required fields.');
       return;
+    }
+    if (isManager && !formData.selectedClient) {
+        toast.error('As a manager, you must select a client.');
+        return;
     }
 
     setIsLoading(true);
 
-    const [clientType, clientId] = clientIdentifier.split('-');
-
-    const payload = {
+    let payload: any = {
       title: formData.title,
       description: formData.description,
-      clientePfId: clientType === 'pf' ? parseInt(clientId, 10) : undefined,
-      clientePjId: clientType === 'pj' ? parseInt(clientId, 10) : undefined,
+      priority: formData.priority,
     };
+
+    if (isManager) {
+        const [clientType, clientId] = formData.selectedClient.split('-');
+        payload = {
+            ...payload,
+            companyUserId: clientType === 'user' ? parseInt(clientId, 10) : undefined,
+            companyId: clientType === 'company' ? parseInt(clientId, 10) : undefined,
+        };
+    } else {
+        // Non-managers open tickets for themselves. We assume the logged-in user's ID
+        // corresponds to a CompanyUser ID. This might need adjustment based on final domain logic.
+        payload = {
+            ...payload,
+            companyUserId: user?.id,
+        };
+    }
     
     try {
       await api.post('/api/tickets/open', payload);
-      toast.success('Chamado aberto com sucesso!');
+      toast.success('Ticket opened successfully!');
       navigate('/dashboard'); 
     } catch (error: any) {
-      console.error("Falha ao abrir chamado:", error);
-      const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao abrir o chamado.';
-      toast.error(`Erro: ${errorMessage}`);
+      console.error("Failed to open ticket:", error);
+      const errorMessage = error.response?.data?.message || 'An error occurred while opening the ticket.';
+      toast.error(`Error: ${errorMessage}`);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Classes de estilo
+  // Style classes
   const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
   const contentContainerClasses = "max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
   const headerTitleClass = "text-tas-primary";
@@ -147,48 +134,39 @@ export function CreateTicketPage() {
   return (
     <>
       <Helmet>
-        <title>Abrir Novo Chamado - TAS</title>
+        <title>Open New Ticket - TAS</title>
       </Helmet>
       <div className={pageWrapperClasses}>
         <div className={contentContainerClasses}>
           <header className="mb-10 text-center">
-            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Abrir Novo Chamado</h1>
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Open New Ticket</h1>
             <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
-              {isManager ? "Selecione o cliente e descreva o problema." : "Descreva o problema para registrar um novo chamado."}
+              {isManager ? "Select the client and describe the issue." : "Describe the issue to open a new ticket."}
             </p>
           </header>
 
           <section className={formCardClasses}>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* O seletor de cliente só é exibido se o utilizador for um gestor */}
               {isManager && (
                 <div>
                   <label htmlFor="selectedClient" className={labelClasses}>
-                    Cliente <span className="text-red-500">*</span>
+                    Client <span className="text-red-500">*</span>
                   </label>
-                  <select
-                    id="selectedClient"
-                    name="selectedClient"
-                    value={formData.selectedClient}
-                    onChange={handleChange}
-                    className={inputBaseClasses}
-                    required
-                    disabled={isFetchingClients || isLoading}
-                  >
+                  <select id="selectedClient" name="selectedClient" value={formData.selectedClient} onChange={handleChange} className={inputBaseClasses} required disabled={isFetchingClients || isLoading}>
                     <option value="" disabled>
-                      {isFetchingClients ? 'A carregar clientes...' : '-- Selecione um cliente --'}
+                      {isFetchingClients ? 'Loading clients...' : '-- Select a client --'}
                     </option>
-                    <optgroup label="Pessoa Física">
-                      {clients.filter(c => c.type === 'pf').map(client => (
-                        <option key={`pf-${client.id}`} value={`pf-${client.id}`}>
-                          {(client as ClientePf).nome}
+                    <optgroup label="Users">
+                      {clients.filter(c => c.type === 'user').map(client => (
+                        <option key={`user-${client.id}`} value={`user-${client.id}`}>
+                          {(client as CompanyUser).name}
                         </option>
                       ))}
                     </optgroup>
-                    <optgroup label="Pessoa Jurídica">
-                       {clients.filter(c => c.type === 'pj').map(client => (
-                        <option key={`pj-${client.id}`} value={`pj-${client.id}`}>
-                          {(client as ClientePj).nomeFantasia}
+                    <optgroup label="Companies">
+                       {clients.filter(c => c.type === 'company').map(client => (
+                        <option key={`company-${client.id}`} value={`company-${client.id}`}>
+                          {(client as Company).tradingName}
                         </option>
                       ))}
                     </optgroup>
@@ -196,56 +174,43 @@ export function CreateTicketPage() {
                 </div>
               )}
 
-              {/* Se o utilizador for um cliente e sua informação já foi carregada, poderia exibir o nome dele aqui */}
-              {!isManager && loggedInClientInfo && (
+              {!isManager && user && (
                 <div>
-                    <label className={labelClasses}>Cliente</label>
+                    <label className={labelClasses}>Client</label>
                     <p className="px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-tas-text-secondary-on-card">
-                        {/* Lógica para exibir o nome do cliente logado - precisa buscar o nome */}
-                        Chamado será aberto em seu nome.
+                        A ticket will be opened in your name: {user.username}
                     </p>
                 </div>
               )}
 
               <div>
                 <label htmlFor="title" className={labelClasses}>
-                  Título do Chamado <span className="text-red-500">*</span>
+                  Ticket Title <span className="text-red-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  id="title"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className={inputBaseClasses}
-                  placeholder="Ex: Problema ao acessar o sistema"
-                  required
-                  disabled={isLoading}
-                />
+                <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} className={inputBaseClasses} placeholder="e.g., Problem accessing the system" required disabled={isLoading} />
+              </div>
+              
+              <div>
+                <label htmlFor="priority" className={labelClasses}>
+                  Priority <span className="text-red-500">*</span>
+                </label>
+                <select id="priority" name="priority" value={formData.priority} onChange={handleChange} className={inputBaseClasses} required disabled={isLoading}>
+                    <option value="LOW">Low</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HIGH">High</option>
+                    <option value="URGENT">Urgent</option>
+                </select>
               </div>
 
               <div>
                 <label htmlFor="description" className={labelClasses}>
-                  Descrição Detalhada <span className="text-red-500">*</span>
+                  Detailed Description <span className="text-red-500">*</span>
                 </label>
-                <textarea
-                  id="description"
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  className={`${inputBaseClasses} min-h-[120px]`}
-                  placeholder="Descreva o problema ou solicitação em detalhes..."
-                  required
-                  disabled={isLoading}
-                />
+                <textarea id="description" name="description" value={formData.description} onChange={handleChange} className={`${inputBaseClasses} min-h-[120px]`} placeholder="Describe the problem or request in detail..." required disabled={isLoading} />
               </div>
 
-              <button
-                type="submit"
-                className={buttonClasses}
-                disabled={isLoading || isFetchingClients}
-              >
-                {isLoading ? 'A Abrir Chamado...' : 'Abrir Chamado'}
+              <button type="submit" className={buttonClasses} disabled={isLoading || isFetchingClients}>
+                {isLoading ? 'Opening Ticket...' : 'Open Ticket'}
               </button>
             </form>
           </section>
@@ -254,4 +219,3 @@ export function CreateTicketPage() {
     </>
   );
 }
-

@@ -68,8 +68,8 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
 
-                        .requestMatchers("/api/clientes-pf/**").authenticated()
-                        .requestMatchers("/api/clientes-pj/**").authenticated()
+                        .requestMatchers("/api/company-users/**").authenticated()
+                        .requestMatchers("/api/companies/**").authenticated()
                         .requestMatchers("/api/technical/**").hasRole("ADMIN")
 
                         // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**

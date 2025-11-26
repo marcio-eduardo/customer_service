@@ -3,15 +3,15 @@ package com.faculdade.customer_service_back.service.ticket_service;
 import com.faculdade.customer_service_back.dto.DashboardStatsDTO;
 import com.faculdade.customer_service_back.dto.projection.PriorityCount;
 import com.faculdade.customer_service_back.dto.projection.StatusCount;
-import com.faculdade.customer_service_back.model.client_model.ClientePf;
-import com.faculdade.customer_service_back.model.client_model.ClientePJ;
+import com.faculdade.customer_service_back.model.client_model.Company;
+import com.faculdade.customer_service_back.model.client_model.CompanyUser;
 import com.faculdade.customer_service_back.model.technical_model.Technical;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
 import com.faculdade.customer_service_back.model.ticket_model.TicketOpenRequest;
 import com.faculdade.customer_service_back.model.ticket_model.TicketPriority;
 import com.faculdade.customer_service_back.model.ticket_model.TicketStatus;
-import com.faculdade.customer_service_back.repository.client_repository.ClientePfRepository;
-import com.faculdade.customer_service_back.repository.client_repository.ClientePJRepository;
+import com.faculdade.customer_service_back.repository.client_repository.CompanyRepository;
+import com.faculdade.customer_service_back.repository.client_repository.CompanyUserRepository;
 import com.faculdade.customer_service_back.repository.technical_repository.TechnicalRepository;
 import com.faculdade.customer_service_back.repository.ticket_repository.TicketRepository;
 import org.springframework.stereotype.Service;
@@ -27,17 +27,17 @@ public class TicketService {
 
     private final TicketRepository ticketRepository;
     private final TechnicalRepository technicalRepository;
-    private final ClientePfRepository clientePfRepository;
-    private final ClientePJRepository clientePjRepository;
+    private final CompanyUserRepository companyUserRepository;
+    private final CompanyRepository companyRepository;
 
     public TicketService(TicketRepository ticketRepository,
                          TechnicalRepository technicalRepository,
-                         ClientePfRepository clientePfRepository,
-                         ClientePJRepository clientePjRepository) {
+                         CompanyUserRepository companyUserRepository,
+                         CompanyRepository companyRepository) {
         this.ticketRepository = ticketRepository;
         this.technicalRepository = technicalRepository;
-        this.clientePfRepository = clientePfRepository;
-        this.clientePjRepository = clientePjRepository;
+        this.companyUserRepository = companyUserRepository;
+        this.companyRepository = companyRepository;
     }
 
     public DashboardStatsDTO getDashboardStats() {
@@ -70,16 +70,16 @@ public class TicketService {
         ticket.setDescription(request.getDescription());
         ticket.setPriority(request.getPriority());
 
-        if (request.getClientePfId() != null) {
-            ClientePf cliente = clientePfRepository.findById(request.getClientePfId())
-                    .orElseThrow(() -> new RuntimeException("Cliente PF nao encontrado com o ID: " + request.getClientePfId()));
-            ticket.setClientePf(cliente);
-        } else if (request.getClientePjId() != null) {
-            ClientePJ cliente = clientePjRepository.findById(request.getClientePjId())
-                    .orElseThrow(() -> new RuntimeException("Cliente PJ nao encontrado com o ID: " + request.getClientePjId()));
-            ticket.setClientePj(cliente);
+        if (request.getCompanyUserId() != null) {
+            CompanyUser user = companyUserRepository.findById(request.getCompanyUserId())
+                    .orElseThrow(() -> new RuntimeException("CompanyUser not found with ID: " + request.getCompanyUserId()));
+            ticket.setCompanyUser(user);
+        } else if (request.getCompanyId() != null) {
+            Company company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Company not found with ID: " + request.getCompanyId()));
+            ticket.setCompany(company);
         } else {
-            throw new IllegalArgumentException("É necessário fornecer o ID de um Cliente PF ou PJ para abrir um chamado.");
+            throw new IllegalArgumentException("A CompanyUser ID or a Company ID must be provided to open a ticket.");
         }
 
         ticket.setStatus(TicketStatus.OPEN);
