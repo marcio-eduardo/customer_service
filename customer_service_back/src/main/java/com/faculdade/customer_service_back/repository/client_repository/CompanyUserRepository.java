@@ -14,4 +14,6 @@ public interface CompanyUserRepository extends JpaRepository<CompanyUser, Long> 
 
     List<CompanyUser> findByNameContainingIgnoreCase(String name);
 
+    List<CompanyUser> findByCompanyIsNull();
+
 }

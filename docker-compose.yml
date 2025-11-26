@@ -59,7 +59,8 @@ services:
       # VITE_API_URL aponta para o serviço backend dentro da rede Docker
       VITE_API_URL: http://localhost:8080
       NODE_ENV: development
-    command: sh -c "npm install && npm run dev -- --host"
+    platform: linux/amd64 # Força a compatibilidade em arquiteturas ARM (ex: Mac M1/M2/M3)
+    command: sh -c "npm run dev -- --host"
     networks: 
       - app_network
 

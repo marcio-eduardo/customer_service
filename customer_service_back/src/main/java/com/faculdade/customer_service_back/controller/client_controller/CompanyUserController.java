@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -33,6 +34,13 @@ public class CompanyUserController {
     @GetMapping("/all")
     public ResponseEntity<List<CompanyUser>> findAllWithoutPagination() {
         List<CompanyUser> users = companyUserService.findAllWithoutPagination();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/unassigned")
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
+    public ResponseEntity<List<CompanyUser>> findUnassignedUsers() {
+        List<CompanyUser> users = companyUserService.findUnassignedUsers();
         return ResponseEntity.ok(users);
     }
 

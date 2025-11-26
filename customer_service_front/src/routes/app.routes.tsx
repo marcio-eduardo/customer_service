@@ -3,6 +3,8 @@ import { DashboardPage } from "../pages/DashboardPage/DashboardPage";
 import { createBrowserRouter } from 'react-router-dom';
 import { ViewCompaniesPage } from "../pages/ViewClientsPage/ViewCompaniesPage";
 import { ViewCompanyUsersPage } from "../pages/ViewClientsPage/ViewCompanyUsersPage";
+import { CreateCompanyPage } from "../pages/CompaniesPage/CreateCompanyPage";
+import { SelectCompanyForUserPage } from "../pages/CompaniesPage/SelectCompanyForUserPage";
 import { AddUserToCompanyPage } from "../pages/CompaniesPage/AddUserToCompanyPage";
 import { AboutUsPage } from "../pages/AboutUsPage/AboutUsPage";
 import { LoginPage } from "../pages/LoginPage/LoginPage";
@@ -31,7 +33,9 @@ export const AppRouter = createBrowserRouter([
     children: [
       { path: '/dashboard', element: <DashboardPage /> },
       { path: '/companies', element: <ViewCompaniesPage /> },
+      { path: '/companies/new', element: <CreateCompanyPage /> },
       { path: '/company-users', element: <ViewCompanyUsersPage /> },
+      { path: '/companies/add-user', element: <SelectCompanyForUserPage /> },
       { path: '/companies/:id/add-user', element: <AddUserToCompanyPage /> },
       { path: '/about', element: <AboutUsPage /> },             
       { path: '/tickets/novo', element: <CreateTicketPage /> },

@@ -1,5 +1,6 @@
 package com.faculdade.customer_service_back.controller.client_controller;
 
+import com.faculdade.customer_service_back.dto.client.CompanyRequestDTO;
 import com.faculdade.customer_service_back.model.client_model.Company;
 import com.faculdade.customer_service_back.service.client_service.CompanyService;
 import jakarta.persistence.EntityExistsException;
@@ -9,6 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
@@ -53,15 +55,10 @@ public class CompanyController {
     }
 
     @PostMapping
-    public ResponseEntity<Company> save(@Valid @RequestBody Company company) {
-        Company savedCompany = companyService.save(company);
+    @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
+    public ResponseEntity<Company> save(@Valid @RequestBody CompanyRequestDTO companyRequestDTO) {
+        Company savedCompany = companyService.saveFromDTO(companyRequestDTO);
         return ResponseEntity.created(URI.create("/api/companies/" + savedCompany.getId())).body(savedCompany);
-    }
-
-    @PostMapping("/batch")
-    public ResponseEntity<Void> saveBatch(@Valid @RequestBody List<Company> companies) {
-        companies.forEach(companyService::save);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PutMapping("/{id}")

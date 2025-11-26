@@ -29,6 +29,10 @@ public class CompanyUserService {
         return companyUserRepository.findAll();
     }
 
+    public List<CompanyUser> findUnassignedUsers() {
+        return companyUserRepository.findByCompanyIsNull();
+    }
+
     public CompanyUser findById(Long id) {
         return companyUserRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Company user not found with ID: " + id));

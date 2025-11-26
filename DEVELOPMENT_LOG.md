@@ -1,35 +1,28 @@
 # Log de Desenvolvimento
 
-### 26 de Novembro de 2025
+### 20 de Novembro de 2025
 
-#### Refatoração de Nomenclaturas (Company e CompanyUser) - Segunda Tentativa
+Uma série de atualizações foram implementadas para melhorar o processo de criação de chamados e corrigir problemas de configuração inicial.
 
-Após uma confusão na interpretação inicial da solicitação de unificação de entidades, o projeto foi revertido para o commit anterior ao início desta grande refatoração. A partir de então, uma nova abordagem foi adotada para renomear entidades e ajustar o código-fonte, focando em:
+#### Backend
+- **Melhoria no Modelo de Ticket**:
+  - Adicionado um campo dedicado `openDate` ao `TicketModel.java` para rastrear explicitamente a data de abertura do chamado.
+  - O método `@PrePersist` foi atualizado para preencher automaticamente este campo na criação do chamado.
+- **Novos Endpoints de API para Clientes**:
+  - Para suportar a busca de todos os clientes para listas suspensas na interface do usuário, novos endpoints foram adicionados para retornar listas não paginadas:
+    - `GET /api/clientes-pf/all`: Retorna uma lista completa de todos os clientes `ClientePf`.
+    - `GET /api/clientes-pj/all`: Retorna uma lista completa de todos os clientes `ClientePj`.
+  - As camadas de serviço correspondentes (`ClientePfService` e `ClientePJService`) foram atualizadas com os métodos `listarTodosSemPaginacao()`.
 
--   **`ClientePJ` para `Company`**: A entidade `ClientePJ` foi renomeada para `Company`, e seus campos foram padronizados para o inglês (`tradingName`, `taxId`, `legalName`, etc.).
--   **`ClientePF` para `CompanyUser`**: A entidade `ClientePF` foi renomeada para `CompanyUser`, e seus campos foram padronizados para o inglês (`name`, `cpf`, `address`, etc.).
--   **Estabelecimento de Relacionamento**: A relação "Um para Muitos" (`@OneToMany` / `@ManyToOne`) entre `Company` e `CompanyUser` foi estabelecida, onde uma `Company` pode ter múltiplos `CompanyUser`s e um `CompanyUser` pertence a uma `Company`.
+#### Frontend
+- **Página de Criação de Chamado Melhorada**:
+  - O arquivo `CreateTicketPage.tsx` foi atualizado para usar os novos endpoints `/all` (`/api/clientes-pf/all` e `/api/clientes-pj/all`).
+  - Isso garante que a lista suspensa de seleção de cliente agora liste corretamente **todos** os clientes disponíveis, e não apenas a primeira página de um resultado paginado.
 
-**Componentes do Backend refatorados com sucesso:**
-
--   Modelos: `Company.java` e `CompanyUser.java` (renomeados e seus campos ajustados).
--   Repositórios: `CompanyRepository.java` e `CompanyUserRepository.java` (renomeados e seus métodos ajustados).
--   Serviços: `CompanyService.java` e `CompanyUserService.java` (renomeados e seus métodos/lógica ajustados).
--   Controladores: `CompanyController.java` e `CompanyUserController.java` (renomeados, mapeamentos de rotas e lógica ajustados).
--   DTOs: `TicketOpenRequest.java` (campos `clientePfId` e `clientePjId` renomeados para `companyUserId` e `companyId`).
--   Modelos de Ticket: `TicketModel.java` (campos `clientePf` e `clientePj` atualizados para `companyUser` e `company`).
--   Configuração de Segurança: `WebSecurityConfig.java` (rotas `/api/clientes-pf/**` e `/api/clientes-pj/**` atualizadas para `/api/company-users/**` e `/api/companies/**`).
-
-**Componentes do Frontend refatorados com sucesso:**
-
--   Páginas de visualização: `ViewPJClientsPage.tsx` renomeada para `ViewCompaniesPage.tsx`, e `ViewPFClientsPage.tsx` renomeada para `ViewCompanyUsersPage.tsx`. Ambas foram refatoradas para buscar e exibir dados das novas entidades e suas respectivas APIs.
--   Formulários: `CreateTicketPage.tsx` foi refatorado para usar as novas entidades e endpoints ao abrir chamados. `SignUpPage.tsx` foi corrigido para remover código duplicado e comentários. `AddUserToCompanyPage.tsx` foi criada para permitir a adição de `CompanyUsers` a `Companies`.
--   Rotas: `app.routes.tsx` foi atualizado para refletir todos os novos nomes de componentes e caminhos de URL.
-
-**Próximos passos pendentes:**
-
--   Limpeza final: A barra de navegação (`NavigationBar.tsx`) ainda precisa ser ajustada para refletir as novas rotas e nomenclaturas.
--   Verificação completa e testes para garantir que todas as partes do sistema funcionem conforme o esperado com a nova arquitetura.
+#### Ambiente e Configuração
+- **Correção no Docker Compose para Login**:
+  - Resolvido um erro `net::ERR_NAME_NOT_RESOLVED` que ocorria durante o login ao executar a aplicação com o Docker Compose.
+  - A variável de ambiente `VITE_API_URL` para o serviço `frontend` no `docker-compose.yml` foi alterada de `http://backend:8080` para `http://localhost:8080`. Isso permite que o navegador resolva corretamente o endereço da API do backend.
 
 ### 25 de Novembro de 2025
 
@@ -56,26 +49,35 @@ Uma refatoração completa da arquitetura do projeto foi realizada para unificar
 
 Todas as modificações visam uma maior consistência e padronização do código, facilitando futuras manutenções e o entendimento do domínio da aplicação.
 
-### 20 de Novembro de 2025
+### 26 de Novembro de 2025
 
-Uma série de atualizações foram implementadas para melhorar o processo de criação de chamados e corrigir problemas de configuração inicial.
+#### Refatoração do Fluxo de Gestão de Empresas e Usuários
 
-#### Backend
-- **Melhoria no Modelo de Ticket**:
-  - Adicionado um campo dedicado `openDate` ao `TicketModel.java` para rastrear explicitamente a data de abertura do chamado.
-  - O método `@PrePersist` foi atualizado para preencher automaticamente este campo na criação do chamado.
-- **Novos Endpoints de API para Clientes**:
-  - Para suportar a busca de todos os clientes para listas suspensas na interface do usuário, novos endpoints foram adicionados para retornar listas não paginadas:
-    - `GET /api/clientes-pf/all`: Retorna uma lista completa de todos os clientes `ClientePf`.
-    - `GET /api/clientes-pj/all`: Retorna uma lista completa de todos os clientes `ClientePj`.
-  - As camadas de serviço correspondentes (`ClientePfService` e `ClientePJService`) foram atualizadas com os métodos `listarTodosSemPaginacao()`.
+Seguindo novas diretrizes de fluxo de trabalho e UX, uma refatoração significativa foi realizada para centralizar e robustecer a gestão de empresas e a associação de usuários.
 
-#### Frontend
-- **Página de Criação de Chamado Melhorada**:
-  - O arquivo `CreateTicketPage.tsx` foi atualizado para usar os novos endpoints `/all` (`/api/clientes-pf/all` e `/api/clientes-pj/all`).
-  - Isso garante que a lista suspensa de seleção de cliente agora liste corretamente **todos** os clientes disponíveis, e não apenas a primeira página de um resultado paginado.
+**Backend:**
 
-#### Ambiente e Configuração
-- **Correção no Docker Compose para Login**:
-  - Resolvido um erro `net::ERR_NAME_NOT_RESOLVED` que ocorria durante o login ao executar a aplicação com o Docker Compose.
-  - A variável de ambiente `VITE_API_URL` para o serviço `frontend` no `docker-compose.yml` foi alterada de `http://backend:8080` para `http://localhost:8080`. Isso permite que o navegador resolva corretamente o endereço da API do backend.
+-   **Endpoint para Usuários Não Associados**: Foi criado um novo endpoint `GET /api/company-users/unassigned` para listar todos os `CompanyUser`s que ainda não pertencem a nenhuma empresa. Isso é fundamental para a nova interface de criação de empresas.
+-   **Endpoint de Criação de Empresa Aprimorado**: O endpoint `POST /api/companies` foi modificado para aceitar um `CompanyRequestDTO`. Este DTO agora inclui, além dos dados da empresa, uma lista de IDs de usuários (`userIds`) que serão automaticamente associados à empresa no momento da sua criação. A lógica no `CompanyService` foi tornada transacional para garantir a integridade dos dados.
+
+**Frontend:**
+
+-   **Nova Página de Criação de Empresa (`CreateCompanyPage.tsx`)**: Uma nova página foi criada para o cadastro de empresas (`/companies/new`). A página inclui:
+    -   Campos para todos os dados da empresa.
+    -   Um seletor para o "Usuário Responsável", populado com todos os usuários do sistema.
+    -   Uma lista de seleção múltipla (checkboxes) para "Associar Usuários", populada pelo novo endpoint de usuários não associados.
+    -   Um botão que redireciona para a página de criação de usuário (`/admin/create-user`), permitindo um fluxo de trabalho contínuo.
+-   **Nova Página de Seleção de Empresa (`SelectCompanyForUserPage.tsx`)**: Para habilitar o link de menu "Adicionar Usuários", foi criada uma página intermediária (`/companies/add-user`) que permite ao moderador primeiro selecionar uma empresa de uma lista e depois ser redirecionado para a página correta de associação (`/companies/:id/add-user`).
+-   **Ajustes na Barra de Navegação (`NavigationBar.tsx`)**:
+    -   **Layout do Submenu**: O problema de layout onde o submenu "Empresas" saía da tela foi corrigido. O menu agora abre para a esquerda quando pertence ao último item da barra de navegação.
+    -   **Permissões de Acesso**: A visibilidade do submenu "Empresas" e de todo o seu conteúdo foi restringida para ser acessível **apenas por Moderadores** (`isModerator`).
+    -   **Itens de Menu**: O submenu "Empresas" agora contém os quatro itens solicitados: "Adicionar Empresa", "Adicionar Usuários", "Empresas Cadastradas" e "Usuários Cadastrados", cada um apontando para o fluxo correto.
+
+Essas mudanças criam um fluxo de gestão de empresas mais robusto, centralizado e alinhado com as regras de negócio e permissões especificadas.
+
+#### Correção de Dependências e Componentes do Frontend
+
+-   **Contexto**: Após a refatoração do fluxo de gestão de empresas, o build do Docker começou a falhar devido a dependências ausentes e um componente de UI que não existia.
+-   **Componente Faltando (`Button.tsx`)**: O componente reutilizável `Button.tsx` estava sendo referenciado mas estava vazio. Um novo componente de botão robusto foi criado usando `class-variance-authority` para garantir consistência visual e flexibilidade.
+-   **Dependências Ausentes**: As bibliotecas `react-hook-form` e `class-variance-authority`, necessárias para as novas páginas e componentes, não estavam declaradas no `package.json`. Ambas foram adicionadas para garantir que sejam instaladas corretamente durante o build do Docker.
+-   **Otimização do Docker Compose**: O `docker-compose.yml` foi otimizado para não executar `npm install` a cada inicialização do contêiner. Também foi adicionada a diretiva `platform: linux/amd64` para resolver erros de compilação de pacotes nativos em arquiteturas ARM (como Macs M-series).
