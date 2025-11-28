@@ -6,6 +6,7 @@ import { api } from '../../lib/axios';
 import TASLogo from '../../assets/logo/NuvemConfig-2.svg';
 import type { Company } from '../../types/Company';
 import { getAllCompanies } from '../../services/companyService';
+import { formatCPF, validateCPF, removeNonNumeric } from '../../lib/validators';
 
 // Interface para os dados do formulário
 interface CreateUserFormData {
@@ -48,11 +49,38 @@ export function CreateUserPage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+    
+    // Aplicar máscara de CPF
+    if (name === 'cpf') {
+      const formatted = formatCPF(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    // Limpar campo de empresa quando selecionar Moderador ou Técnico
+    if (name === 'role' && (value === 'moderator' || value === 'tech_user')) {
+      setFormData(prev => ({ ...prev, [name]: value, companyId: '' }));
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    
+    // Validar CPF
+    if (!validateCPF(formData.cpf)) {
+      toast.error('CPF inválido. Por favor, verifique o número digitado.');
+      return;
+    }
+    
+    // Validar empresa para company_user
+    if (formData.role === 'company_user' && !formData.companyId) {
+      toast.error('Selecione uma empresa para Usuário de Empresa.');
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -61,6 +89,8 @@ export function CreateUserPage() {
         email: formData.email,
         password: formData.password,
         role: formData.role,
+        nome: formData.nome,
+        cpf: removeNonNumeric(formData.cpf), // Enviar CPF sem formatação
         companyId: formData.companyId ? Number(formData.companyId) : null,
       };
 
@@ -72,7 +102,7 @@ export function CreateUserPage() {
         username: '',
         email: '',
         password: '',
-        role: 'user',
+        role: 'company_user',
         nome: '',
         cpf: '',
         companyId: ''
@@ -89,6 +119,9 @@ export function CreateUserPage() {
 
   const inputClasses = "w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary";
   const labelClasses = "block text-sm font-medium mb-1 text-tas-text-secondary-on-card";
+
+  // Determinar se o campo empresa deve ser exibido
+  const shouldShowCompanyField = formData.role === 'company_user';
 
   return (
     <>
@@ -107,69 +140,125 @@ export function CreateUserPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="nome" className={labelClasses}> Nome Completo </label>
-              <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome completo"
+              <input 
+                type="text" 
+                id="nome" 
+                name="nome" 
+                value={formData.nome} 
+                onChange={handleChange} 
+                placeholder="Nome completo"
                 className={inputClasses}
-                required disabled={isLoading} />
+                required 
+                disabled={isLoading} 
+              />
             </div>
 
             <div>
               <label htmlFor="cpf" className={labelClasses}> CPF </label>
-              <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="CPF (apenas números)"
+              <input 
+                type="text" 
+                id="cpf" 
+                name="cpf" 
+                value={formData.cpf} 
+                onChange={handleChange} 
+                placeholder="000.000.000-00"
+                maxLength={14}
                 className={inputClasses}
-                required disabled={isLoading} />
+                required 
+                disabled={isLoading} 
+              />
             </div>
 
             <div>
               <label htmlFor="username" className={labelClasses}> Nome de Usuário </label>
-              <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} placeholder="Nome de usuário"
+              <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                value={formData.username} 
+                onChange={handleChange} 
+                placeholder="Nome de usuário"
                 className={inputClasses}
-                required disabled={isLoading} />
+                required 
+                disabled={isLoading} 
+              />
             </div>
 
             <div>
               <label htmlFor="email" className={labelClasses}> Email </label>
-              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemplo.com"
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                value={formData.email} 
+                onChange={handleChange} 
+                placeholder="email@exemplo.com"
                 className={inputClasses}
-                required disabled={isLoading} />
+                required 
+                disabled={isLoading} 
+              />
             </div>
 
             <div>
               <label htmlFor="password" className={labelClasses}> Senha </label>
-              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Senha segura"
+              <input 
+                type="password" 
+                id="password" 
+                name="password" 
+                value={formData.password} 
+                onChange={handleChange} 
+                placeholder="Senha segura"
                 className={inputClasses}
-                required disabled={isLoading} />
-            </div>
-
-            <div>
-              <label htmlFor="companyId" className={labelClasses}> Empresa </label>
-              <select id="companyId" name="companyId" value={formData.companyId} onChange={handleChange}
-                className={inputClasses}
-                required disabled={isLoading}>
-                <option value="">Selecione uma empresa</option>
-                {companies.map(company => (
-                  <option key={company.id} value={company.id}>
-                    {company.tradeName} ({company.cnpj})
-                  </option>
-                ))}
-              </select>
+                required 
+                disabled={isLoading} 
+              />
             </div>
 
             <div>
               <label htmlFor="role" className={labelClasses}> Papel do Usuário </label>
-              <select id="role" name="role" value={formData.role} onChange={handleChange}
+              <select 
+                id="role" 
+                name="role" 
+                value={formData.role} 
+                onChange={handleChange}
                 className={inputClasses}
-                disabled={isLoading}>
-                <option value="user">Usuário (User)</option>
-                <option value="company_user">Usuário de Empresa (Company User)</option>
-                <option value="tech_user">Técnico (Tech User)</option>
-                <option value="moderator">Moderador (Moderator)</option>
-                <option value="admin">Administrador (Admin)</option>
+                disabled={isLoading}
+              >
+                <option value="company_user">Usuário de Empresa</option>
+                <option value="tech_user">Técnico</option>
+                <option value="moderator">Moderador</option>
               </select>
             </div>
 
+            {/* Mostrar campo Empresa apenas para company_user */}
+            {shouldShowCompanyField && (
+              <div>
+                <label htmlFor="companyId" className={labelClasses}> Empresa </label>
+                <select 
+                  id="companyId" 
+                  name="companyId" 
+                  value={formData.companyId} 
+                  onChange={handleChange}
+                  className={inputClasses}
+                  required 
+                  disabled={isLoading}
+                >
+                  <option value="">Selecione uma empresa</option>
+                  {companies.map(company => (
+                    <option key={company.id} value={company.id}>
+                      {company.name} - {company.cnpj}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div className="pt-2">
-              <button type="submit" className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors bg-tas-secondary hover:bg-tas-secondary-hover disabled:bg-gray-400"
-                disabled={isLoading}>
+              <button 
+                type="submit" 
+                className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors bg-tas-secondary hover:bg-tas-secondary-hover disabled:bg-gray-400"
+                disabled={isLoading}
+              >
                 {isLoading ? 'Criando...' : 'Criar Usuário'}
               </button>
             </div>
