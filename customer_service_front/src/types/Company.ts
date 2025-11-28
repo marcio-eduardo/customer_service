@@ -1,5 +1,8 @@
 export interface Company {
     id: number;
-    tradeName: string;
+    name: string;
     cnpj: string;
+    address?: string;
+    phone?: string;
+    email: string;
 }
