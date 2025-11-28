@@ -22,15 +22,15 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
-        logger.error("Erro de não autorizado: {}", authException.getMessage());
+        logger.error("Erro de autenticação: {}", authException.getMessage());
 
         response.setContentType("application/json");
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 
         final Map<String, Object> body = new HashMap<>();
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
-        body.put("error", "Não Autorizado");
-        body.put("message", authException.getMessage());
+        body.put("error", "Unauthorized");
+        body.put("message", "Erro de autenticação: Full authentication is required to access this resource");
         body.put("path", request.getServletPath());
 
         final ObjectMapper mapper = new ObjectMapper();
