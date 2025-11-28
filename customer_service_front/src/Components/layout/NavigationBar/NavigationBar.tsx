@@ -111,8 +111,8 @@ export function NavigationBar() {
           label: 'Empresas',
           condition: isModerator || isTechUser,
           items: [
-            { type: 'fullwidth-link', path: '/companies/view', label: 'Empresas Cadastradas', style: dropdownFullWidthLinkStyle, condition: isModerator || isTechUser },
-            { type: 'fullwidth-link', path: '/companies/add', label: 'Adicionar Empresas', style: dropdownFullWidthLinkStyle, condition: isModerator },
+            { type: 'fullwidth-link', path: '/companies/view', label: 'Listar Empresas', style: dropdownFullWidthLinkStyle, condition: isModerator || isTechUser },
+            { type: 'fullwidth-link', path: '/companies/create', label: 'Criar Empresa', style: dropdownFullWidthLinkStyle, condition: isModerator },
           ]
         },
         {
@@ -120,8 +120,7 @@ export function NavigationBar() {
           label: 'Usuários',
           condition: isModerator,
           items: [
-            { type: 'fullwidth-link', path: '/users/view', label: 'Usuários Cadastrados', style: dropdownFullWidthLinkStyle, condition: isModerator },
-            { type: 'fullwidth-link', path: '/users/add', label: 'Adicionar Usuários', style: dropdownFullWidthLinkStyle, condition: isModerator },
+            { type: 'fullwidth-link', path: '/admin/criar-utilizador', label: 'Adicionar Usuários', style: dropdownFullWidthLinkStyle, condition: isModerator },
           ]
         },
       ]
