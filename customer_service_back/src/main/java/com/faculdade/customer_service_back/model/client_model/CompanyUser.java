@@ -1,8 +1,11 @@
 package com.faculdade.customer_service_back.model.client_model;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.faculdade.customer_service_back.model.user_model.User;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDate;
@@ -10,41 +13,32 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "company_users")
 @Data
+@EqualsAndHashCode(exclude = {"company", "user"})
 public class CompanyUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
-    private String name;
-
-    @Column(unique = true, nullable = false, length = 14)
-    private String cpf;
-
-    private String address;
-
-    private String phone;
-
-    private String email;
+    @OneToOne
+    @JoinColumn(name = "user_id", unique = true, nullable = false)
+    @JsonIgnoreProperties({"password", "roles"})
+    private User user;
 
     @Column(name = "registration_date", nullable = false, updatable = false)
     private LocalDate registrationDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = true)
-    @JsonBackReference
+    @JsonIgnore
     @ToString.Exclude
     private Company company;
 
     public CompanyUser() {}
 
-    public CompanyUser(String name, String cpf, String address, String phone, String email) {
-        this.name = name;
-        this.cpf = cpf;
-        this.address = address;
-        this.phone = phone;
-        this.email = email;
+    public CompanyUser(User user, Company company) {
+        this.user = user;
+        this.company = company;
     }
 
     @PrePersist

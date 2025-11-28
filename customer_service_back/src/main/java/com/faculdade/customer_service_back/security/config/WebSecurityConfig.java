@@ -72,21 +72,23 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/companies/**").authenticated()
                         .requestMatchers("/api/technical/**").hasRole("ADMIN")
 
-                        // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**
-                        // 1. Permitir que qualquer usuário autenticado abra um chamado
-                        .requestMatchers(HttpMethod.POST, "/api/tickets/open").authenticated()
-                        // 2. Manter ou ajustar outras operações de tickets:
-                        //    - Fechar (POST /api/tickets/close) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //    - Listar todos (GET /api/tickets) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //    - Buscar por ID (GET /api/tickets/{id}) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //      (Se precisar que usuários vejam seus próprios tickets, precisaremos de uma regra mais específica ou lógica no serviço)
-                        //    - Alterar (PUT) e Excluir (DELETE) chamados devem ser apenas para ADMIN.
-                        //      Se esses endpoints forem, por exemplo, PUT /api/tickets/{id} e DELETE /api/tickets/{id}
-                        .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ADMIN")
+                        // **CONFIGURAÇÃO DE TICKETS**
+                        // Rotas específicas primeiro (ordem importa!)
+                        .requestMatchers(HttpMethod.POST, "/api/tickets/open").authenticated() // USER, ADMIN, MODERATOR
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/company-user/**").authenticated() // USER vê seus tickets
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/admin-user/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/**").authenticated() // USER pode atualizar
                         .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
-                        // Regra geral para outros GETs em tickets (como listar e buscar por ID) e POST /api/tickets/close:
-                        .requestMatchers("/api/tickets/**").hasAnyRole("MODERATOR", "ADMIN")
-                        // **FIM DAS ALTERAÇÕES PARA TICKETS**
+                        
+                        // Rotas administrativas
+                        .requestMatchers(HttpMethod.POST, "/api/tickets/close").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.POST, "/api/tickets/assign").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/status/**").hasAnyRole("ADMIN", "MODERATOR")
+                        .requestMatchers(HttpMethod.GET, "/api/tickets").hasAnyRole("ADMIN", "MODERATOR")
+                        
+                        // Buscar por ID - qualquer autenticado (validação no controller)
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/**").authenticated()
+                        // **FIM CONFIGURAÇÃO DE TICKETS**
 
                         .anyRequest().authenticated()
                 );

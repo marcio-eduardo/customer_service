@@ -1,8 +1,10 @@
 package com.faculdade.customer_service_back.model.client_model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.time.LocalDate;
@@ -12,6 +14,7 @@ import java.util.Set;
 @Entity
 @Table(name = "companies")
 @Data
+@EqualsAndHashCode(exclude = {"responsible", "users"})
 public class Company {
 
     @Id
@@ -38,12 +41,13 @@ public class Company {
 
     @ManyToOne
     @JoinColumn(name = "responsible_id", nullable = false)
+    @JsonIgnore
     private CompanyUser responsible;
 
     @OneToMany(mappedBy = "company", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @JsonManagedReference
+    @JsonIgnore
     @ToString.Exclude
-    private Set<CompanyUser> companyUsers = new HashSet<>();
+    private Set<CompanyUser> users = new HashSet<>();
 
     public Company() {}
 

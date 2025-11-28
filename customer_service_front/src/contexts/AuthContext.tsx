@@ -9,6 +9,10 @@ interface User {
   username: string; // O backend envia 'username'
   email: string;
   roles?: string[]; // Adicionar para guardar os papéis do utilizador
+  
+  companyUserId?: number | null;
+  adminUserId?: number | null;
+  moderatorUserId?: number | null;
 }
 
 // Interface para o valor do contexto de autenticação

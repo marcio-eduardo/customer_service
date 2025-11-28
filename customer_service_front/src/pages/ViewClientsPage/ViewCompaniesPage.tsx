@@ -130,23 +130,23 @@ export function ViewCompaniesPage() {
   return (
     <>
       <Helmet>
-        <title>Companies - TAS</title>
+        <title>Empresas - TAS</title>
       </Helmet>
       <div className={pageWrapperClasses}>
         <div className={contentContainerClasses}>
           <header className="mb-10 text-center">
-            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Companies</h1>
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Empresas</h1>
             <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
-              Consult your registered companies data.
+              Consulte os dados das empresas cadastradas
             </p>
           </header>
 
           <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
-            {isLoading && <p className={loadingTextClass}>Loading companies...</p>}
+            {isLoading && <p className={loadingTextClass}>Carregando empresas...</p>}
             {error && <p className={errorTextClass}>{error}</p>}
 
             {!isLoading && !error && companies.length === 0 && (
-              <p className={`${clientDetailTextClasses} text-center py-4`}>No companies found.</p>
+              <p className={`${clientDetailTextClasses} text-center py-4`}>Nenhuma empresa encontrada.</p>
             )}
 
             {!isLoading && !error && companies.length > 0 && (
@@ -154,16 +154,16 @@ export function ViewCompaniesPage() {
                 {companies.map((company) => (
                   <li key={company.id} className={`${clientCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
                     <h3 className={`text-xl ${clientNameTextClasses} mb-1`}>{company.tradingName}</h3>
-                    <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>Tax ID:</span> {company.taxId}</p>
-                    <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Legal Name:</span> {company.legalName}</p>
+                    <p className={`text-sm ${clientDetailTextClasses} mb-1`}><span className={clientLabelTextClasses}>CNPJ:</span> {company.taxId}</p>
+                    <p className={`text-sm ${clientDetailTextClasses} mb-2`}><span className={clientLabelTextClasses}>Razão Social:</span> {company.legalName}</p>
                     <div className="mt-3 text-sm space-y-1">
                       <p><span className={clientLabelTextClasses}>Email:</span> <span className={clientDetailTextClasses}>{company.email || 'N/A'}</span></p>
-                      <p><span className={clientLabelTextClasses}>Phone:</span> <span className={clientDetailTextClasses}>{company.phone || 'N/A'}</span></p>
-                      <p><span className={clientLabelTextClasses}>Address:</span> <span className={clientDetailTextClasses}>{company.address || 'N/A'}</span></p>
-                      <p><span className={clientLabelTextClasses}>Registration Date:</span> <span className={clientDetailTextClasses}>{formatDate(company.registrationDate)}</span></p>
+                      <p><span className={clientLabelTextClasses}>Telefone:</span> <span className={clientDetailTextClasses}>{company.phone || 'N/A'}</span></p>
+                      <p><span className={clientLabelTextClasses}>Endereço:</span> <span className={clientDetailTextClasses}>{company.address || 'N/A'}</span></p>
+                      <p><span className={clientLabelTextClasses}>Data de Cadastro:</span> <span className={clientDetailTextClasses}>{formatDate(company.registrationDate)}</span></p>
                       {company.responsible && (
                         <div className={`mt-3 pt-3 border-t border-gray-200`}>
-                          <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsible</h4>
+                          <h4 className={`text-xs font-semibold ${clientLabelTextClasses} uppercase mb-1`}>Responsável</h4>
                           <p><span className={clientLabelTextClasses}>{company.responsible.name}</span> <span className={clientDetailTextClasses}>(CPF: {company.responsible.cpf})</span></p>
                         </div>
                       )}
@@ -173,7 +173,7 @@ export function ViewCompaniesPage() {
                             to={`/companies/${company.id}/add-user`}
                             className="inline-block bg-tas-primary text-white font-bold py-2 px-4 rounded hover:bg-tas-primary-dark transition-colors"
                         >
-                            Add User
+                            Adicionar Usuário
                         </Link>
                     </div>
                   </li>
@@ -183,7 +183,7 @@ export function ViewCompaniesPage() {
 
             {paginationInfo && !isLoading && companies.length > 0 && (
               <div className={`mt-8 text-center text-sm ${clientDetailTextClasses}`}>
-                Page {paginationInfo.number + 1} of {paginationInfo.totalPages}. Total of {paginationInfo.totalElements} companies.
+                Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} empresas.
               </div>
             )}
           </section>

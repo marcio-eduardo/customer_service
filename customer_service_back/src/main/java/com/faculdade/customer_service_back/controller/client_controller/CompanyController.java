@@ -1,6 +1,7 @@
 package com.faculdade.customer_service_back.controller.client_controller;
 
 import com.faculdade.customer_service_back.dto.client.CompanyRequestDTO;
+import com.faculdade.customer_service_back.dto.client.CompanyResponseDTO;
 import com.faculdade.customer_service_back.model.client_model.Company;
 import com.faculdade.customer_service_back.service.client_service.CompanyService;
 import jakarta.persistence.EntityExistsException;
@@ -56,8 +57,8 @@ public class CompanyController {
 
     @PostMapping
     @PreAuthorize("hasRole('MODERATOR') or hasRole('ADMIN')")
-    public ResponseEntity<Company> save(@Valid @RequestBody CompanyRequestDTO companyRequestDTO) {
-        Company savedCompany = companyService.saveFromDTO(companyRequestDTO);
+    public ResponseEntity<CompanyResponseDTO> save(@Valid @RequestBody CompanyRequestDTO companyRequestDTO) {
+        CompanyResponseDTO savedCompany = companyService.saveFromDTO(companyRequestDTO);
         return ResponseEntity.created(URI.create("/api/companies/" + savedCompany.getId())).body(savedCompany);
     }
 

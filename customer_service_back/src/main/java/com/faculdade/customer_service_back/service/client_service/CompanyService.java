@@ -1,6 +1,7 @@
 package com.faculdade.customer_service_back.service.client_service;
 
 import com.faculdade.customer_service_back.dto.client.CompanyRequestDTO;
+import com.faculdade.customer_service_back.dto.client.CompanyResponseDTO;
 import com.faculdade.customer_service_back.model.client_model.Company;
 import com.faculdade.customer_service_back.model.client_model.CompanyUser;
 import com.faculdade.customer_service_back.repository.client_repository.CompanyRepository;
@@ -14,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CompanyService {
@@ -48,12 +48,13 @@ public class CompanyService {
     }
 
     @Transactional
-    public Company saveFromDTO(CompanyRequestDTO dto) {
+    public CompanyResponseDTO saveFromDTO(CompanyRequestDTO dto) {
         if (companyRepository.findByTaxId(dto.getTaxId()) != null) {
             throw new EntityExistsException("Tax ID already registered: " + dto.getTaxId());
         }
 
         CompanyUser responsible = companyUserService.findById(dto.getResponsibleId());
+        String responsibleName = responsible.getUser() != null ? responsible.getUser().getName() : null;
 
         Company company = new Company();
         company.setTradingName(dto.getTradingName());
@@ -72,10 +73,20 @@ public class CompanyService {
                 user.setCompany(savedCompany);
                 companyUserRepository.save(user);
             }
-            savedCompany.setCompanyUsers(usersToAssociate.stream().collect(Collectors.toSet()));
         }
 
-        return savedCompany;
+        return CompanyResponseDTO.builder()
+                .id(savedCompany.getId())
+                .tradingName(dto.getTradingName())
+                .taxId(dto.getTaxId())
+                .legalName(dto.getLegalName())
+                .address(dto.getAddress())
+                .phone(dto.getPhone())
+                .email(dto.getEmail())
+                .registrationDate(savedCompany.getRegistrationDate())
+                .responsibleId(dto.getResponsibleId())
+                .responsibleName(responsibleName)
+                .build();
     }
 
     public Company update(Long id, Company companyToUpdate) {

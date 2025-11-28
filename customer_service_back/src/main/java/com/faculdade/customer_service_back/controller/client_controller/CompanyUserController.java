@@ -54,10 +54,12 @@ public class CompanyUserController {
         }
     }
 
-    @GetMapping("/cpf/{cpf}")
-    public ResponseEntity<CompanyUser> findByCpf(@PathVariable String cpf) {
-        CompanyUser user = companyUserService.findByCpf(cpf);
-        return user != null ? ResponseEntity.ok(user) : ResponseEntity.notFound().build();
+    @GetMapping("/by-user/{userId}")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CompanyUser> findByUserId(@PathVariable Long userId) {
+        return companyUserService.findByUserId(userId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @PostMapping

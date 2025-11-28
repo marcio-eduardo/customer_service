@@ -1,159 +1,360 @@
 // src/pages/CompaniesPage/CreateCompanyPage.tsx
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { api } from '../../lib/axios';
-import { Button } from '../../Components/common/Button/Button';
+import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
+import { api } from '../../lib/axios';
+import { useAuth } from '../../contexts/AuthContext';
 
-interface ICompanyUser {
-    id: number;
+interface CompanyUser {
+  id: number;
+  user?: {
     name: string;
     email: string;
+  };
 }
 
-interface IFormInputs {
-    tradingName: string;
-    legalName: string;
-    taxId: string;
-    address: string;
-    phone: string;
-    email: string;
-    responsibleId: number;
-    userIds: number[];
+interface FormData {
+  tradingName: string;
+  legalName: string;
+  taxId: string;
+  address: string;
+  phone: string;
+  email: string;
+  responsibleId: string;
+  userIds: number[];
 }
 
 export function CreateCompanyPage() {
-    const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<IFormInputs>();
-    const navigate = useNavigate();
-    
-    const [unassignedUsers, setUnassignedUsers] = useState<ICompanyUser[]>([]);
-    const [allUsers, setAllUsers] = useState<ICompanyUser[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [submitError, setSubmitError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const [formData, setFormData] = useState<FormData>({
+    tradingName: '',
+    legalName: '',
+    taxId: '',
+    address: '',
+    phone: '',
+    email: '',
+    responsibleId: '',
+    userIds: [],
+  });
+  
+  const [unassignedUsers, setUnassignedUsers] = useState<CompanyUser[]>([]);
+  const [allUsers, setAllUsers] = useState<CompanyUser[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    useEffect(() => {
-        const fetchUsers = async () => {
-            try {
-                setIsLoading(true);
-                const [unassignedRes, allRes] = await Promise.all([
-                    api.get('/company-users/unassigned'),
-                    api.get('/company-users/all')
-                ]);
-                setUnassignedUsers(unassignedRes.data);
-                setAllUsers(allRes.data);
-            } catch (error) {
-                console.error("Erro ao buscar usuários:", error);
-                toast.error("Falha ao carregar dados dos usuários. Tente novamente mais tarde.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        fetchUsers();
-    }, []);
-
-    const onSubmit = async (data: IFormInputs) => {
-        setSubmitError(null);
-        const payload = {
-            ...data,
-            responsibleId: Number(data.responsibleId),
-            userIds: data.userIds ? data.userIds.map(id => Number(id)) : []
-        };
-        
-        try {
-            await api.post('/companies', payload);
-            toast.success("Empresa cadastrada com sucesso!");
-            navigate('/companies');
-        } catch (err: any) {
-            console.error("Erro ao criar empresa:", err);
-            const errorMessage = err.response?.data?.message || err.response?.data || "Ocorreu um erro ao criar a empresa.";
-            setSubmitError(errorMessage);
-            toast.error(errorMessage);
-        }
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoading(true);
+      try {
+        const [unassignedRes, allRes] = await Promise.all([
+          api.get('/api/company-users/unassigned'),
+          api.get('/api/company-users/all')
+        ]);
+        setUnassignedUsers(unassignedRes.data || []);
+        setAllUsers(allRes.data || []);
+      } catch (error: any) {
+        console.error('Erro ao buscar usuários:', error);
+        toast.error('Falha ao carregar usuários. Tente novamente.');
+      } finally {
+        setIsLoading(false);
+      }
     };
+    fetchUsers();
+  }, []);
 
-    if (isLoading) {
-        return <div className="text-center p-8">Carregando...</div>;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (userId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      userIds: prev.userIds.includes(userId)
+        ? prev.userIds.filter(id => id !== userId)
+        : [...prev.userIds, userId]
+    }));
+  };
+
+  const formatCNPJ = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 14) {
+      return numbers
+        .replace(/^(\d{2})(\d)/, '$1.$2')
+        .replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3')
+        .replace(/\.(\d{3})(\d)/, '.$1/$2')
+        .replace(/(\d{4})(\d)/, '$1-$2');
+    }
+    return value;
+  };
+
+  const handleCNPJChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJ(e.target.value);
+    setFormData(prev => ({ ...prev, taxId: formatted }));
+  };
+
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    
+    if (!formData.tradingName || !formData.legalName || !formData.taxId || !formData.responsibleId) {
+      toast.error('Preencha todos os campos obrigatórios');
+      return;
     }
 
+    setIsSubmitting(true);
+    
+    const payload = {
+      tradingName: formData.tradingName,
+      legalName: formData.legalName,
+      taxId: formData.taxId.replace(/\D/g, ''),
+      address: formData.address,
+      phone: formData.phone,
+      email: formData.email,
+      responsibleId: parseInt(formData.responsibleId, 10),
+      userIds: formData.userIds,
+    };
+
+    try {
+      await api.post('/api/companies', payload);
+      toast.success('Empresa cadastrada com sucesso!');
+      navigate('/dashboard');
+    } catch (error: any) {
+      console.error('Erro ao criar empresa:', error);
+      const errorMessage = error.response?.data?.message || error.response?.data || 'Ocorreu um erro ao criar a empresa.';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Classes de estilo
+  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
+  const contentContainerClasses = "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
+  const headerTitleClass = "text-tas-primary";
+  const headerSubtitleClass = "text-tas-text-secondary-on-card";
+  const formCardClasses = "bg-tas-bg-card shadow-xl rounded-xl p-6 md:p-8";
+  const labelClasses = "block text-sm font-medium mb-1 text-tas-text-secondary-on-card";
+  const inputBaseClasses = "w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm transition-colors text-tas-text-on-card focus:ring-tas-secondary focus:border-tas-secondary";
+  const buttonClasses = `w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors ${isSubmitting || isLoading ? 'bg-gray-400 cursor-not-allowed' : 'bg-tas-secondary hover:bg-tas-secondary-hover'}`;
+  const sectionTitleClass = "text-xl font-semibold mb-4 text-tas-primary";
+
+  if (isLoading) {
     return (
-        <div className="container mx-auto p-4 md:p-8 max-w-3xl">
-            <div className="bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 md:p-8">
-                <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-white text-center">
-                    Cadastro de Nova Empresa
-                </h1>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                    {/* Company Info */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label htmlFor="tradingName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nome Fantasia</label>
-                            <input id="tradingName" {...register("tradingName", { required: "Nome Fantasia é obrigatório" })}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" />
-                            {errors.tradingName && <p className="text-red-500 text-xs mt-1">{errors.tradingName.message}</p>}
-                        </div>
-                        <div>
-                            <label htmlFor="legalName" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Razão Social</label>
-                            <input id="legalName" {...register("legalName", { required: "Razão Social é obrigatória" })}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" />
-                            {errors.legalName && <p className="text-red-500 text-xs mt-1">{errors.legalName.message}</p>}
-                        </div>
-                        <div>
-                            <label htmlFor="taxId" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">CNPJ</label>
-                            <input id="taxId" {...register("taxId", { required: "CNPJ é obrigatório" })}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" />
-                            {errors.taxId && <p className="text-red-500 text-xs mt-1">{errors.taxId.message}</p>}
-                        </div>
-                        <div>
-                            <label htmlFor="responsibleId" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Usuário Responsável</label>
-                            <select id="responsibleId" {...register("responsibleId", { required: "É obrigatório selecionar um responsável" })}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white">
-                                <option value="">Selecione um usuário</option>
-                                {allUsers.map(user => (
-                                    <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
-                                ))}
-                            </select>
-                            {errors.responsibleId && <p className="text-red-500 text-xs mt-1">{errors.responsibleId.message}</p>}
-                        </div>
-                        <div className="md:col-span-2">
-                             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email de Contato</label>
-                            <input id="email" type="email" {...register("email", { pattern: { value: /^\S+@\S+$/i, message: "Email inválido" } })}
-                                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white" />
-                            {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
-                        </div>
-                    </div>
-
-                    {/* User Association */}
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <h2 className="text-xl font-semibold mb-4 text-gray-800 dark:text-white">Associar Usuários à Empresa</h2>
-                        <div className="flex justify-end mb-4">
-                            <Button variant="outline" onClick={() => navigate('/admin/create-user')} type="button">
-                                + Criar Novo Usuário
-                            </Button>
-                        </div>
-                        <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-4 space-y-2">
-                             {unassignedUsers.map(user => (
-                                <div key={user.id} className="flex items-center">
-                                    <input id={`user-${user.id}`} type="checkbox" {...register("userIds")} value={user.id}
-                                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
-                                    <label htmlFor={`user-${user.id}`} className="ml-3 text-sm text-gray-700 dark:text-gray-300">
-                                        {user.name} ({user.email})
-                                    </label>
-                                </div>
-                            ))}
-                            {unassignedUsers.length === 0 && <p className="text-gray-500 dark:text-gray-400">Nenhum usuário não associado encontrado.</p>}
-                        </div>
-                    </div>
-
-                    {submitError && <p className="text-red-500 text-center font-semibold mt-4">{submitError}</p>}
-
-                    <div className="flex justify-end pt-6">
-                        <Button type="submit" size="lg" disabled={isSubmitting}>
-                            {isSubmitting ? "Salvando..." : "Salvar Empresa"}
-                        </Button>
-                    </div>
-                </form>
-            </div>
+      <>
+        <Helmet><title>Cadastro de Empresa - TAS</title></Helmet>
+        <div className={pageWrapperClasses}>
+          <div className={contentContainerClasses}>
+            <p className="text-center text-tas-text-secondary-on-card py-10">Carregando...</p>
+          </div>
         </div>
+      </>
     );
+  }
+
+  return (
+    <>
+      <Helmet><title>Cadastro de Empresa - TAS</title></Helmet>
+      <div className={pageWrapperClasses}>
+        <div className={contentContainerClasses}>
+          <header className="mb-10 text-center">
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>
+              Cadastro de Nova Empresa
+            </h1>
+            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
+              Preencha as informações da empresa e associe usuários
+            </p>
+          </header>
+
+          <section className={formCardClasses}>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              {/* Informações da Empresa */}
+              <div>
+                <h2 className={sectionTitleClass}>Informações da Empresa</h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="tradingName" className={labelClasses}>
+                      Nome Fantasia <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="tradingName"
+                      name="tradingName"
+                      value={formData.tradingName}
+                      onChange={handleChange}
+                      className={inputBaseClasses}
+                      placeholder="Ex: TechSolutions"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="legalName" className={labelClasses}>
+                      Razão Social <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="legalName"
+                      name="legalName"
+                      value={formData.legalName}
+                      onChange={handleChange}
+                      className={inputBaseClasses}
+                      placeholder="Ex: TechSolutions Ltda"
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="taxId" className={labelClasses}>
+                      CNPJ <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="taxId"
+                      name="taxId"
+                      value={formData.taxId}
+                      onChange={handleCNPJChange}
+                      className={inputBaseClasses}
+                      placeholder="00.000.000/0000-00"
+                      maxLength={18}
+                      required
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="email" className={labelClasses}>
+                      Email de Contato
+                    </label>
+                    <input
+                      type="email"
+                      id="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={inputBaseClasses}
+                      placeholder="contato@empresa.com"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone" className={labelClasses}>
+                      Telefone
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      className={inputBaseClasses}
+                      placeholder="(00) 00000-0000"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="address" className={labelClasses}>
+                      Endereço
+                    </label>
+                    <input
+                      type="text"
+                      id="address"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      className={inputBaseClasses}
+                      placeholder="Rua, Número, Cidade - UF"
+                      disabled={isSubmitting}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Usuário Responsável */}
+              <div className="border-t border-gray-200 pt-6">
+                <h2 className={sectionTitleClass}>Usuário Responsável</h2>
+                <div>
+                  <label htmlFor="responsibleId" className={labelClasses}>
+                    Selecione um usuário <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="responsibleId"
+                    name="responsibleId"
+                    value={formData.responsibleId}
+                    onChange={handleChange}
+                    className={inputBaseClasses}
+                    required
+                    disabled={isSubmitting}
+                  >
+                    <option value="">-- Selecione um usuário --</option>
+                    {allUsers.map(user => (
+                      <option key={user.id} value={user.id}>
+                        {user.user?.name || `Usuário ${user.id}`} ({user.user?.email || 'Sem email'})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="border-t border-gray-200 pt-6">
+                <h2 className={sectionTitleClass}>Associar Usuários à Empresa</h2>
+                <div className="max-h-64 overflow-y-auto border border-gray-300 rounded-lg p-4 space-y-2 bg-white">
+                  {unassignedUsers.length > 0 ? (
+                    unassignedUsers.map(user => (
+                      <div key={user.id} className="flex items-center py-2 hover:bg-gray-50 rounded px-2">
+                        <input
+                          type="checkbox"
+                          id={`user-${user.id}`}
+                          checked={formData.userIds.includes(user.id)}
+                          onChange={() => handleCheckboxChange(user.id)}
+                          className="h-4 w-4 rounded border-gray-300 text-tas-secondary focus:ring-tas-secondary"
+                          disabled={isSubmitting}
+                        />
+                        <label
+                          htmlFor={`user-${user.id}`}
+                          className="ml-3 text-sm text-tas-text-on-card cursor-pointer flex-1"
+                        >
+                          {user.user?.name || `Usuário ${user.id}`} - {user.user?.email || 'Sem email'}
+                        </label>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-tas-text-secondary-on-card text-center py-4">
+                      Nenhum usuário não associado encontrado.
+                    </p>
+                  )}
+                </div>
+                {formData.userIds.length > 0 && (
+                  <p className="text-sm text-tas-secondary mt-2">
+                    {formData.userIds.length} usuário(s) selecionado(s)
+                  </p>
+                )}
+              </div>
+
+              {/* Botões */}
+              <div className="flex gap-4 pt-6">
+                <button
+                  type="button"
+                  onClick={() => navigate('/dashboard')}
+                  className="flex-1 px-4 py-2.5 border-2 border-gray-300 rounded-lg text-tas-text-secondary-on-card font-semibold hover:bg-gray-100 transition-colors"
+                  disabled={isSubmitting}
+                >
+                  Cancelar
+                </button>
+                <button type="submit" className={buttonClasses} disabled={isSubmitting || isLoading}>
+                  {isSubmitting ? 'Salvando...' : 'Salvar Empresa'}
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </div>
+    </>
+  );
 }

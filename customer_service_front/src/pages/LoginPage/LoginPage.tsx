@@ -21,6 +21,9 @@ interface LoginApiResponse {
   username: string;
   email: string;
   roles?: string[];
+  companyUserId?: number | null;
+  adminUserId?: number | null;
+  moderatorUserId?: number | null;
 }
 
 export function LoginPage({}: LoginPageProps) { // Prop removida
@@ -77,6 +80,9 @@ export function LoginPage({}: LoginPageProps) { // Prop removida
         username: userData.username,
         email: userData.email,
         roles: userData.roles || [],
+        companyUserId: userData.companyUserId,
+        adminUserId: userData.adminUserId,
+        moderatorUserId: userData.moderatorUserId,
       };
 
       auth.login(userForContext, token);

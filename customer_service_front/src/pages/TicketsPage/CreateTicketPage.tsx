@@ -99,11 +99,10 @@ export function CreateTicketPage() {
             companyId: clientType === 'company' ? parseInt(clientId, 10) : undefined,
         };
     } else {
-        // Non-managers open tickets for themselves. We assume the logged-in user's ID
-        // corresponds to a CompanyUser ID. This might need adjustment based on final domain logic.
+        // Non-managers open tickets for themselves using the companyUserId from context
         payload = {
             ...payload,
-            companyUserId: user?.id,
+            companyUserId: user?.companyUserId,
         };
     }
     
