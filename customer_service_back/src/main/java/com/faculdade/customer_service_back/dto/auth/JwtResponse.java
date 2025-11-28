@@ -8,15 +8,31 @@ public class JwtResponse {
     private Long id;
     private String username;
     private String email;
-    //Podes adicionar uma lista de papéis (roles) se necessário
     private List<String> roles;
+    
+    // IDs dos perfis específicos
+    private Long companyUserId;
+    private Long adminUserId;
+    private Long moderatorUserId;
 
-    public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles ) {
+    public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles) {
         this.token = accessToken;
         this.id = id;
         this.username = username;
         this.email = email;
         this.roles = roles;
+    }
+    
+    public JwtResponse(String accessToken, Long id, String username, String email, List<String> roles,
+                       Long companyUserId, Long adminUserId, Long moderatorUserId) {
+        this.token = accessToken;
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.roles = roles;
+        this.companyUserId = companyUserId;
+        this.adminUserId = adminUserId;
+        this.moderatorUserId = moderatorUserId;
     }
 
     // Getters e Setters
@@ -69,4 +85,27 @@ public class JwtResponse {
         this.roles = roles;
     }
 
+    public Long getCompanyUserId() {
+        return companyUserId;
+    }
+
+    public void setCompanyUserId(Long companyUserId) {
+        this.companyUserId = companyUserId;
+    }
+
+    public Long getAdminUserId() {
+        return adminUserId;
+    }
+
+    public void setAdminUserId(Long adminUserId) {
+        this.adminUserId = adminUserId;
+    }
+
+    public Long getModeratorUserId() {
+        return moderatorUserId;
+    }
+
+    public void setModeratorUserId(Long moderatorUserId) {
+        this.moderatorUserId = moderatorUserId;
+    }
 }
