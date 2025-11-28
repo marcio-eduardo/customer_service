@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
+import { formatCNPJ, formatPhone, validateCNPJ, removeNonNumeric } from '../../lib/validators';
 
 interface FormData {
   name: string;
@@ -27,6 +28,21 @@ export function CreateCompanySimplePage() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    
+    // Aplicar máscara de CNPJ
+    if (name === 'cnpj') {
+      const formatted = formatCNPJ(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
+    // Aplicar máscara de telefone
+    if (name === 'phone') {
+      const formatted = formatPhone(value);
+      setFormData(prev => ({ ...prev, [name]: formatted }));
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -37,10 +53,25 @@ export function CreateCompanySimplePage() {
       toast.error('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
+    
+    // Validar CNPJ
+    if (!validateCNPJ(formData.cnpj)) {
+      toast.error('CNPJ inválido. Por favor, verifique o número digitado.');
+      return;
+    }
 
     setIsSubmitting(true);
     try {
-      await api.post('/api/companies', formData);
+      // Enviar dados com CNPJ e telefone sem formatação
+      const payload = {
+        name: formData.name,
+        cnpj: removeNonNumeric(formData.cnpj),
+        email: formData.email,
+        phone: removeNonNumeric(formData.phone),
+        address: formData.address,
+      };
+      
+      await api.post('/api/companies', payload);
       toast.success('Empresa criada com sucesso!');
       navigate('/companies/view');
     } catch (error: any) {
@@ -111,6 +142,7 @@ export function CreateCompanySimplePage() {
                   className={inputBaseClasses}
                   placeholder="00.000.000/0000-00"
                   maxLength={18}
+                  autoComplete="off"
                 />
               </div>
 
@@ -142,6 +174,8 @@ export function CreateCompanySimplePage() {
                   onChange={handleChange}
                   className={inputBaseClasses}
                   placeholder="(00) 00000-0000"
+                  maxLength={15}
+                  autoComplete="off"
                 />
               </div>
 

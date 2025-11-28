@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Company } from '../../types/Company';
+import { formatCNPJ, formatPhone } from '../../lib/validators';
 
 interface Pageable {
   pageNumber: number;
@@ -151,10 +152,10 @@ export function ViewCompaniesPage() {
                 {companies.map((company) => (
                   <li key={company.id} className={`bg-tas-bg-card p-4 sm:p-6 rounded-lg shadow-md border border-gray-700 transition-shadow hover:shadow-lg`}>
                     <h3 className={`text-xl ${companyNameTextClasses} mb-1`}>{company.name}</h3>
-                    <p className={`text-sm ${companyDetailTextClasses} mb-2`}><span className={companyLabelTextClasses}>CNPJ:</span> {company.cnpj}</p>
+                    <p className={`text-sm ${companyDetailTextClasses} mb-2`}><span className={companyLabelTextClasses}>CNPJ:</span> {formatCNPJ(company.cnpj || '')}</p>
                     <div className="mt-3 text-sm space-y-1">
                       <p><span className={companyLabelTextClasses}>Email:</span> <span className={companyDetailTextClasses}>{company.email || 'N/A'}</span></p>
-                      <p><span className={companyLabelTextClasses}>Telefone:</span> <span className={companyDetailTextClasses}>{company.phone || 'N/A'}</span></p>
+                      <p><span className={companyLabelTextClasses}>Telefone:</span> <span className={companyDetailTextClasses}>{company.phone ? formatPhone(company.phone) : 'N/A'}</span></p>
                       <p><span className={companyLabelTextClasses}>Endereço:</span> <span className={companyDetailTextClasses}>{company.address || 'N/A'}</span></p>
                     </div>
                   </li>
