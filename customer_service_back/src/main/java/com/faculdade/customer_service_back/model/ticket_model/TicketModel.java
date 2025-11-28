@@ -1,10 +1,10 @@
 package com.faculdade.customer_service_back.model.ticket_model;
 
+import com.faculdade.customer_service_back.model.admin_model.AdminUser;
 import com.faculdade.customer_service_back.model.client_model.Company;
 import com.faculdade.customer_service_back.model.client_model.CompanyUser;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import com.faculdade.customer_service_back.model.technical_model.Technical;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -31,27 +31,27 @@ public class TicketModel {
     private TicketPriority priority;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_user_id", nullable = true)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
-    private CompanyUser companyUser;
+    @JoinColumn(name = "created_by_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "user", "company"})
+    private CompanyUser createdBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "company_id", nullable = true)
-    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "users"})
     private Company company;
 
     @ManyToOne
-    @JoinColumn(name = "technical_id")
-    @JsonIgnoreProperties({"ticketQueue"})
-    private Technical technical;
+    @JoinColumn(name = "assigned_to_id")
+    @JsonIgnoreProperties({"user", "assignedTickets"})
+    private AdminUser assignedTo;
 
     @ManyToOne
-    @JoinColumn(name = "closed_by_technical_id", nullable = true)
-    @JsonIgnoreProperties({"ticketQueue"})
-    private Technical closedByTechnical; // Técnico que fechou o chamado
+    @JoinColumn(name = "closed_by_id", nullable = true)
+    @JsonIgnoreProperties({"user", "assignedTickets"})
+    private AdminUser closedBy;
 
     @Column(nullable = true, length = 500)
-    private String resolutionNotes; // Texto da resolução
+    private String resolutionNotes;
 
     @Column
     private LocalDateTime openDate;

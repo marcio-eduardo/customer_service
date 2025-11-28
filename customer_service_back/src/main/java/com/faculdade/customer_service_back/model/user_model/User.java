@@ -1,5 +1,6 @@
 package com.faculdade.customer_service_back.model.user_model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -13,7 +14,8 @@ import java.util.Set;
 @Table(name = "users",
         uniqueConstraints = {
                 @UniqueConstraint(columnNames = "username"),
-                @UniqueConstraint(columnNames = "email")
+                @UniqueConstraint(columnNames = "email"),
+                @UniqueConstraint(columnNames = "cpf")
         })
 @Data
 public class User {
@@ -36,6 +38,7 @@ public class User {
     @NotBlank
     @Size(max = 120)
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @ManyToMany(fetch = FetchType.LAZY)
@@ -43,6 +46,20 @@ public class User {
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
+
+    // Dados pessoais comuns
+    @NotBlank
+    @Column(nullable = false)
+    private String name;
+
+    @Column(unique = true, length = 14)
+    private String cpf;
+
+    @Column
+    private String phone;
+
+    @Column
+    private String address;
 
     public User() {
     }
