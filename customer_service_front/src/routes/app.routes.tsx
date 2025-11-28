@@ -11,6 +11,7 @@ import { ViewResolvedTicketsPage } from "../pages/TicketsPage/ViewResolvedTicket
 import { CreateUserPage } from "../pages/CreateUserPage/CreateUserPage";
 import { ViewCompaniesPage } from "../pages/CompaniesPage/ViewCompaniesPage";
 import { CreateCompanySimplePage } from "../pages/CompaniesPage/CreateCompanySimplePage";
+import { ViewUsersPage } from "../pages/UsersPage/ViewUsersPage";
 
 export const AppRouter = createBrowserRouter([
   {
@@ -28,6 +29,7 @@ export const AppRouter = createBrowserRouter([
       { path: '/dashboard', element: <DashboardPage /> },
       { path: '/companies/view', element: <ViewCompaniesPage /> },
       { path: '/companies/create', element: <CreateCompanySimplePage /> },
+      { path: '/users/view', element: <ViewUsersPage /> },
       { path: '/about', element: <AboutUsPage /> },
       { path: '/tickets/novo', element: <CreateTicketPage /> },
       { path: '/tickets/abertos', element: <ViewOpenTicketsPage /> },

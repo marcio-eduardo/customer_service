@@ -185,7 +185,7 @@ export function CreateTicketPage() {
                     <option value="" disabled>-- Selecione a Empresa --</option>
                     {companies.map(company => (
                       <option key={company.id} value={company.id}>
-                        {company.tradeName} ({company.cnpj})
+                        {company.name} ({company.cnpj})
                       </option>
                     ))}
                   </select>
@@ -222,7 +222,7 @@ export function CreateTicketPage() {
                     </option>
                     {companyUsers.map(u => (
                       <option key={u.id} value={u.id}>
-                        {u.nome} ({u.username})
+                        ({u.username})
                       </option>
                     ))}
                   </select>
@@ -246,7 +246,7 @@ export function CreateTicketPage() {
                     <option value="">-- Deixar na fila (Sem técnico) --</option>
                     {techUsers.map(tech => (
                       <option key={tech.id} value={tech.id}>
-                        {tech.nome} ({tech.username})
+                        ({tech.username})
                       </option>
                     ))}
                   </select>

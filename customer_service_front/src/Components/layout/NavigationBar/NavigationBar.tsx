@@ -120,6 +120,7 @@ export function NavigationBar() {
           label: 'Usuários',
           condition: isModerator,
           items: [
+            { type: 'fullwidth-link', path: '/users/view', label: 'Listar Usuários', style: dropdownFullWidthLinkStyle, condition: isModerator },
             { type: 'fullwidth-link', path: '/admin/criar-utilizador', label: 'Adicionar Usuários', style: dropdownFullWidthLinkStyle, condition: isModerator },
           ]
         },
