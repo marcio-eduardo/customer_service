@@ -17,6 +17,7 @@ import com.faculdade.customer_service_back.security.services.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -70,55 +71,5 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles));
-    }
-
-    @PostMapping("/signup")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpRequest signUpRequest) {
-        if (userRepository.existsByUsername(signUpRequest.getUsername())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro: Nome de utilizador já está em uso!"));
-        }
-
-        if (userRepository.existsByEmail(signUpRequest.getEmail())) {
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro: Email já está em uso!"));
-        }
-
-        User user = new User(signUpRequest.getUsername(),
-                signUpRequest.getEmail(),
-                encoder.encode(signUpRequest.getPassword()));
-
-        Set<Role> roles = new HashSet<>();
-        String strRole = signUpRequest.getRole();
-        Role userRole;
-
-        if (strRole == null || strRole.isEmpty() || strRole.equalsIgnoreCase("company_user")) {
-            userRole = roleRepository.findByName(ERole.ROLE_COMPANY_USER)
-                    .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_COMPANY_USER não encontrado."));
-            if (signUpRequest.getCompanyId() == null) {
-                return ResponseEntity.badRequest().body(new MessageResponse("Erro: O ID da empresa é obrigatório para usuários da empresa."));
-            }
-            Company company = companyRepository.findById(signUpRequest.getCompanyId())
-                    .orElseThrow(() -> new RuntimeException("Erro: Empresa não encontrada."));
-            user.setCompany(company);
-        } else {
-            switch (strRole.toLowerCase()) {
-                case "tech":
-                    userRole = roleRepository.findByName(ERole.ROLE_TECH_USER)
-                            .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_TECH_USER não encontrado."));
-                    break;
-                case "mod":
-                case "moderator":
-                    userRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                            .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_MODERATOR não encontrado."));
-                    break;
-                default:
-                    return ResponseEntity.badRequest().body(new MessageResponse("Erro: Papel '" + strRole + "' não é válido."));
-            }
-        }
-        roles.add(userRole);
-        user.setRoles(roles);
-
-        userRepository.save(user);
-
-        return ResponseEntity.ok(new MessageResponse("Utilizador registado com sucesso!"));
     }
 }
