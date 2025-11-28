@@ -72,3 +72,19 @@
   5. Company form masks (CNPJ, phone)
   6. Routes and navigation updates
   7. User management page (ViewUsersPage)
+- Implementado CRUD Completo de Empresas:
+  - Backend: Criados DTOs `CompanyRequest`, `CompanyResponse` e `UpdateCompanyRequest`
+  - CompanyService refatorado seguindo padrão Repository com validações:
+    - Validação de CNPJ e email duplicados (create e update)
+    - Verificação de usuários vinculados antes de deletar (previne foreign key constraint)
+    - Métodos @Transactional para operações de escrita
+    - Update parcial (atualiza apenas campos não nulos)
+  - CompanyController atualizado para usar DTOs com validações @Valid
+  - UserRepository: Adicionados métodos `countByCompanyId` e `existsByCompanyId`
+  - Frontend: ViewCompaniesPage com CRUD completo
+    - Modal de edição com máscaras de CNPJ e telefone
+    - Validação de CNPJ antes do submit
+    - Modal de exclusão com aviso sobre usuários vinculados
+    - React Query para cache e gerenciamento de estado
+    - Toast com duração estendida (5s) para erros de constraint
+    - Botões de ação visíveis apenas para Moderadores
