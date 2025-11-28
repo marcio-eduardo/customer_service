@@ -1,101 +1,128 @@
 // Localização: src/pages/ViewCompaniesPage.tsx
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom';
 import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Company } from '../../types/Company';
-import { formatCNPJ, formatPhone } from '../../lib/validators';
-
-interface Pageable {
-  pageNumber: number;
-  pageSize: number;
-  sort: {
-    sorted: boolean;
-    empty: boolean;
-    unsorted: boolean;
-  };
-  offset: number;
-  paged: boolean;
-  unpaged: boolean;
-}
-
-interface SortInfo {
-  sorted: boolean;
-  empty: boolean;
-  unsorted: boolean;
-}
-
-interface PaginatedResponse<T> {
-  content: T[];
-  pageable: Pageable;
-  totalPages: number;
-  totalElements: number;
-  last: boolean;
-  size: number;
-  number: number;
-  sort: SortInfo;
-  numberOfElements: number;
-  first: boolean;
-  empty: boolean;
-}
-
-const formatDate = (dateString: string) => {
-  try {
-    if (!dateString || !/^\d{4}-\d{2}-\d{2}/.test(dateString)) {
-      return dateString || 'N/A';
-    }
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    });
-  } catch (e) {
-    console.warn("Erro ao formatar data:", dateString, e);
-    return dateString;
-  }
-};
+import { formatCNPJ, formatPhone, validateCNPJ, removeNonNumeric } from '../../lib/validators';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 
 export function ViewCompaniesPage() {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [paginationInfo, setPaginationInfo] = useState<Omit<PaginatedResponse<any>, 'content'> | null>(null);
-  const { user } = useAuth();
+  const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [deletingCompany, setDeletingCompany] = useState<Company | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    cnpj: '',
+    email: '',
+    phone: '',
+    address: '',
+  });
 
-  const apiUrl = '/api/companies';
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   const isModerator = user?.roles?.includes('ROLE_MODERATOR');
 
-  useEffect(() => {
-    const fetchCompanies = async () => {
-      setIsLoading(true);
-      setError(null);
-      setCompanies([]);
-      setPaginationInfo(null);
-      try {
-        const response = await api.get<Company[]>(apiUrl);
-        const data = response.data;
+  // Query para buscar empresas
+  const { data: companies = [], isLoading, error } = useQuery<Company[]>({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const response = await api.get<Company[]>('/api/companies');
+      return response.data;
+    },
+  });
 
-        if (data && Array.isArray(data)) {
-          setCompanies(data);
-        } else {
-          console.warn("Estrutura de dados da API inesperada para empresas. Não é um array:", data);
-          setCompanies([]);
-        }
-      } catch (err: any) {
-        console.error(`Falha ao buscar empresas:`, err);
-        if (err.response && err.response.status === 401) {
-          setError("Erro 401: Não autorizado. Verifique se está logado ou se sua sessão expirou.");
-        } else {
-          setError(err.message || `Ocorreu um erro desconhecido ao buscar empresas.`);
-        }
-      } finally {
-        setIsLoading(false);
+  // Mutation para atualizar empresa
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: number; data: any }) => {
+      const response = await api.put(`/api/companies/${id}`, data);
+      return response.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      toast.success('Empresa atualizada com sucesso!');
+      setEditingCompany(null);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Erro ao atualizar empresa';
+      toast.error(errorMessage);
+    },
+  });
+
+  // Mutation para deletar empresa
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await api.delete(`/api/companies/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['companies'] });
+      toast.success('Empresa excluída com sucesso!');
+      setDeletingCompany(null);
+    },
+    onError: (error: any) => {
+      const errorMessage = error.response?.data?.message || 'Erro ao excluir empresa';
+      
+      // Exibir mensagem mais clara para erros de constraint
+      if (errorMessage.includes('usuário(s) vinculado(s)')) {
+        toast.error(errorMessage, { duration: 5000 });
+      } else {
+        toast.error(errorMessage);
       }
-    };
+    },
+  });
 
-    fetchCompanies();
-  }, []);
+  const handleEditClick = (company: Company) => {
+    setEditingCompany(company);
+    setEditFormData({
+      name: company.name || '',
+      cnpj: formatCNPJ(company.cnpj || ''),
+      email: company.email || '',
+      phone: formatPhone(company.phone || ''),
+      address: company.address || '',
+    });
+  };
+
+  const handleEditSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editingCompany) return;
+
+    // Validar CNPJ se foi alterado
+    if (editFormData.cnpj) {
+      const cnpjNumerico = removeNonNumeric(editFormData.cnpj);
+      if (!validateCNPJ(cnpjNumerico)) {
+        toast.error('CNPJ inválido');
+        return;
+      }
+    }
+
+    // Preparar dados para envio (sem formatação)
+    const updateData: any = {};
+    if (editFormData.name) updateData.name = editFormData.name;
+    if (editFormData.cnpj) updateData.cnpj = removeNonNumeric(editFormData.cnpj);
+    if (editFormData.email) updateData.email = editFormData.email;
+    if (editFormData.phone) updateData.phone = removeNonNumeric(editFormData.phone);
+    if (editFormData.address) updateData.address = editFormData.address;
+
+    updateMutation.mutate({ id: editingCompany.id, data: updateData });
+  };
+
+  const handleDeleteConfirm = () => {
+    if (deletingCompany) {
+      deleteMutation.mutate(deletingCompany.id);
+    }
+  };
+
+  const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCNPJ(e.target.value);
+    setEditFormData({ ...editFormData, cnpj: formatted });
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhone(e.target.value);
+    setEditFormData({ ...editFormData, phone: formatted });
+  };
 
   const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
@@ -141,7 +168,7 @@ export function ViewCompaniesPage() {
 
           <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
             {isLoading && <p className={loadingTextClass}>A carregar empresas...</p>}
-            {error && <p className={errorTextClass}>{error}</p>}
+            {error && <p className={errorTextClass}>Erro ao carregar empresas</p>}
 
             {!isLoading && !error && companies.length === 0 && (
               <p className={`${companyDetailTextClasses} text-center py-4`}>Nenhuma empresa encontrada.</p>
@@ -151,26 +178,160 @@ export function ViewCompaniesPage() {
               <ul className="space-y-6">
                 {companies.map((company) => (
                   <li key={company.id} className={`bg-tas-bg-card p-4 sm:p-6 rounded-lg shadow-md border border-gray-700 transition-shadow hover:shadow-lg`}>
-                    <h3 className={`text-xl ${companyNameTextClasses} mb-1`}>{company.name}</h3>
-                    <p className={`text-sm ${companyDetailTextClasses} mb-2`}><span className={companyLabelTextClasses}>CNPJ:</span> {formatCNPJ(company.cnpj || '')}</p>
-                    <div className="mt-3 text-sm space-y-1">
-                      <p><span className={companyLabelTextClasses}>Email:</span> <span className={companyDetailTextClasses}>{company.email || 'N/A'}</span></p>
-                      <p><span className={companyLabelTextClasses}>Telefone:</span> <span className={companyDetailTextClasses}>{company.phone ? formatPhone(company.phone) : 'N/A'}</span></p>
-                      <p><span className={companyLabelTextClasses}>Endereço:</span> <span className={companyDetailTextClasses}>{company.address || 'N/A'}</span></p>
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h3 className={`text-xl ${companyNameTextClasses} mb-1`}>{company.name}</h3>
+                        <p className={`text-sm ${companyDetailTextClasses} mb-2`}>
+                          <span className={companyLabelTextClasses}>CNPJ:</span> {formatCNPJ(company.cnpj || '')}
+                        </p>
+                        <div className="mt-3 text-sm space-y-1">
+                          <p><span className={companyLabelTextClasses}>Email:</span> <span className={companyDetailTextClasses}>{company.email || 'N/A'}</span></p>
+                          <p><span className={companyLabelTextClasses}>Telefone:</span> <span className={companyDetailTextClasses}>{company.phone ? formatPhone(company.phone) : 'N/A'}</span></p>
+                          <p><span className={companyLabelTextClasses}>Endereço:</span> <span className={companyDetailTextClasses}>{company.address || 'N/A'}</span></p>
+                        </div>
+                      </div>
+                      {isModerator && (
+                        <div className="flex gap-2 ml-4">
+                          <button
+                            onClick={() => handleEditClick(company)}
+                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            Editar
+                          </button>
+                          <button
+                            onClick={() => setDeletingCompany(company)}
+                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                          >
+                            Excluir
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </li>
                 ))}
               </ul>
             )}
-
-            {paginationInfo && !isLoading && companies.length > 0 && (
-              <div className={`mt-8 text-center text-sm ${companyDetailTextClasses}`}>
-                Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} empresas.
-              </div>
-            )}
           </section>
         </div>
       </div>
+
+      {/* Modal de Edição */}
+      {editingCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-tas-bg-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h2 className="text-2xl font-bold text-tas-primary mb-4">Editar Empresa</h2>
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-tas-text-on-card font-medium mb-2">Nome*</label>
+                <input
+                  type="text"
+                  value={editFormData.name}
+                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-tas-text-on-card font-medium mb-2">CNPJ*</label>
+                <input
+                  type="text"
+                  value={editFormData.cnpj}
+                  onChange={handleCnpjChange}
+                  maxLength={18}
+                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-tas-text-on-card font-medium mb-2">Email*</label>
+                <input
+                  type="email"
+                  value={editFormData.email}
+                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
+                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-tas-text-on-card font-medium mb-2">Telefone</label>
+                <input
+                  type="text"
+                  value={editFormData.phone}
+                  onChange={handlePhoneChange}
+                  maxLength={15}
+                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
+                />
+              </div>
+
+              <div>
+                <label className="block text-tas-text-on-card font-medium mb-2">Endereço</label>
+                <textarea
+                  value={editFormData.address}
+                  onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
+                  rows={3}
+                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={updateMutation.isPending}
+                  className="flex-1 px-4 py-2 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50"
+                >
+                  {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditingCompany(null)}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Exclusão */}
+      {deletingCompany && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-tas-bg-card rounded-lg p-6 max-w-md w-full">
+            <h2 className="text-2xl font-bold text-red-500 mb-4">Confirmar Exclusão</h2>
+            <div className="text-tas-text-on-card mb-6">
+              <p className="mb-3">
+                Tem certeza que deseja excluir a empresa <strong>{deletingCompany.name}</strong>?
+              </p>
+              <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3 text-sm">
+                <p className="text-yellow-400 font-medium mb-1">⚠️ Atenção:</p>
+                <p className="text-yellow-200">
+                  Não será possível excluir se houver usuários vinculados a esta empresa. 
+                  Remova ou transfira os usuários antes de prosseguir.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={handleDeleteConfirm}
+                disabled={deleteMutation.isPending}
+                className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
+              </button>
+              <button
+                onClick={() => setDeletingCompany(null)}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
