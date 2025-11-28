@@ -13,3 +13,6 @@
 - Criados os arquivos `BD.md` e `BD-OLD.md` para documentar e comparar os modelos de dados.
 - Removidas as classes de modelo e repositórios antigos: `ClientePf`, `ClientePJ` e `Technical`.
 - Atualizado o arquivo `Tarefas.md` com o plano de refatoração.
+- Análise de contexto realizada: Leitura de README, DevLog e Tarefas. Próximo foco identificado: Refatoração do Frontend (SignUp, CreateTicket, Company CRUD).
+- Correção de Bug: Ajustado o menu dropdown "Configurações" que fechava prematuramente. Removido gap (`mt-0.5`) entre o botão e o menu.
+- Melhoria de UX: Alterado o comportamento dos submenus "Empresas" e "Usuários" no NavigationBar. Agora são seções estáticas (sempre visíveis) para evitar layout shift e fechamento acidental do menu.

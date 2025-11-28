@@ -19,7 +19,7 @@ interface NavLinkSimple { type: 'link'; path: string; label: string; icon?: JSX.
 interface DropdownSubItemLink { path: string; label: string; style: string; condition?: boolean; }
 interface DropdownItemGroupRow { type: 'row'; subItems: (DropdownSubItemLink)[]; condition?: boolean; }
 interface DropdownItemGroupFullWidthLink { type: 'fullwidth-link'; path: string; label: string; style: string; condition?: boolean; }
-interface DropdownItemGroupSearch { type: 'search'; condition?: boolean; } 
+interface DropdownItemGroupSearch { type: 'search'; condition?: boolean; }
 interface DropdownSubMenu { type: 'submenu'; label: string; items: DropdownItemGroup[]; condition?: boolean; }
 
 type DropdownItemGroup = DropdownItemGroupRow | DropdownItemGroupFullWidthLink | DropdownItemGroupSearch | DropdownSubMenu;
@@ -29,8 +29,8 @@ type NavigationItemConfig = NavLinkSimple | NavDropdown;
 
 export function NavigationBar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [ticketIdFilter, setTicketIdFilter] = useState(''); 
-  
+  const [ticketIdFilter, setTicketIdFilter] = useState('');
+
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -40,7 +40,7 @@ export function NavigationBar() {
   const isCompanyUser = userRoles.includes('ROLE_COMPANY_USER');
 
   const canManageTickets = isTechUser || isModerator;
-  
+
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const handleLinkClick = () => setIsMobileMenuOpen(false);
 
@@ -63,45 +63,46 @@ export function NavigationBar() {
       handleTicketSearch();
     }
   };
-  
+
   // Classes de estilo
-  const navBgClass = 'bg-tas-primary'; 
-  const navTextClass = 'text-tas-text-on-primary'; 
-  const navHoverTextClass = 'hover:text-tas-accent'; 
-  const mobileMenuBgClass = 'bg-tas-primary'; 
-  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary'; 
+  const navBgClass = 'bg-tas-primary';
+  const navTextClass = 'text-tas-text-on-primary';
+  const navHoverTextClass = 'hover:text-tas-accent';
+  const mobileMenuBgClass = 'bg-tas-primary';
+  const searchInputBgClass = 'bg-tas-primary-hover placeholder-gray-400 text-tas-text-on-primary focus:bg-tas-primary';
   const searchFocusRingClass = 'focus:ring-tas-accent focus:border-tas-accent';
-  
+
   const dropdownButtonBase = `flex-1 text-xs py-1.5 px-2 rounded-md border transition-colors`;
   const dropdownButtonRowStyle = `${dropdownButtonBase} border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent text-center`;
-  const dropdownFullWidthLinkStyle = `block w-full text-center text-xs mt-2 py-1.5 px-2 rounded-md border border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent transition-colors`;
+  const dropdownFullWidthLinkStyle = `block w-full text-center text-xs py-1.5 px-2 rounded-md border border-tas-accent text-tas-text-on-primary hover:bg-tas-primary-hover hover:text-tas-accent transition-colors`;
 
   const navItemBaseClasses = `px-3 py-2 rounded-md text-sm font-medium ${navHoverTextClass} transition-colors flex items-center ${navTextClass} cursor-pointer hover:bg-tas-primary-hover`;
   const mobileNavItemBaseClasses = `w-full text-left block px-4 py-3 text-base font-medium ${navHoverTextClass} transition-colors ${navTextClass} hover:bg-tas-primary-hover`;
 
-  const dropdownContainerClasses = `absolute right-0 md:left-0 top-full mt-0.5 w-64 rounded-md shadow-lg p-3 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
+  const dropdownContainerClasses = `absolute right-0 md:left-0 top-full w-64 rounded-md shadow-lg p-3 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50`;
 
-  const navigationStructure: NavigationItemConfig[] = [
+  const navigationStructure: NavigationItemConfig[] = ([
     { type: 'link', path: '/dashboard', label: 'Dashboard', icon: <HomeIcon />, id: 'dashboard', condition: isModerator || isTechUser },
-    { 
-      type: 'dropdown', 
-      label: 'Chamados', 
-      icon: <ListChecksIcon />, 
+    {
+      type: 'dropdown',
+      label: 'Chamados',
+      icon: <ListChecksIcon />,
       id: 'chamados',
       condition: isModerator || isTechUser || isCompanyUser, // All roles can see tickets
       items: [
         { type: 'search', condition: isModerator || isTechUser }, // Only tech/moderator can search tickets
-        { type: 'row', subItems: [
+        {
+          type: 'row', subItems: [
             { path: '/tickets/novo', label: '+ Novo', style: dropdownButtonRowStyle, condition: isModerator || isCompanyUser }, // Moderator and CompanyUser can create
             { path: '/tickets/abertos', label: 'Abertos', style: dropdownButtonRowStyle, condition: isModerator || isTechUser || isCompanyUser }, // All can see open
           ],
         },
       ]
     },
-    { 
-      type: 'dropdown', 
-      label: 'Configurações', 
-      icon: <CogIcon />, 
+    {
+      type: 'dropdown',
+      label: 'Configurações',
+      icon: <CogIcon />,
       id: 'settings',
       condition: isModerator || isTechUser, // Only moderator and tech user see this dropdown
       items: [
@@ -125,7 +126,7 @@ export function NavigationBar() {
         },
       ]
     },
-  ].filter(item => item.condition === undefined || item.condition); // Filter out items based on their conditions
+  ] as NavigationItemConfig[]).filter(item => item.condition === undefined || item.condition); // Filter out items based on their conditions
 
   const renderDropdownItems = (items: DropdownItemGroup[]): JSX.Element[] => {
     return items.map((group, groupIndex) => {
@@ -133,18 +134,17 @@ export function NavigationBar() {
 
       if (group.type === 'submenu') {
         return (
-          <div key={`submenu-${groupIndex}`} className="relative group/submenu">
-            <button className="w-full text-left px-3 py-2 text-sm font-medium text-tas-text-on-primary hover:bg-tas-primary-hover rounded-md flex items-center justify-between">
-              <span>{group.label}</span>
-              <ChevronDownIcon />
-            </button>
-            <div className="pl-4 border-l border-tas-accent ml-2 hidden group-hover/submenu:block">
+          <div key={`submenu-${groupIndex}`} className="mt-2 first:mt-0">
+            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">
+              {group.label}
+            </p>
+            <div className="pl-0 space-y-1">
               {renderDropdownItems(group.items)}
             </div>
           </div>
         );
       }
-      
+
       if (group.type === 'search') {
         return (
           <div key={`search-${groupIndex}`} className="relative flex items-center mb-1">
@@ -208,20 +208,20 @@ export function NavigationBar() {
             <Link to={isCompanyUser ? "/tickets/abertos" : "/dashboard"} className="flex-shrink-0" onClick={handleLinkClick}>
               <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto" />
             </Link>
-            <Link 
-              to="/about" 
-              className={`ml-3 text-xl font-semibold hidden md:flex items-center ${navTextClass} ${navHoverTextClass}`} 
+            <Link
+              to="/about"
+              className={`ml-3 text-xl font-semibold hidden md:flex items-center ${navTextClass} ${navHoverTextClass}`}
               onClick={handleLinkClick}
             >
-              <h2 className="hidden lg:block">Trust Assist System</h2> 
-              <span className="hidden md:block lg:hidden">TAS</span>   
+              <h2 className="hidden lg:block">Trust Assist System</h2>
+              <span className="hidden md:block lg:hidden">TAS</span>
             </Link>
           </div>
 
           <div className="hidden md:flex flex-grow items-center justify-end space-x-1">
             {navigationStructure.map((item) => {
               if (item.type === 'link') {
-                return ( <Link key={item.id} to={item.path} className={navItemBaseClasses} aria-label={item.label} onClick={handleLinkClick}> {item.icon} <span className="ml-2 hidden xl:inline">{item.label}</span> </Link> );
+                return (<Link key={item.id} to={item.path} className={navItemBaseClasses} aria-label={item.label} onClick={handleLinkClick}> {item.icon} <span className="ml-2 hidden xl:inline">{item.label}</span> </Link>);
               }
               if (item.type === 'dropdown') {
                 return (
@@ -237,7 +237,7 @@ export function NavigationBar() {
               }
               return null;
             })}
-            {auth.isAuthenticated && ( <button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair"> <LogOutIcon /> <span className="ml-2 hidden xl:inline">Sair</span> </button> )}
+            {auth.isAuthenticated && (<button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair"> <LogOutIcon /> <span className="ml-2 hidden xl:inline">Sair</span> </button>)}
           </div>
           <div className="md:hidden flex items-center">
             <button onClick={toggleMobileMenu} className={`${navTextClass} ${navHoverTextClass} p-2 rounded-md focus:outline-none hover:bg-tas-primary-hover`} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu-tas">
@@ -246,31 +246,31 @@ export function NavigationBar() {
           </div>
         </div>
       </div>
-      {isMobileMenuOpen && ( <div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40 border-t border-tas-primary-hover`} >
-            <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              {navigationStructure.map(item => {
-                if (item.type === 'link') {
-                  return ( <Link key={`mobile-${item.id}`} to={item.path} className={mobileNavItemBaseClasses} onClick={handleLinkClick}> {item.label} </Link> );
-                }
-                if (item.type === 'dropdown') {
-                  if (item.condition === false) return null; // Apply condition for dropdown
-                  return (
-                    <div key={`mobile-dropdown-${item.id}`} className="border-t border-tas-primary-hover mt-2 pt-2">
-                      <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p> 
-                      {renderDropdownItems(item.items)}
-                    </div>
-                  );
-                }
-                return null;
-              })}
-
-              {auth.isAuthenticated && (
-                <div className="border-t border-tas-primary-hover mt-2 pt-2">
-                  <button onClick={handleLogout} className={mobileNavItemBaseClasses}> Sair </button>
+      {isMobileMenuOpen && (<div className={`md:hidden absolute top-16 inset-x-0 ${mobileMenuBgClass} shadow-lg z-40 border-t border-tas-primary-hover`} >
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          {navigationStructure.map(item => {
+            if (item.type === 'link') {
+              return (<Link key={`mobile-${item.id}`} to={item.path} className={mobileNavItemBaseClasses} onClick={handleLinkClick}> {item.label} </Link>);
+            }
+            if (item.type === 'dropdown') {
+              if (item.condition === false) return null; // Apply condition for dropdown
+              return (
+                <div key={`mobile-dropdown-${item.id}`} className="border-t border-tas-primary-hover mt-2 pt-2">
+                  <p className={`px-3 text-xs font-semibold uppercase text-gray-400 tracking-wider mb-1`}>{item.label}</p>
+                  {renderDropdownItems(item.items)}
                 </div>
-              )}
+              );
+            }
+            return null;
+          })}
+
+          {auth.isAuthenticated && (
+            <div className="border-t border-tas-primary-hover mt-2 pt-2">
+              <button onClick={handleLogout} className={mobileNavItemBaseClasses}> Sair </button>
             </div>
-      </div> )}
+          )}
+        </div>
+      </div>)}
     </nav>
   );
 };
