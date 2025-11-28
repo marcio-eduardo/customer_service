@@ -2,13 +2,18 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { api } from '../../lib/axios';
 
-interface CompanyUserType {
+interface User {
   id: number;
   name: string;
   cpf: string;
-  address?: string;
+  email: string;
   phone?: string;
-  email?: string;
+  address?: string;
+}
+
+interface CompanyUserType {
+  id: number;
+  user: User;
   registrationDate: string;
 }
 
@@ -122,36 +127,36 @@ export function ViewCompanyUsersPage() {
   return (
     <>
       <Helmet>
-        <title>Company Users - TAS</title>
+        <title>Usuários de Empresas - TAS</title>
       </Helmet>
       <div className={pageWrapperClasses}>
         <div className={contentContainerClasses}>
           <header className="mb-10 text-center">
-            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Company Users</h1>
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Usuários de Empresas</h1>
             <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
-              Consult your registered company users data.
+              Consulte os dados dos usuários cadastrados nas empresas
             </p>
           </header>
 
           <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
-            {isLoading && <p className={loadingTextClass}>Loading company users...</p>}
+            {isLoading && <p className={loadingTextClass}>Carregando usuários...</p>}
             {error && <p className={errorTextClass}>{error}</p>}
 
             {!isLoading && !error && users.length === 0 && (
-              <p className={`${userDetailTextClasses} text-center py-4`}>No company users found.</p>
+              <p className={`${userDetailTextClasses} text-center py-4`}>Nenhum usuário encontrado.</p>
             )}
 
             {!isLoading && !error && users.length > 0 && (
               <ul className="space-y-6">
-                {users.map((user) => (
-                  <li key={user.id} className={`${userCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
-                    <h3 className={`text-xl ${userNameTextClasses} mb-1`}>{user.name}</h3>
-                    <p className={`text-sm ${userDetailTextClasses} mb-2`}><span className={userLabelTextClasses}>CPF:</span> {user.cpf}</p>
+                {users.map((companyUser) => (
+                  <li key={companyUser.id} className={`${userCardBgClasses} p-4 sm:p-6 rounded-lg shadow-md border border-gray-200 transition-shadow hover:shadow-lg`}>
+                    <h3 className={`text-xl ${userNameTextClasses} mb-1`}>{companyUser.user?.name || 'Sem nome'}</h3>
+                    <p className={`text-sm ${userDetailTextClasses} mb-2`}><span className={userLabelTextClasses}>CPF:</span> {companyUser.user?.cpf || 'N/A'}</p>
                     <div className="mt-3 text-sm space-y-1">
-                      <p><span className={userLabelTextClasses}>Email:</span> <span className={userDetailTextClasses}>{user.email || 'N/A'}</span></p>
-                      <p><span className={userLabelTextClasses}>Phone:</span> <span className={userDetailTextClasses}>{user.phone || 'N/A'}</span></p>
-                      <p><span className={userLabelTextClasses}>Address:</span> <span className={userDetailTextClasses}>{user.address || 'N/A'}</span></p>
-                      <p><span className={userLabelTextClasses}>Registration Date:</span> <span className={userDetailTextClasses}>{formatDate(user.registrationDate)}</span></p>
+                      <p><span className={userLabelTextClasses}>Email:</span> <span className={userDetailTextClasses}>{companyUser.user?.email || 'N/A'}</span></p>
+                      <p><span className={userLabelTextClasses}>Telefone:</span> <span className={userDetailTextClasses}>{companyUser.user?.phone || 'N/A'}</span></p>
+                      <p><span className={userLabelTextClasses}>Endereço:</span> <span className={userDetailTextClasses}>{companyUser.user?.address || 'N/A'}</span></p>
+                      <p><span className={userLabelTextClasses}>Data de Cadastro:</span> <span className={userDetailTextClasses}>{formatDate(companyUser.registrationDate)}</span></p>
                     </div>
                   </li>
                 ))}
@@ -160,7 +165,7 @@ export function ViewCompanyUsersPage() {
 
             {paginationInfo && !isLoading && users.length > 0 && (
               <div className={`mt-8 text-center text-sm ${userDetailTextClasses}`}>
-                Page {paginationInfo.number + 1} of {paginationInfo.totalPages}. Total of {paginationInfo.totalElements} users.
+                Página {paginationInfo.number + 1} de {paginationInfo.totalPages}. Total de {paginationInfo.totalElements} usuários.
               </div>
             )}
           </section>

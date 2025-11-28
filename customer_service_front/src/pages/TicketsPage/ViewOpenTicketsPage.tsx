@@ -3,7 +3,8 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom'; 
 import { toast } from 'sonner';
-import { api } from '../../lib/axios'; 
+import { api } from '../../lib/axios';
+import { useAuth } from '../../contexts/AuthContext'; 
 
 // Interface para o modelo de Ticket
 interface Ticket {
@@ -42,16 +43,32 @@ const formatDate = (dateString?: string | null) => {
 };
 
 export function ViewOpenTicketsPage() {
+  const { user } = useAuth();
   const [openTickets, setOpenTickets] = useState<Ticket[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN');
+  const isModerator = user?.roles?.includes('ROLE_MODERATOR');
+  const isCompanyUser = user?.roles?.includes('ROLE_USER');
 
   useEffect(() => {
     const fetchOpenTickets = async () => {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await api.get<Ticket[]>('/api/tickets/status/open'); 
+        let response;
+        
+        if (isAdmin || isModerator) {
+          // Admins e Moderadores veem todos os tickets abertos
+          response = await api.get<Ticket[]>('/api/tickets/status/open');
+        } else if (isCompanyUser && user?.companyUserId) {
+          // CompanyUsers veem apenas seus próprios tickets usando o ID já disponível no contexto
+          response = await api.get<Ticket[]>(`/api/tickets/company-user/${user.companyUserId}`);
+        } else {
+          throw new Error('Usuário sem permissão adequada ou dados incompletos');
+        }
+        
         setOpenTickets(response.data || []);
       } catch (err: any) {
         console.error("Falha ao buscar chamados abertos:", err);
@@ -72,7 +89,7 @@ export function ViewOpenTicketsPage() {
     };
 
     fetchOpenTickets();
-  }, []);
+  }, [user, isAdmin, isModerator, isCompanyUser]);
 
   // Classes de estilo com a paleta "Confiança Moderna (Light) Final"
   const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";

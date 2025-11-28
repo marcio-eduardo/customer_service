@@ -13,7 +13,7 @@ interface SignUpFormData {
   email: string;
   password: string;
   role: string;
-  nome: string;
+  name: string;
   cpf: string;
 }
 
@@ -29,7 +29,7 @@ export function SignUpPage() {
     email: '',
     password: '',
     role: 'user',
-    nome: '', // Inicializar novos campos
+    name: '', // Inicializar novos campos
     cpf: '',   // Inicializar novos campos
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -49,17 +49,17 @@ export function SignUpPage() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        nome: formData.nome,
+        name: formData.name,
         cpf: formData.cpf,
         // Só envia o 'role' se o utilizador for admin.
-        ...(isAdmin && { role: [formData.role] }),
+        ...(isAdmin && { role: formData.role }),
       };
 
       await api.post('/api/auth/signup', payload);
 
       if (isAdmin) {
         toast.success(`Utilizador '${formData.username}' criado com sucesso!`);
-        setFormData({ username: '', email: '', password: '', role: 'user', nome: '', cpf: '' });
+        setFormData({ username: '', email: '', password: '', role: 'user', name: '', cpf: '' });
       } else {
         toast.success('Conta criada com sucesso! A autenticar...');
         
@@ -69,7 +69,18 @@ export function SignUpPage() {
         });
 
         const { token, ...userData } = loginResponse.data;
-        auth.login(userData, token);
+        
+        const userForContext = {
+          id: userData.id,
+          username: userData.username,
+          email: userData.email,
+          roles: userData.roles || [],
+          companyUserId: userData.companyUserId,
+          adminUserId: userData.adminUserId,
+          moderatorUserId: userData.moderatorUserId,
+        };
+        
+        auth.login(userForContext, token);
 
         // Redireciona para a página de criação de chamados
         navigate('/tickets/novo');
@@ -120,8 +131,8 @@ export function SignUpPage() {
             {!isAdmin && (
               <>
                 <div>
-                  <label htmlFor="nome" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo </label>
-                  <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="O seu nome completo"
+                  <label htmlFor="name" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo </label>
+                  <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="O seu nome completo"
                     className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
                     required disabled={isLoading} />
                 </div>
@@ -158,8 +169,8 @@ export function SignUpPage() {
             {isAdmin && (
               <>
                  <div>
-                  <label htmlFor="nome" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo (para Técnico/Moderador) </label>
-                  <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome completo do novo utilizador"
+                  <label htmlFor="name" className={`block text-sm font-medium mb-1 ${labelTextClass}`}> Nome Completo (para Técnico/Moderador) </label>
+                  <input type="text" id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Nome completo do novo utilizador"
                     className={`w-full px-4 py-2.5 ${inputBgClass} ${inputTextClass} ${inputBorderClass} rounded-lg shadow-sm transition-colors ${inputFocusRingClass}`}
                     required disabled={isLoading} />
                 </div>
