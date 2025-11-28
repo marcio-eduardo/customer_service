@@ -1,37 +1,50 @@
 // src/pages/SignUpPage/SignUpPage.tsx
-import { useState, type FormEvent } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, type FormEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
-import { useAuth } from '../../contexts/AuthContext';
 import TASLogo from '../../assets/logo/NuvemConfig-2.svg';
+import type { Company } from '../../types/Company';
+import { getAllCompanies } from '../../services/companyService';
 
-// Interface para os dados do formulário de registo atualizada
+// Interface para os dados do formulário
 interface SignUpFormData {
   username: string;
   email: string;
   password: string;
   role: string;
-  nome: string; // Novo campo para o nome completo do ClientePf
-  cpf: string;  // Novo campo para o CPF do ClientePf
+  nome: string;
+  cpf: string;
+  companyId: number | '';
 }
 
 export function SignUpPage() {
-  const navigate = useNavigate();
-  const auth = useAuth();
-  
-  const isAdmin = auth.isAuthenticated && auth.user?.roles?.includes('ROLE_ADMIN');
-
   const [formData, setFormData] = useState<SignUpFormData>({
     username: '',
     email: '',
     password: '',
     role: 'user',
-    nome: '', // Inicializar novos campos
-    cpf: '',   // Inicializar novos campos
+    nome: '',
+    cpf: '',
+    companyId: '',
   });
+
+  const [companies, setCompanies] = useState<Company[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    loadCompanies();
+  }, []);
+
+  const loadCompanies = async () => {
+    try {
+      const data = await getAllCompanies();
+      setCompanies(data);
+    } catch (error) {
+      console.error("Erro ao carregar empresas:", error);
+      toast.error("Não foi possível carregar a lista de empresas.");
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -43,40 +56,33 @@ export function SignUpPage() {
     setIsLoading(true);
 
     try {
-      // O payload agora inclui os campos nome e cpf
       const payload = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
         nome: formData.nome,
         cpf: formData.cpf,
-        // Só envia o 'role' se o utilizador for admin.
-        ...(isAdmin && { role: [formData.role] }),
+        role: [formData.role],
+        companyId: Number(formData.companyId),
       };
 
       await api.post('/api/auth/signup', payload);
 
-      if (isAdmin) {
-        toast.success(`Utilizador '${formData.username}' criado com sucesso!`);
-        setFormData({ username: '', email: '', password: '', role: 'user', nome: '', cpf: '' });
-      } else {
-        toast.success('Conta criada com sucesso! A autenticar...');
-        
-        const loginResponse = await api.post('/api/auth/signin', {
-          username: formData.username,
-          password: formData.password,
-        });
-
-        const { token, ...userData } = loginResponse.data;
-        auth.login(userData, token);
-
-        // Redireciona para a página de criação de chamados
-        navigate('/tickets/novo');
-      }
+      toast.success(`Usuário '${formData.username}' criado com sucesso!`);
+      // Limpar formulário
+      setFormData({
+        username: '',
+        email: '',
+        password: '',
+        role: 'user',
+        nome: '',
+        cpf: '',
+        companyId: ''
+      });
 
     } catch (error: any) {
-      console.error("Falha no registo:", error);
-      const errorMessage = error.response?.data?.message || 'Ocorreu um erro durante o registo.';
+      console.error("Falha no registro:", error);
+      const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao criar o usuário.';
       toast.error(errorMessage);
     } finally {
       setIsLoading(false);
@@ -89,96 +95,87 @@ export function SignUpPage() {
   return (
     <>
       <Helmet>
-        <title>Criar Conta - TAS</title>
+        <title>Criar Usuário - TAS</title>
       </Helmet>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 font-['Poppins'] bg-tas-bg-page">
         <div className="p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card">
           <div className="flex justify-center mb-10 flex-col items-center gap-4">
-            <Link to="/">
-              <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
-            </Link>
+            <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
             <h2 className="text-2xl font-bold text-tas-primary">
-              {isAdmin ? 'Criar Novo Utilizador' : 'Crie a sua Conta'}
+              Criar Novo Usuário
             </h2>
           </div>
-              
+
           <form onSubmit={handleSubmit} className="space-y-4">
-            {!isAdmin && (
-              <>
-                <div>
-                  <label htmlFor="nome" className={labelClasses}> Nome Completo </label>
-                  <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="O seu nome completo"
-                    className={inputClasses}
-                    required disabled={isLoading} />
-                </div>
-                <div>
-                  <label htmlFor="cpf" className={labelClasses}> CPF </label>
-                  <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="Seu CPF (apenas números)"
-                    className={inputClasses}
-                    required disabled={isLoading} />
-                </div>
-              </>
-            )}
-            
             <div>
-              <label htmlFor="username" className={labelClasses}> Nome de Utilizador </label>
-              <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} placeholder="Escolha um nome de utilizador"
+              <label htmlFor="nome" className={labelClasses}> Nome Completo </label>
+              <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome completo"
                 className={inputClasses}
                 required disabled={isLoading} />
             </div>
+
+            <div>
+              <label htmlFor="cpf" className={labelClasses}> CPF </label>
+              <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="CPF (apenas números)"
+                className={inputClasses}
+                required disabled={isLoading} />
+            </div>
+
+            <div>
+              <label htmlFor="username" className={labelClasses}> Nome de Usuário </label>
+              <input type="text" id="username" name="username" value={formData.username} onChange={handleChange} placeholder="Nome de usuário"
+                className={inputClasses}
+                required disabled={isLoading} />
+            </div>
+
             <div>
               <label htmlFor="email" className={labelClasses}> Email </label>
-              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="o.seu.email@exemplo.com"
+              <input type="email" id="email" name="email" value={formData.email} onChange={handleChange} placeholder="email@exemplo.com"
                 className={inputClasses}
                 required disabled={isLoading} />
             </div>
+
             <div>
               <label htmlFor="password" className={labelClasses}> Senha </label>
-              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Crie uma senha segura"
+              <input type="password" id="password" name="password" value={formData.password} onChange={handleChange} placeholder="Senha segura"
                 className={inputClasses}
                 required disabled={isLoading} />
             </div>
-            
-            {isAdmin && (
-              <>
-                 <div>
-                  <label htmlFor="nome" className={labelClasses}> Nome Completo (para Técnico/Moderador) </label>
-                  <input type="text" id="nome" name="nome" value={formData.nome} onChange={handleChange} placeholder="Nome completo do novo utilizador"
-                    className={inputClasses}
-                    required disabled={isLoading} />
-                </div>
-                <div>
-                  <label htmlFor="cpf" className={labelClasses}> CPF (para Técnico/Moderador) </label>
-                  <input type="text" id="cpf" name="cpf" value={formData.cpf} onChange={handleChange} placeholder="CPF do novo utilizador"
-                    className={inputClasses}
-                    required disabled={isLoading} />
-                </div>
-                <div>
-                  <label htmlFor="role" className={labelClasses}> Papel do Utilizador </label>
-                  <select id="role" name="role" value={formData.role} onChange={handleChange}
-                    className={inputClasses}
-                    disabled={isLoading}>
-                    <option value="user">Utilizador (User)</option>
-                    <option value="moderator">Moderador (Moderator)</option>
-                    <option value="admin">Administrador (Admin)</option>
-                  </select>
-                </div>
-              </>
-            )}
+
+            <div>
+              <label htmlFor="companyId" className={labelClasses}> Empresa </label>
+              <select id="companyId" name="companyId" value={formData.companyId} onChange={handleChange}
+                className={inputClasses}
+                required disabled={isLoading}>
+                <option value="">Selecione uma empresa</option>
+                {companies.map(company => (
+                  <option key={company.id} value={company.id}>
+                    {company.tradeName} ({company.cnpj})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="role" className={labelClasses}> Papel do Usuário </label>
+              <select id="role" name="role" value={formData.role} onChange={handleChange}
+                className={inputClasses}
+                disabled={isLoading}>
+                <option value="user">Usuário (User)</option>
+                <option value="company_user">Usuário de Empresa (Company User)</option>
+                <option value="tech_user">Técnico (Tech User)</option>
+                <option value="moderator">Moderador (Moderator)</option>
+                <option value="admin">Administrador (Admin)</option>
+              </select>
+            </div>
 
             <div className="pt-2">
               <button type="submit" className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors bg-tas-secondary hover:bg-tas-secondary-hover disabled:bg-gray-400"
                 disabled={isLoading}>
-                {isLoading ? 'A Criar Conta...' : 'Criar Conta'}
+                {isLoading ? 'Criando...' : 'Criar Usuário'}
               </button>
             </div>
           </form>
-          
-          {!isAdmin && (
-            <p className="mt-6 text-center text-sm text-tas-text-secondary-on-card"> Já tem uma conta?{' '}
-              <Link to="/" className="font-medium text-tas-secondary hover:text-tas-secondary-hover"> Faça login aqui </Link>
-            </p>
-          )}
         </div>
       </div>
     </>

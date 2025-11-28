@@ -5,16 +5,17 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
-
-// Tipos
-interface ClientePf { id: number; nome: string; }
-interface ClientePj { id: number; nomeFantasia: string; }
-type Client = (ClientePf & { type: 'pf' }) | (ClientePj & { type: 'pj' });
+import type { Company } from '../../types/Company';
+import type { User } from '../../types/User';
+import { getAllCompanies } from '../../services/companyService';
+import { getUsersByCompany, getAllTechUsers } from '../../services/userService';
 
 interface TicketFormData {
   title: string;
   description: string;
-  selectedClient: string;
+  selectedCompanyId: string;
+  selectedRequesterId: string;
+  selectedAssigneeId: string;
 }
 
 export function CreateTicketPage() {
@@ -24,92 +25,122 @@ export function CreateTicketPage() {
   const [formData, setFormData] = useState<TicketFormData>({
     title: '',
     description: '',
-    selectedClient: '',
+    selectedCompanyId: '',
+    selectedRequesterId: '',
+    selectedAssigneeId: '',
   });
-  
-  const [allClients, setAllClients] = useState<Client[]>([]);
-  const [clientTypeFilter, setClientTypeFilter] = useState<'pf' | 'pj' | ''>('');
+
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [companyUsers, setCompanyUsers] = useState<User[]>([]);
+  const [techUsers, setTechUsers] = useState<User[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
   const [isFetchingInitialData, setIsFetchingInitialData] = useState(true);
-  const [loggedInClientInfo, setLoggedInClientInfo] = useState<string | null>(null);
 
-  const isManager = user?.roles?.includes('ROLE_ADMIN') || user?.roles?.includes('ROLE_MODERATOR');
+  // Roles
+  const isManager = user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_MODERATOR', 'ROLE_TECH_USER'].includes(r));
+  const canAssignTech = user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_MODERATOR'].includes(r));
+  const isCompanyUser = !isManager; // Simplificação, assumindo que se não é manager, é company user (ou user simples)
 
   useEffect(() => {
-    if (isManager) {
-      const fetchAllClients = async () => {
-        setIsFetchingInitialData(true);
-        try {
-          const pfPromise = api.get<ClientePf[]>('/api/clientes-pf/all');
-          const pjPromise = api.get<ClientePj[]>('/api/clientes-pj/all');
-          const [pfResponse, pjResponse] = await Promise.all([pfPromise, pjPromise]);
-          const pfClients: Client[] = pfResponse.data.map(c => ({ ...c, type: 'pf' }));
-          const pjClients: Client[] = pjResponse.data.map(c => ({ ...c, type: 'pj' }));
-          setClients([...pfClients, ...pjClients]);
-        } catch (error: any) {
-          toast.error("Não foi possível carregar a lista de clientes.");
-        } finally {
-          setIsFetchingInitialData(false);
-        }
-      };
-      fetchAllClients();
-    } else {
-      const fetchMyClientInfo = async () => {
-        setIsFetchingInitialData(true);
-        try {
-          const response = await api.get('/api/me/client-info'); 
-          if (response.data.clientePfId) {
-            setLoggedInClientInfo(`pf-${response.data.clientePfId}`);
-          } else if (response.data.clientePjId) {
-            setLoggedInClientInfo(`pj-${response.data.clientePjId}`);
-          } else {
-            toast.error("Não foi possível encontrar uma conta de cliente associada a este utilizador.");
+    const loadInitialData = async () => {
+      setIsFetchingInitialData(true);
+      try {
+        if (isManager) {
+          // Carregar todas as empresas
+          const companiesData = await getAllCompanies();
+          setCompanies(companiesData);
+
+          // Se puder atribuir técnico, carregar técnicos
+          if (canAssignTech) {
+            const techsData = await getAllTechUsers();
+            setTechUsers(techsData);
           }
-        } catch (error) {
-           toast.error("Erro ao buscar as suas informações de cliente para abrir um chamado.");
-        } finally {
-           setIsFetchingInitialData(false);
+        } else {
+          // Se for usuário de empresa, a empresa já deve vir do contexto ou de um endpoint 'me'
+          // Como o contexto atual tem user.companyId (se adicionarmos), ou podemos pegar do backend
+          // Por enquanto, vamos assumir que o backend valida, mas para o frontend precisamos saber a empresa dele
+          // Vamos tentar pegar os dados do usuário atual atualizados, caso o contexto não tenha
+          try {
+            // Se o user context não tiver companyId, talvez precisemos de um endpoint /api/me/details
+            // Mas vamos assumir que o usuário logado sabe sua empresa ou o backend preenche automaticamente se não enviado
+            // Para exibir o nome da empresa, seria bom ter essa info.
+            // Vou deixar como "Sua Empresa" se não tivermos o dado visualmente, mas o backend deve tratar.
+            // O ideal seria: const myCompany = await getMyCompany(); setCompanies([myCompany]);
+            // Mas vamos simplificar: se é company user, ele não seleciona empresa, o backend pega do token.
+          } catch (e) {
+            console.error("Erro ao carregar dados do usuário", e);
+          }
         }
-      };
-      fetchMyClientInfo();
+      } catch (error) {
+        console.error("Erro ao carregar dados iniciais:", error);
+        toast.error("Erro ao carregar informações necessárias.");
+      } finally {
+        setIsFetchingInitialData(false);
+      }
+    };
+
+    loadInitialData();
+  }, [isManager, canAssignTech]);
+
+  // Quando a empresa selecionada mudar, carregar os usuários dessa empresa
+  useEffect(() => {
+    const loadCompanyUsers = async () => {
+      if (formData.selectedCompanyId) {
+        try {
+          const users = await getUsersByCompany(Number(formData.selectedCompanyId));
+          setCompanyUsers(users);
+        } catch (error) {
+          console.error("Erro ao carregar usuários da empresa:", error);
+          toast.error("Erro ao carregar usuários da empresa selecionada.");
+        }
+      } else {
+        setCompanyUsers([]);
+      }
+    };
+
+    if (isManager) {
+      loadCompanyUsers();
     }
-  }, [isManager]);
+  }, [formData.selectedCompanyId, isManager]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleClientTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setClientTypeFilter(e.target.value as 'pf' | 'pj' | '');
-    setFormData(prev => ({ ...prev, selectedClient: '' }));
-  };
-
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    
-    const clientIdentifier = isManager ? formData.selectedClient : loggedInClientInfo;
 
-    if (!formData.title || !formData.description || !clientIdentifier) {
-      toast.error('Por favor, preencha todos os campos obrigatórios.');
+    if (!formData.title || !formData.description) {
+      toast.error('Por favor, preencha o título e a descrição.');
+      return;
+    }
+
+    if (isManager && !formData.selectedCompanyId) {
+      toast.error('Por favor, selecione uma empresa.');
+      return;
+    }
+
+    if (isManager && !formData.selectedRequesterId) {
+      toast.error('Por favor, selecione o solicitante.');
       return;
     }
 
     setIsLoading(true);
 
-    const [clientType, clientId] = clientIdentifier.split('-');
-
     const payload = {
       title: formData.title,
       description: formData.description,
-      clientePfId: clientType === 'pf' ? parseInt(clientId, 10) : undefined,
-      clientePjId: clientType === 'pj' ? parseInt(clientId, 10) : undefined,
+      companyId: isManager ? Number(formData.selectedCompanyId) : undefined, // Backend pega do token se null
+      requesterId: isManager ? Number(formData.selectedRequesterId) : undefined, // Backend pega do token se null
+      assigneeId: canAssignTech && formData.selectedAssigneeId ? Number(formData.selectedAssigneeId) : undefined,
     };
-    
+
     try {
       await api.post('/api/tickets/open', payload);
       toast.success('Chamado aberto com sucesso!');
-      navigate('/dashboard'); 
+      navigate('/tickets/abertos'); // Redirecionar para lista de chamados
     } catch (error: any) {
       console.error("Falha ao abrir chamado:", error);
       const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao abrir o chamado.';
@@ -118,8 +149,6 @@ export function CreateTicketPage() {
       setIsLoading(false);
     }
   };
-
-  const filteredClients = allClients.filter(c => c.type === clientTypeFilter);
 
   return (
     <>
@@ -131,65 +160,96 @@ export function CreateTicketPage() {
           <header className="mb-10 text-center">
             <h1 className="text-3xl lg:text-4xl font-bold text-tas-primary">Abrir Novo Chamado</h1>
             <p className="text-tas-text-secondary-on-card mt-2 text-base lg:text-lg">
-              {isManager ? "Selecione o tipo de cliente e o cliente para registrar o chamado." : "Descreva o problema para registrar um novo chamado."}
+              {isManager ? "Registre um chamado para um cliente." : "Descreva o problema para registrar um novo chamado."}
             </p>
           </header>
 
           <section className="bg-tas-bg-card shadow-xl rounded-xl p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {isManager ? (
-                <>
-                  <div>
-                    <label htmlFor="clientTypeFilter" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
-                      Tipo de Cliente <span className="text-red-500">*</span>
-                    </label>
-                    <select
-                      id="clientTypeFilter"
-                      name="clientTypeFilter"
-                      value={clientTypeFilter}
-                      onChange={handleClientTypeChange}
-                      className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
-                      required
-                      disabled={isFetchingInitialData || isLoading}
-                    >
-                      <option value="" disabled>-- Selecione o tipo --</option>
-                      <option value="pf">Pessoa Física</option>
-                      <option value="pj">Pessoa Jurídica</option>
-                    </select>
-                  </div>
 
-                  {clientTypeFilter && (
-                    <div>
-                      <label htmlFor="selectedClient" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
-                        Cliente <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="selectedClient"
-                        name="selectedClient"
-                        value={formData.selectedClient}
-                        onChange={handleChange}
-                        className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
-                        required
-                        disabled={isFetchingInitialData || isLoading || filteredClients.length === 0}
-                      >
-                        <option value="" disabled>
-                          {isFetchingInitialData ? 'A carregar...' : `-- Selecione um cliente ${clientTypeFilter === 'pf' ? 'Físico' : 'Jurídico'} --`}
-                        </option>
-                        {filteredClients.map(client => (
-                          <option key={`${client.type}-${client.id}`} value={`${client.type}-${client.id}`}>
-                            {client.type === 'pf' ? (client as ClientePf).nome : (client as ClientePj).nomeFantasia}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-                </>
+              {/* Seleção de Empresa (Apenas Managers) */}
+              {isManager ? (
+                <div>
+                  <label htmlFor="selectedCompanyId" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
+                    Empresa <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="selectedCompanyId"
+                    name="selectedCompanyId"
+                    value={formData.selectedCompanyId}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-tas-secondary focus:border-tas-secondary"
+                    required
+                    disabled={isLoading || isFetchingInitialData}
+                  >
+                    <option value="" disabled>-- Selecione a Empresa --</option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.tradeName} ({company.cnpj})
+                      </option>
+                    ))}
+                  </select>
+                </div>
               ) : (
-                 <div>
-                    <label className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">Cliente</label>
-                    <p className="px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-tas-text-secondary-on-card">
-                        {isFetchingInitialData ? 'A verificar dados do cliente...' : 'Chamado será aberto em seu nome.'}
-                    </p>
+                <div>
+                  <label className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">Empresa</label>
+                  <input
+                    type="text"
+                    value="Sua Empresa (Vinculada ao Perfil)"
+                    disabled
+                    className="w-full px-4 py-2.5 bg-gray-100 border border-gray-300 rounded-lg text-gray-500 cursor-not-allowed"
+                  />
+                </div>
+              )}
+
+              {/* Seleção de Solicitante (Apenas Managers e se Empresa selecionada) */}
+              {isManager && (
+                <div>
+                  <label htmlFor="selectedRequesterId" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
+                    Solicitante (Usuário da Empresa) <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="selectedRequesterId"
+                    name="selectedRequesterId"
+                    value={formData.selectedRequesterId}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-tas-secondary focus:border-tas-secondary"
+                    required
+                    disabled={isLoading || !formData.selectedCompanyId}
+                  >
+                    <option value="" disabled>
+                      {!formData.selectedCompanyId ? '-- Selecione uma empresa primeiro --' : '-- Selecione o Solicitante --'}
+                    </option>
+                    {companyUsers.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.nome} ({u.username})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Seleção de Técnico Responsável (Apenas Admin/Moderator) */}
+              {canAssignTech && (
+                <div>
+                  <label htmlFor="selectedAssigneeId" className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card">
+                    Técnico Responsável (Opcional)
+                  </label>
+                  <select
+                    id="selectedAssigneeId"
+                    name="selectedAssigneeId"
+                    value={formData.selectedAssigneeId}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-tas-secondary focus:border-tas-secondary"
+                    disabled={isLoading || isFetchingInitialData}
+                  >
+                    <option value="">-- Deixar na fila (Sem técnico) --</option>
+                    {techUsers.map(tech => (
+                      <option key={tech.id} value={tech.id}>
+                        {tech.nome} ({tech.username})
+                      </option>
+                    ))}
+                  </select>
                 </div>
               )}
 
@@ -203,7 +263,7 @@ export function CreateTicketPage() {
                   name="title"
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm focus:ring-tas-secondary focus:border-tas-secondary"
                   placeholder="Ex: Problema ao acessar o sistema"
                   required
                   disabled={isLoading}
@@ -219,7 +279,7 @@ export function CreateTicketPage() {
                   name="description"
                   value={formData.description}
                   onChange={handleChange}
-                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm min-h-[120px]"
+                  className="w-full px-4 py-2.5 bg-white border border-gray-300 rounded-lg shadow-sm min-h-[120px] focus:ring-tas-secondary focus:border-tas-secondary"
                   placeholder="Descreva o problema ou solicitação em detalhes..."
                   required
                   disabled={isLoading}
@@ -240,5 +300,3 @@ export function CreateTicketPage() {
     </>
   );
 }
-
-

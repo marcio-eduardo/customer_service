@@ -21,7 +21,7 @@ export function LoginPage() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const auth = useAuth();
   const navigate = useNavigate();
 
@@ -44,7 +44,7 @@ export function LoginPage() {
       });
 
       const { token, ...userData } = response.data;
-      
+
       const userForContext = {
         id: userData.id,
         username: userData.username,
@@ -53,7 +53,7 @@ export function LoginPage() {
       };
 
       auth.login(userForContext, token);
-      
+
       toast.success('Login bem-sucedido!');
       navigate('/dashboard');
 
@@ -89,18 +89,18 @@ export function LoginPage() {
               <img src={TrustAssisSystem} alt="Trust Assist System" className="h-10" />
             </div>
           </div>
-              
+
           <form onSubmit={handleSubmit}>
             <div className="mb-4">
-              <label 
+              <label
                 htmlFor="username"
                 className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card"
               >
-                Nome de Utilizador 
+                Nome de Utilizador
               </label>
-              <input 
+              <input
                 type="text"
-                id="username" 
+                id="username"
                 name="username"
                 placeholder="Seu nome de utilizador"
                 className="w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
@@ -110,15 +110,15 @@ export function LoginPage() {
               />
             </div>
             <div className="mb-6">
-              <label 
-                htmlFor="password" 
+              <label
+                htmlFor="password"
                 className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card"
               >
                 Senha
               </label>
-              <input 
-                type="password" 
-                id="password" 
+              <input
+                type="password"
+                id="password"
                 name="password"
                 placeholder="Sua senha"
                 className="w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
@@ -127,7 +127,7 @@ export function LoginPage() {
                 disabled={isLoading}
               />
               <div className="text-right mt-1">
-                <a 
+                <a
                   href="#"
                   className="text-sm text-tas-secondary hover:text-tas-secondary-hover"
                 >
@@ -135,7 +135,7 @@ export function LoginPage() {
                 </a>
               </div>
             </div>
-            <button 
+            <button
               type="submit"
               className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors disabled:bg-gray-400 bg-tas-secondary hover:bg-tas-secondary-hover"
               disabled={isLoading}
@@ -143,16 +143,7 @@ export function LoginPage() {
               {isLoading ? 'A Entrar...' : 'Entrar'}
             </button>
           </form>
-          <p className="mt-6 text-center text-sm text-tas-text-secondary-on-card">
-            Não tem uma conta?{' '}
-            <a 
-              href="#" 
-              onClick={(e) => { e.preventDefault(); navigate('/signup'); }}
-              className="font-medium text-tas-accent hover:text-tas-accent-hover"
-            >
-              Crie uma agora
-            </a>
-          </p>
+
         </div>
       </div>
     </>

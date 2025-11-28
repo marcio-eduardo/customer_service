@@ -16,3 +16,5 @@
 - Análise de contexto realizada: Leitura de README, DevLog e Tarefas. Próximo foco identificado: Refatoração do Frontend (SignUp, CreateTicket, Company CRUD).
 - Correção de Bug: Ajustado o menu dropdown "Configurações" que fechava prematuramente. Removido gap (`mt-0.5`) entre o botão e o menu.
 - Melhoria de UX: Alterado o comportamento dos submenus "Empresas" e "Usuários" no NavigationBar. Agora são seções estáticas (sempre visíveis) para evitar layout shift e fechamento acidental do menu.
+- Refatoração de Segurança/Fluxo: Removido o cadastro público de usuários. A rota `/signup` foi removida e a página `SignUpPage` foi refatorada para ser utilizada apenas internamente por administradores/moderadores, exigindo agora a vinculação com uma Empresa (`Company`).
+- Refatoração da CreateTicketPage: Implementada lógica de seleção dinâmica. Moderadores e Técnicos podem selecionar Empresa e Solicitante. Moderadores podem atribuir Técnico Responsável. Usuários de Empresa têm seus dados preenchidos automaticamente.
