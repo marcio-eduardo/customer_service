@@ -57,9 +57,8 @@
   - Aplicada formatação de Telefone na exibição (formatPhone)
 - Implementada Página de Gestão de Usuários:
   - Criada ViewUsersPage com listagem completa de usuários
-  - Sistema de tabs para filtrar por perfil (Admin, Moderador, Técnico, Cliente)
+  - Sistema de tabs para filtrar por perfil (Moderador, Técnico, Cliente)
   - Modais de edição e exclusão de usuários
-  - Integração com backend via axios e react-query
   - Exibição formatada: nome, CPF (com máscara), email, empresa e perfil
 - Atualização de Rotas e Navegação:
   - Adicionada rota `/users/view` para visualização de usuários
