@@ -35,6 +35,8 @@ export function LoginPage() {
       return;
     }
 
+    console.log("Attempting to log in with:", { username, password }); // Log credentials
+
     try {
       const response = await api.post<LoginApiResponse>('/api/auth/signin', {
         username,

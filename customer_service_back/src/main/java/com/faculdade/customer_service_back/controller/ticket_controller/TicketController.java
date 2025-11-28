@@ -1,11 +1,11 @@
 package com.faculdade.customer_service_back.controller.ticket_controller;
 
-import com.faculdade.customer_service_back.service.ticket_service.TicketService;
+import com.faculdade.customer_service_back.dto.ticket.TicketCloseRequest;
+import com.faculdade.customer_service_back.dto.ticket.TicketOpenRequest;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
-import com.faculdade.customer_service_back.model.ticket_model.TicketOpenRequest;
-import com.faculdade.customer_service_back.model.ticket_model.TicketCloseRequest;
+import com.faculdade.customer_service_back.service.ticket_service.TicketService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize; // Para controle de acesso baseado em roles
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -20,50 +20,44 @@ public class TicketController {
         this.ticketService = ticketService;
     }
 
-    // Endpoint para abrir um chamado
     @PostMapping("/open")
-    @PreAuthorize("isAuthenticated()") // Qualquer utilizador autenticado pode abrir um chamado
+    @PreAuthorize("hasRole('ROLE_COMPANY_USER')")
     public ResponseEntity<TicketModel> openTicket(@RequestBody TicketOpenRequest request) {
         TicketModel ticket = ticketService.openTicket(request);
         return ResponseEntity.status(201).body(ticket);
     }
 
-    // Endpoint para fechar um chamado com quem fechou e observações
-    @PostMapping("/close")
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')") // Apenas MODERATOR ou ADMIN podem fechar
-    public ResponseEntity<TicketModel> closeTicket(@RequestBody TicketCloseRequest request) {
-        TicketModel ticket = ticketService.closeTicket(request.getTicketId(), request.getClosedByTechnicalId(), request.getResolutionNotes());
+    @PostMapping("/{id}/close")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<TicketModel> closeTicket(@PathVariable Long id, @RequestBody TicketCloseRequest request) {
+        TicketModel ticket = ticketService.closeTicket(id, request);
         return ResponseEntity.ok(ticket);
     }
 
-    // Endpoint para listar todos os chamados
     @GetMapping
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')") // Apenas MODERATOR ou ADMIN podem ver todos
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<List<TicketModel>> getAllTickets() {
         List<TicketModel> tickets = ticketService.getAllTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
     }
 
-    // Endpoint para buscar chamado por ID
     @GetMapping("/{id}")
-    @PreAuthorize("isAuthenticated()") // Autenticado pode ver detalhes se souber o ID (ajustar conforme necessário)
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TicketModel> getTicketById(@PathVariable Long id) {
         return ticketService.getTicketById(id)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
-    // Endpoint para listar chamados abertos
     @GetMapping("/status/open")
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')") // Apenas MODERATOR ou ADMIN podem ver a lista de abertos
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<List<TicketModel>> getOpenTickets() {
         List<TicketModel> tickets = ticketService.getOpenTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
     }
 
-    // NOVO ENDPOINT para listar chamados resolvidos
     @GetMapping("/status/resolved")
-    @PreAuthorize("hasAnyRole('MODERATOR', 'ADMIN')") // Apenas MODERATOR ou ADMIN podem ver a lista de resolvidos
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<List<TicketModel>> getResolvedTickets() {
         List<TicketModel> tickets = ticketService.getResolvedTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);

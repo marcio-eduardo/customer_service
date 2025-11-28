@@ -1,13 +1,11 @@
 package com.faculdade.customer_service_back.dto.auth;
 
-// Podes adicionar anotações de validação
 public class SignUpRequest {
     private String username;
     private String email;
     private String password;
     private String role;
-    private String nome;
-    private String cpf;
+    private Long companyId;
 
     // Getters e Setters
     public String getUsername() {
@@ -42,19 +40,11 @@ public class SignUpRequest {
         this.role = role;
     }
 
-    public String getNome() {
-        return nome;
+    public Long getCompanyId() {
+        return companyId;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
-    }
-
-    public String getCpf() {
-        return cpf;
-    }
-
-    public void setCpf(String cpf) {
-        this.cpf = cpf;
+    public void setCompanyId(Long companyId) {
+        this.companyId = companyId;
     }
 }

@@ -1,8 +1,10 @@
 package com.faculdade.customer_service_back.repository.user_repository;
 
+import com.faculdade.customer_service_back.model.user_model.ERole;
 import com.faculdade.customer_service_back.model.user_model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -14,4 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Boolean existsByUsername(String username);
 
     Boolean existsByEmail(String email);
+
+    List<User> findByRoles_Name(ERole roleName);
 }

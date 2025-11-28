@@ -4,11 +4,11 @@ import com.faculdade.customer_service_back.dto.auth.LoginRequest;
 import com.faculdade.customer_service_back.dto.auth.SignUpRequest;
 import com.faculdade.customer_service_back.dto.auth.JwtResponse;
 import com.faculdade.customer_service_back.dto.auth.MessageResponse;
-import com.faculdade.customer_service_back.model.client_model.ClientePf;
+import com.faculdade.customer_service_back.model.company_model.Company;
 import com.faculdade.customer_service_back.model.user_model.ERole;
 import com.faculdade.customer_service_back.model.user_model.Role;
 import com.faculdade.customer_service_back.model.user_model.User;
-import com.faculdade.customer_service_back.repository.client_repository.ClientePfRepository;
+import com.faculdade.customer_service_back.repository.company_repository.CompanyRepository;
 import com.faculdade.customer_service_back.repository.user_repository.RoleRepository;
 import com.faculdade.customer_service_back.repository.user_repository.UserRepository;
 import com.faculdade.customer_service_back.security.jwt.JwtUtils;
@@ -44,7 +44,7 @@ public class AuthController {
     RoleRepository roleRepository;
 
     @Autowired
-    ClientePfRepository clientePfRepository; // Injetado
+    CompanyRepository companyRepository;
 
     @Autowired
     PasswordEncoder encoder;
@@ -90,14 +90,20 @@ public class AuthController {
         String strRole = signUpRequest.getRole();
         Role userRole;
 
-        if (strRole == null || strRole.isEmpty() || strRole.equalsIgnoreCase("user")) {
-            userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_USER não encontrado."));
+        if (strRole == null || strRole.isEmpty() || strRole.equalsIgnoreCase("company_user")) {
+            userRole = roleRepository.findByName(ERole.ROLE_COMPANY_USER)
+                    .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_COMPANY_USER não encontrado."));
+            if (signUpRequest.getCompanyId() == null) {
+                return ResponseEntity.badRequest().body(new MessageResponse("Erro: O ID da empresa é obrigatório para usuários da empresa."));
+            }
+            Company company = companyRepository.findById(signUpRequest.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Erro: Empresa não encontrada."));
+            user.setCompany(company);
         } else {
             switch (strRole.toLowerCase()) {
-                case "admin":
-                    userRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                            .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_ADMIN não encontrado."));
+                case "tech":
+                    userRole = roleRepository.findByName(ERole.ROLE_TECH_USER)
+                            .orElseThrow(() -> new RuntimeException("Erro: Papel ROLE_TECH_USER não encontrado."));
                     break;
                 case "mod":
                 case "moderator":
@@ -110,22 +116,8 @@ public class AuthController {
         }
         roles.add(userRole);
         user.setRoles(roles);
-        
-        // Salva o User primeiro para obter o ID
-        User savedUser = userRepository.save(user);
 
-        // Se for um utilizador padrão, cria também a entidade ClientePf
-        if (userRole.getName() == ERole.ROLE_USER) {
-            if (signUpRequest.getNome() == null || signUpRequest.getCpf() == null) {
-                return ResponseEntity.badRequest().body(new MessageResponse("Erro: Nome e CPF são obrigatórios para utilizadores."));
-            }
-            ClientePf clientePf = new ClientePf();
-            clientePf.setNome(signUpRequest.getNome());
-            clientePf.setCpf(signUpRequest.getCpf());
-            clientePf.setEmail(signUpRequest.getEmail());
-            clientePf.setUser(savedUser); // Associa o User ao ClientePf
-            clientePfRepository.save(clientePf);
-        }
+        userRepository.save(user);
 
         return ResponseEntity.ok(new MessageResponse("Utilizador registado com sucesso!"));
     }

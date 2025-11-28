@@ -1,125 +1,134 @@
 # Trust Assist System (TAS)
 
-### 1. Do que se trata o projeto?
+O **Trust Assist System (TAS)** é uma plataforma integrada de **Customer Service** (Atendimento ao Cliente) desenvolvida para facilitar a gestão de chamados de suporte, clientes corporativos e suas equipes. O sistema adota uma arquitetura moderna, separando o Backend (API RESTful) do Frontend (SPA), e utiliza Docker para orquestração completa do ambiente.
 
-O projeto é um **Sistema de Atendimento ao Cliente (Customer Service)**, nomeado "Trust Assist System". A sua finalidade é gerir o ciclo de vida de tickets de suporte, desde a abertura até à resolução, e também manter um registo de clientes (Pessoa Física e Pessoa Jurídica).
+## 🏛️ Arquitetura do Projeto
 
-As principais funcionalidades já implementadas ou em desenvolvimento são:
+O sistema é composto por três serviços principais orquestrados via Docker Compose:
 
-- **Autenticação de Utilizadores:** Controlo de acesso com diferentes níveis de permissão (USER, MODERATOR, ADMIN).
-- **Cadastro de Clientes:** O sistema agora suporta o autocadastro de clientes (Pessoa Física), vinculando a conta de usuário a um perfil de cliente.
-- **Gestão de Clientes:** CRUD (Criar, Ler, Atualizar, Apagar) para clientes do tipo Pessoa Física (PF) e Pessoa Jurídica (PJ).
-- **Gestão de Tickets (Chamados):**
-  - Abertura de novos tickets associados a um cliente, com fluxos diferentes para clientes e administradores.
-  - Encerramento de tickets com notas de resolução.
-  - Visualização de tickets abertos e resolvidos.
-- **Dashboard:** Uma página inicial que exibe métricas em tempo real sobre os tickets, como total de chamados abertos, resolvidos, em andamento e por prioridade.
+1. **Backend (`customer_service_back`)**: Uma API robusta construída em Java com Spring Boot, responsável pela lógica de negócios, segurança e persistência de dados.
+2. **Frontend (`customer_service_front`)**: Uma interface de usuário moderna e responsiva construída com React e TypeScript, focada na experiência do usuário (UX).
+3. **Banco de Dados**: MySQL 8.0 para armazenamento relacional persistente.
 
-### 2. Tecnologias Utilizadas
+## 🚀 Tecnologias Utilizadas
 
-O projeto está dividido em duas partes principais: `customer_service_back` (o backend) e `customer_service_front` (o frontend).
+### Backend (API)
 
-#### Tecnologias do Backend
+- **Linguagem:** Java 21 (LTS)
+- **Framework:** Spring Boot 3.4.5
+- **Banco de Dados:** MySQL 8.0
+- **Segurança:** Spring Security com autenticação Stateless via JWT (JSON Web Tokens).
+- **Persistência:** Spring Data JPA (Hibernate).
+- **Gerenciamento de Dependências:** Maven.
+- **Outros:** Lombok, Jakarta Validation.
 
-- **Java 21:** A linguagem de programação principal.
-- **Spring Boot 3:** Framework para a criação de APIs.
-- **Spring Data JPA (Hibernate):** Para a persistência de dados (ORM).
-- **Spring Security:** Para autenticação e autorização.
-- **JWT (JSON Web Tokens):** Estratégia de autenticação stateless.
-- **MySQL:** Base de dados relacional.
-- **Maven:** Gestão de dependências e build.
-- **Docker:** O backend está "containerizado" para facilitar a execução.
+### Frontend (Interface)
 
-#### Tecnologias do Frontend
+- **Linguagem:** TypeScript
+- **Framework:** React 18
+- **Build Tool:** Vite
+- **Estilização:** Tailwind CSS (Design System personalizado "Confiança Moderna").
+- **Gerenciamento de Estado/Cache:** React Query (TanStack Query).
+- **Roteamento:** React Router DOM v6.
+- **Cliente HTTP:** Axios.
+- **Componentes:** Headless UI (via Tailwind classes), React Helmet Async.
 
-- **React 18:** Biblioteca para a construção da interface.
-- **TypeScript:** Superset do JavaScript com tipagem estática.
-- **Vite:** Ferramenta de build e servidor de desenvolvimento.
-- **Tailwind CSS:** Framework de CSS "utility-first" para estilização.
-- **React Router DOM:** Para gestão de rotas.
-- **Axios:** Cliente HTTP para comunicação com a API.
-- **Docker:** O frontend também está preparado para ser executado num container.
+### Infraestrutura
 
-#### Como Inicializar o Projeto Completo com Docker
+- **Containerização:** Docker & Docker Compose.
 
-A forma mais simples de colocar todo o sistema a funcionar é utilizando o Docker Compose.
+## 📋 Funcionalidades Implementadas
 
-**Pré-requisitos:**
-- Ter o [Docker](https://www.docker.com/get-started) e o Docker Compose instalados.
+### 🔐 Autenticação e Controle de Acesso (RBAC)
 
-**Passo a Passo:**
+O sistema implementa segurança baseada em papéis (Roles):
 
-1. **Navegue até à Raiz do Projeto:** Abra o terminal e certifique-se de que está na pasta principal do projeto (a que contém o ficheiro `docker-compose.yml`).
+- **ROLE_USER:** Usuários de empresas (clientes). Podem abrir chamados e ver seus próprios tickets.
+- **ROLE_MODERATOR:** Moderadores. Podem gerenciar tickets, visualizar dashboard e gerenciar cadastros básicos.
+- **ROLE_ADMIN:** Administradores. Acesso total ao sistema, incluindo gestão de técnicos e configurações sensíveis.
+- **Fluxo de Login/Registro:** Telas dedicadas para login e cadastro de novos usuários com validação de CPF e dados corporativos.
 
-2. **Construa e Suba os Containers:** Execute o seguinte comando:
+### 🎫 Gestão de Tickets (Chamados)
+
+- **Abertura de Chamados:**
+  - Clientes (`User`) abrem tickets para si mesmos.
+  - Gestores (`Admin`/`Moderator`) podem abrir tickets em nome de qualquer usuário ou empresa cadastrada.
+- **Listagem Inteligente:**
+  - Visualização de chamados **Abertos** e **Resolvidos**.
+  - Filtros automáticos baseados no perfil do usuário logado.
+- **Ciclo de Vida:**
+  - Status: `OPEN` (Aberto), `IN_PROGRESS` (Em Progresso), `RESOLVED` (Resolvido).
+  - Prioridades: `LOW`, `MEDIUM`, `HIGH`, `URGENT`.
+- **Encerramento:** Fluxo dedicado para encerrar chamados com inserção obrigatória de "Notas de Resolução".
+
+### 🏢 Gestão de Clientes e Empresas
+
+- **Empresas (`Company`):** CRUD de empresas com dados como Razão Social, CNPJ (Tax ID) e Responsável.
+- **Usuários de Empresa (`CompanyUser`):** Associação de usuários a empresas.
+- **Fluxo de Cadastro:** Interface para criar novas empresas e associar múltiplos usuários existentes de uma só vez.
+
+### 📊 Dashboard
+
+- **Visão Geral:** Cards com contagem em tempo real de tickets Abertos e Resolvidos.
+- **Gráficos:**
+  - Distribuição de Chamados por **Status** (Pie Chart).
+  - Distribuição de Chamados por **Prioridade** (Doughnut Chart).
+
+## ⚙️ Configuração e Instalação
+
+### Pré-requisitos
+
+- [Docker](https://www.docker.com/) e Docker Compose instalados na máquina.
+
+### Executando com Docker (Recomendado)
+
+1. **Clone o repositório:**
+
+   ```
+   git clone [https://github.com/marcio-eduardo/customer_service.git](https://github.com/marcio-eduardo/customer_service.git)
+   cd customer_service-university-group
+   ```
+
+2. Inicie os serviços:
+
+   Execute o comando na raiz do projeto (onde está o arquivo docker-compose.yml):
 
    ```
    docker-compose up --build
    ```
 
-   - `--build`: Este argumento força o Docker a reconstruir as imagens do backend e do frontend a partir dos `Dockerfiles`. É importante usá-lo sempre que fizer alterações no código.
+   *Isso irá baixar as imagens do MySQL, compilar o Backend (Maven) e o Frontend (Node/Vite) e iniciar os containers.*
 
-3. **Aguarde a Inicialização:** O Docker irá descarregar a imagem do MySQL, construir as imagens do seu backend e frontend, e iniciar os três containers. O processo pode demorar alguns minutos na primeira vez. Poderá acompanhar os logs de cada serviço no terminal.
+3. **Acesse a aplicação:**
 
-4. **Aceda à Aplicação:**
+   - **Frontend:** [http://localhost:5173](https://www.google.com/search?q=http://localhost:5173)
+   - **Backend API:** [http://localhost:8080](https://www.google.com/search?q=http://localhost:8080)
 
-   - O **frontend** estará acessível no seu navegador em: `http://localhost:5173`
-   - O **backend** (API) estará a responder em: `http://localhost:8080`
+### Credenciais Padrão (Banco de Dados)
 
-5. **Para Parar a Aplicação:** Pressione `Ctrl + C` no terminal onde o `docker-compose` está a ser executado. Para parar e remover os containers, pode executar:
+Definidas no `docker-compose.yml`:
 
-   ```
-   docker-compose down
-   ```
+- **User:** `admin`
+- **Password:** `admin123`
+- **Database:** `serviceDB`
 
-### 3. Possíveis Erros e Melhorias
+## 📂 Estrutura de Diretórios
 
-O projeto está bem encaminhado, mas identifiquei alguns pontos que podem ser melhorados para aumentar a segurança e a funcionalidade.
-
-#### Possíveis Erros / Pontos de Atenção
-
-No momento, não há erros críticos ou pontos de atenção pendentes que requeiram ação imediata. As questões previamente identificadas em relação a credenciais e dados estáticos no dashboard foram resolvidas.
-
-#### Sugestões de Melhoria
-
-1. **Manter o uso de Variáveis de Ambiente:** É crucial continuar a mover informações sensíveis (se houver novas) dos ficheiros de propriedades diretamente no código para variáveis de ambiente. O `docker-compose.yml` já está preparado para isso, garantindo uma maior segurança.
-2. **Tratamento de Erros no Frontend:** Melhorar o feedback ao utilizador em caso de falhas na comunicação com o backend ou erros de validação. A biblioteca `sonner` já está em uso e pode ser expandida para exibir mensagens mais claras e amigáveis ao usuário (ex: "Utilizador ou senha inválidos" em vez de apenas registrar na consola).
-3. **Validação de Dados Abrangente:** Implementar validações robustas tanto no frontend (antes do envio de dados, com feedback imediato ao usuário) quanto no backend (para garantir a integridade dos dados na API, usando anotações como `@Size`, `@Pattern`, etc., nas DTOs e Models). Isso reduz erros e melhora a segurança.
-
-### 4. Ideias de Implementação Futura
-
-Com a base que já tem, aqui ficam algumas ideias para expandir as funcionalidades do sistema:
-
-1. **Página de Detalhes do Ticket:** Criar uma rota (ex: `/tickets/:id`) onde se possa ver todo o histórico de um chamado, adicionar comentários, ver quem é o técnico responsável, etc.
-2. **Atribuição de Tickets:** Implementar a lógica para que um técnico (Moderator/Admin) possa atribuir um ticket a si mesmo ou a outro técnico.
-3. **Sistema de Comentários nos Tickets:** Permitir que clientes e técnicos troquem mensagens dentro de um ticket, criando um histórico de conversação.
-4. **Notificações por Email:** Enviar emails automáticos quando um ticket é aberto, atualizado com um novo comentário ou resolvido.
-5. **Filtros e Pesquisa Avançada:** Adicionar filtros nas páginas de listagem de tickets e clientes (filtrar por data, status, cliente, etc.).
-6. **Recuperação de Senha:** Implementar a funcionalidade de "Esqueceu a senha?".
-7. **Perfil do Utilizador:** Uma página onde os utilizadores possam ver e editar as suas informações.
-
-## Log de Desenvolvimento
-
-### 20 de Novembro de 2025
-
-Uma série de atualizações foram implementadas para melhorar o processo de criação de chamados e corrigir problemas de configuração inicial.
-
-#### Backend
-- **Melhoria no Modelo de Ticket**:
-  - Adicionado um campo dedicado `openDate` ao `TicketModel.java` para rastrear explicitamente a data de abertura do chamado.
-  - O método `@PrePersist` foi atualizado para preencher automaticamente este campo na criação do chamado.
-- **Novos Endpoints de API para Clientes**:
-  - Para suportar a busca de todos os clientes para listas suspensas na interface do usuário, novos endpoints foram adicionados para retornar listas não paginadas:
-    - `GET /api/clientes-pf/all`: Retorna uma lista completa de todos os clientes `ClientePf`.
-    - `GET /api/clientes-pj/all`: Retorna uma lista completa de todos os clientes `ClientePj`.
-  - As camadas de serviço correspondentes (`ClientePfService` e `ClientePJService`) foram atualizadas com os métodos `listarTodosSemPaginacao()`.
-
-#### Frontend
-- **Página de Criação de Chamado Melhorada**:
-  - O arquivo `CreateTicketPage.tsx` foi atualizado para usar os novos endpoints `/all` (`/api/clientes-pf/all` e `/api/clientes-pj/all`).
-  - Isso garante que a lista suspensa de seleção de cliente agora liste corretamente **todos** os clientes disponíveis, e não apenas a primeira página de um resultado paginado.
-
-#### Ambiente e Configuração
-- **Correção no Docker Compose para Login**:
-  - Resolvido um erro `net::ERR_NAME_NOT_RESOLVED` que ocorria durante o login ao executar a aplicação com o Docker Compose.
-  - A variável de ambiente `VITE_API_URL` para o serviço `frontend` no `docker-compose.yml` foi alterada de `http://backend:8080` para `http://localhost:8080`. Isso permite que o navegador resolva corretamente o endereço da API do backend.
+```
+customer_service-university-group/
+├── customer_service_back/       # Backend Java Spring Boot
+│   ├── src/main/java/           # Código fonte Java (Controllers, Services, Models)
+│   ├── src/main/resources/      # Configurações (application.properties) e SQL inicial
+│   └── Dockerfile               # Definição da imagem Docker do Backend
+│
+├── customer_service_front/      # Frontend React + Vite
+│   ├── src/
+│   │   ├── Components/          # Componentes reutilizáveis (Layout, Button, Navbar)
+│   │   ├── contexts/            # Contexto de Autenticação (AuthContext)
+│   │   ├── pages/               # Páginas da aplicação (Dashboard, Login, Tickets)
+│   │   └── lib/                 # Configurações de bibliotecas (Axios, React Query)
+│   └── Dockerfile               # Definição da imagem Docker do Frontend
+│
+├── docker-compose.yml           # Orquestração dos serviços
+└── README.md                    # Documentação do projeto
+```
