@@ -1,11 +1,23 @@
-# Usa a imagem oficial do OpenJDK 21
-FROM eclipse-temurin:21-jdk
+# Estágio 1: Build da aplicação
+FROM eclipse-temurin:21-jdk AS builder
 
-# Define diretório de trabalho dentro do container
 WORKDIR /app
 
-# Copia o JAR da aplicação para dentro do container
-COPY target/customer_service_back-0.0.1.jar /app/customer_service_back.jar
+COPY mvnw .
+COPY mvnw.cmd .
+COPY .mvn .mvn
+COPY pom.xml .
 
-# Define o comando para rodar a aplicação
+RUN ./mvnw dependency:go-offline -B
+
+COPY src ./src
+
+RUN ./mvnw clean package -DskipTests
+
+FROM eclipse-temurin:21-jdk
+
+WORKDIR /app
+
+COPY --from=builder /app/target/customer_service_back-0.0.1.jar /app/customer_service_back.jar
+
 CMD ["java", "-jar", "/app/customer_service_back.jar"]
