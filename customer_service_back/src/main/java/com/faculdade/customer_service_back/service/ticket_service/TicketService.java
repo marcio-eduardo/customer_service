@@ -5,10 +5,12 @@ import com.faculdade.customer_service_back.dto.projection.PriorityCount;
 import com.faculdade.customer_service_back.dto.projection.StatusCount;
 import com.faculdade.customer_service_back.dto.ticket.TicketCloseRequest;
 import com.faculdade.customer_service_back.dto.ticket.TicketOpenRequest;
+import com.faculdade.customer_service_back.dto.ticket.TicketResponse;
 import com.faculdade.customer_service_back.model.company_model.Company;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
 import com.faculdade.customer_service_back.model.ticket_model.TicketPriority;
 import com.faculdade.customer_service_back.model.ticket_model.TicketStatus;
+import com.faculdade.customer_service_back.model.user_model.ERole;
 import com.faculdade.customer_service_back.model.user_model.User;
 import com.faculdade.customer_service_back.repository.company_repository.CompanyRepository;
 import com.faculdade.customer_service_back.repository.ticket_repository.TicketRepository;
@@ -77,18 +79,44 @@ public class TicketService {
 
     public TicketModel openTicket(TicketOpenRequest request) {
         UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User user = userRepository.findById(userDetails.getId())
+        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
-        Company company = companyRepository.findById(request.getCompanyId())
-                .orElseThrow(() -> new RuntimeException("Company not found"));
+        Company company = null;
+        if (request.getCompanyId() != null && request.getCompanyId() > 0) {
+            company = companyRepository.findById(request.getCompanyId())
+                    .orElseThrow(() -> new RuntimeException("Company not found with id: " + request.getCompanyId()));
+        } else {
+            if (currentUser.getCompany() != null) {
+                company = currentUser.getCompany();
+            } else {
+                throw new RuntimeException("Usuário não possui empresa vinculada e nenhuma empresa foi especificada");
+            }
+        }
+
+        User requester;
+        if (request.getRequesterId() != null) {
+            requester = userRepository.findById(request.getRequesterId())
+                    .orElseThrow(() -> new RuntimeException("Requester not found with id: " + request.getRequesterId()));
+        } else {
+            requester = currentUser;
+        }
+
+        User assignee = null;
+        if (request.getAssigneeId() != null) {
+            assignee = userRepository.findById(request.getAssigneeId())
+                    .orElseThrow(() -> new RuntimeException("Assignee not found with id: " + request.getAssigneeId()));
+        }
 
         TicketModel ticket = new TicketModel();
         ticket.setTitle(request.getTitle());
         ticket.setDescription(request.getDescription());
-        ticket.setPriority(request.getPriority());
+        ticket.setPriority(request.getPriority() != null ? request.getPriority() : TicketPriority.MEDIA);
         ticket.setCompany(company);
-        ticket.setOpenedBy(user);
+        ticket.setOpenedBy(requester);
+        if (assignee != null) {
+            ticket.setAssignedTo(assignee);
+        }
 
         return ticketRepository.save(ticket);
     }
@@ -109,19 +137,83 @@ public class TicketService {
     }
 
 
-    public Optional<TicketModel> getTicketById(Long id) {
-        return ticketRepository.findById(id);
+    public Optional<com.faculdade.customer_service_back.dto.ticket.TicketResponse> getTicketById(Long id) {
+        return ticketRepository.findByIdWithDetails(id)
+                .map(com.faculdade.customer_service_back.dto.ticket.TicketResponse::new);
     }
 
-    public List<TicketModel> getAllTickets() {
-        return ticketRepository.findAll();
+    public List<TicketResponse> getAllTickets() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<TicketModel> tickets = ticketRepository.findAllWithDetails();
+        
+        // Se for usuário de empresa, retornar apenas tickets da sua empresa
+        if (currentUser.getCompany() != null && 
+            !currentUser.getRoles().stream().anyMatch(role -> 
+                role.getName().equals(ERole.ROLE_MODERATOR) ||
+                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
+                role.getName().equals(ERole.ROLE_TECH_USER))) {
+            return tickets.stream()
+                    .filter(ticket -> ticket.getCompany() != null && 
+                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
+                    .map(TicketResponse::new)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return tickets.stream()
+                .map(TicketResponse::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 
-    public List<TicketModel> getOpenTickets() {
-        return ticketRepository.findOpenTickets();
+    public List<TicketResponse> getOpenTickets() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<TicketModel> openTickets = ticketRepository.findOpenTicketsWithDetails();
+        
+        // Se for usuário de empresa, filtrar apenas tickets da sua empresa
+        if (currentUser.getCompany() != null && 
+            !currentUser.getRoles().stream().anyMatch(role -> 
+                role.getName().equals(ERole.ROLE_MODERATOR) ||
+                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
+                role.getName().equals(ERole.ROLE_TECH_USER))) {
+            return openTickets.stream()
+                    .filter(ticket -> ticket.getCompany() != null && 
+                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
+                    .map(TicketResponse::new)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return openTickets.stream()
+                .map(TicketResponse::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 
-    public List<TicketModel> getResolvedTickets() {
-        return ticketRepository.findResolvedTickets();
+    public List<TicketResponse> getResolvedTickets() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        List<TicketModel> resolvedTickets = ticketRepository.findResolvedTicketsWithDetails();
+        
+        // Se for usuário de empresa, filtrar apenas tickets da sua empresa
+        if (currentUser.getCompany() != null && 
+            !currentUser.getRoles().stream().anyMatch(role -> 
+                role.getName().equals(ERole.ROLE_MODERATOR) ||
+                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
+                role.getName().equals(ERole.ROLE_TECH_USER))) {
+            return resolvedTickets.stream()
+                    .filter(ticket -> ticket.getCompany() != null && 
+                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
+                    .map(TicketResponse::new)
+                    .collect(java.util.stream.Collectors.toList());
+        }
+        
+        return resolvedTickets.stream()
+                .map(TicketResponse::new)
+                .collect(java.util.stream.Collectors.toList());
     }
 }
