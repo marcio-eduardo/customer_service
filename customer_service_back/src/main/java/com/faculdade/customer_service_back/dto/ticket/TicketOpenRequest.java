@@ -9,5 +9,7 @@ public class TicketOpenRequest {
     private String title;
     private String description;
     private TicketPriority priority;
-    private Long companyId;
+    private Long companyId; // Opcional: se null, pega do usuário logado
+    private Long requesterId; // Opcional: se null, pega do usuário logado
+    private Long assigneeId; // Opcional: técnico responsável
 }

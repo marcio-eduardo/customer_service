@@ -68,25 +68,18 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
 
-                        .requestMatchers("/api/clientes-pf/**").authenticated()
-                        .requestMatchers("/api/clientes-pj/**").authenticated()
-                        .requestMatchers("/api/technical/**").hasRole("ADMIN")
-
                         // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**
                         // 1. Permitir que qualquer usuário autenticado abra um chamado
                         .requestMatchers(HttpMethod.POST, "/api/tickets/open").authenticated()
-                        // 2. Manter ou ajustar outras operações de tickets:
-                        //    - Fechar (POST /api/tickets/close) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //    - Listar todos (GET /api/tickets) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //    - Buscar por ID (GET /api/tickets/{id}) continua coberto por "/api/tickets/**" para MODERATOR/ADMIN
-                        //      (Se precisar que usuários vejam seus próprios tickets, precisaremos de uma regra mais específica ou lógica no serviço)
-                        //    - Alterar (PUT) e Excluir (DELETE) chamados devem ser apenas para ADMIN.
-                        //      Se esses endpoints forem, por exemplo, PUT /api/tickets/{id} e DELETE /api/tickets/{id}
-                        .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
-                        // Regra geral para outros GETs em tickets (como listar e buscar por ID) e POST /api/tickets/close:
-                        .requestMatchers("/api/tickets/**").hasAnyRole("MODERATOR", "ADMIN")
-                        // **FIM DAS ALTERAÇÕES PARA TICKETS**
+                        // 2. Permitir que usuários autenticados vejam tickets (filtragem é feita no service)
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/status/open").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/status/resolved").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/{id}").authenticated()
+                        // 3. Alterar e Excluir apenas para MODERATOR
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("MODERATOR")
+                        .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("MODERATOR")
+                        // 4. Regra geral para outros endpoints de tickets (fechar, etc)
+                        .requestMatchers("/api/tickets/**").hasAnyRole("MODERATOR", "TECH_USER")
 
                         .anyRequest().authenticated()
                 );
