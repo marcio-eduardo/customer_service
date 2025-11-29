@@ -23,16 +23,16 @@ public class TicketController {
 
     @PostMapping("/open")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<TicketModel> openTicket(@RequestBody TicketOpenRequest request) {
+    public ResponseEntity<TicketResponse> openTicket(@RequestBody TicketOpenRequest request) {
         TicketModel ticket = ticketService.openTicket(request);
-        return ResponseEntity.status(201).body(ticket);
+        return ResponseEntity.status(201).body(new TicketResponse(ticket));
     }
 
     @PostMapping("/{id}/close")
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
-    public ResponseEntity<TicketModel> closeTicket(@PathVariable Long id, @RequestBody TicketCloseRequest request) {
+    public ResponseEntity<TicketResponse> closeTicket(@PathVariable Long id, @RequestBody TicketCloseRequest request) {
         TicketModel ticket = ticketService.closeTicket(id, request);
-        return ResponseEntity.ok(ticket);
+        return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
     @GetMapping

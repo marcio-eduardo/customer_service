@@ -3,42 +3,33 @@ import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom'; 
 import { toast } from 'sonner';
-import { api } from '../../lib/axios'; 
+import { api } from '../../lib/axios';
+import { User } from '../../types/User';
 
-// Interface para o modelo de Ticket
 interface Ticket {
   id: number;
   title: string;
   description: string;
   status: string; 
-  createdAt: string; 
-  technical?: { 
-    id: number;
-    name: string;
-  } | null;
-  closedByTechnical?: { 
-    id: number;
-    name: string;
-  } | null;
-  resolvedAt?: string | null;
-  resolutionNotes?: string | null;
+  priority: string;
+  createdAt: string;
+  openedBy: User;
+  assignedTo?: User | null;
 }
 
-// Função para formatar a data
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return 'N/A';
-  try {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch (e) {
-    console.warn("Erro ao formatar data:", dateString, e);
-    return dateString;
-  }
+  return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const getStatusBadge = (status: string) => {
+  const statusMap: Record<string, { label: string; className: string }> = {
+    OPEN: { label: 'Aberto', className: 'bg-tas-status-info text-tas-text-on-primary' },
+    IN_PROGRESS: { label: 'Em Progresso', className: 'bg-tas-status-warning text-tas-text-on-primary' },
+    RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success text-tas-text-on-primary' },
+  };
+  const config = statusMap[status] || { label: status, className: 'bg-gray-500 text-white' };
+  return <span className={`text-xs px-3 py-1 rounded-full font-semibold ${config.className}`}>{config.label}</span>;
 };
 
 export function ViewOpenTicketsPage() {
@@ -55,16 +46,9 @@ export function ViewOpenTicketsPage() {
         setOpenTickets(response.data || []);
       } catch (err: any) {
         console.error("Falha ao buscar chamados abertos:", err);
-        if (err.response && err.response.status === 401) {
-          setError("Erro 401: Não autorizado. Verifique se está logado.");
-          toast.error("Sessão expirada ou não autorizado. Faça login novamente.");
-        } else if (err.response && err.response.status === 403) {
-          setError("Erro 403: Você não tem permissão para ver esta lista.");
-          toast.error("Você não tem permissão para acessar este recurso.");
-        } else {
-          setError(err.message || "Ocorreu um erro desconhecido ao buscar os chamados.");
-          toast.error("Não foi possível carregar os chamados abertos.");
-        }
+        const errorMessage = err.response?.data?.message || "Ocorreu um erro desconhecido ao buscar os chamados.";
+        setError(errorMessage);
+        toast.error(errorMessage);
         setOpenTickets([]);
       } finally {
         setIsLoading(false);
@@ -74,23 +58,17 @@ export function ViewOpenTicketsPage() {
     fetchOpenTickets();
   }, []);
 
-  // Classes de estilo com a paleta "Confiança Moderna (Light) Final"
-  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
+  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card";
   const contentContainerClasses = "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  
-  const headerTitleClass = "text-tas-primary"; // Azul da navbar para o título principal
-  const headerSubtitleClass = "text-tas-text-secondary-on-card"; // Texto secundário para o subtítulo
-
-  const cardBgClasses = "bg-tas-bg-card"; // Fundo do card
-  const cardTitleTextClasses = "text-tas-primary font-semibold"; // Título do card com a cor primária
-  const cardDetailTextClasses = "text-tas-text-secondary-on-card"; // Detalhes do card
-  const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium"; // Rótulos dentro do card
-  
-  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary"; // Fundo vermelho com texto branco
+  const headerTitleClass = "text-tas-primary";
+  const headerSubtitleClass = "text-tas-text-secondary-on-card";
+  const cardBgClasses = "bg-tas-bg-card";
+  const cardTitleTextClasses = "text-tas-primary font-semibold";
+  const cardDetailTextClasses = "text-tas-text-secondary-on-card";
+  const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium";
+  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium";
   const loadingTextClass = "text-tas-text-secondary-on-card";
-
-  const statusTagClasses = "bg-tas-status-info text-tas-text-on-primary"; // Tag de status "OPEN"
-  const buttonClasses = "bg-tas-secondary text-tas-text-on-primary hover:bg-tas-secondary-hover"; // Botão verde
+  const buttonClasses = "bg-tas-secondary text-tas-text-on-primary hover:bg-tas-secondary-hover";
 
   return (
     <>
@@ -115,7 +93,7 @@ export function ViewOpenTicketsPage() {
               </p>
             )}
             {error && (
-              <p className={`${errorTextClass} p-4 rounded-md text-center font-medium`}>
+              <p className={errorTextClass}>
                 {error}
               </p>
             )}
@@ -127,14 +105,12 @@ export function ViewOpenTicketsPage() {
             {!isLoading && !error && openTickets.length > 0 && (
               <div className="space-y-6">
                 {openTickets.map((ticket) => (
-                  <div key={ticket.id} className={`${cardBgClasses} p-6 rounded-xl shadow-lg border border-gray-200`}>
+                  <div key={ticket.id} className={`${cardBgClasses} p-6 rounded-xl shadow-lg border border-black/10 transition-transform hover:scale-[1.02] hover:shadow-xl`}>
                     <div className="flex flex-col sm:flex-row justify-between items-start mb-2">
                       <h2 className={`text-xl ${cardTitleTextClasses} mb-1 sm:mb-0`}>
                         #{ticket.id}: {ticket.title}
                       </h2>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusTagClasses}`}>
-                        {ticket.status} 
-                      </span>
+                      {getStatusBadge(ticket.status)}
                     </div>
                     <p className={`${cardDetailTextClasses} text-sm mb-3 leading-relaxed line-clamp-3`}>
                       {ticket.description}
@@ -145,8 +121,12 @@ export function ViewOpenTicketsPage() {
                         <span className={cardDetailTextClasses}>{formatDate(ticket.createdAt)}</span>
                       </p>
                       <p>
+                        <span className={cardLabelTextClasses}>Aberto por:</span>{' '}
+                        <span className={cardDetailTextClasses}>{ticket.openedBy?.username ?? 'N/A'}</span>
+                      </p>
+                      <p>
                         <span className={cardLabelTextClasses}>Técnico Atribuído:</span>{' '}
-                        <span className={cardDetailTextClasses}>{ticket.technical ? ticket.technical.name : 'Nenhum (Aguardando atribuição)'}</span>
+                        <span className={cardDetailTextClasses}>{ticket.assignedTo ? ticket.assignedTo.username : 'Aguardando atribuição'}</span>
                       </p>
                     </div>
                     <div className="mt-4 flex justify-end space-x-3">

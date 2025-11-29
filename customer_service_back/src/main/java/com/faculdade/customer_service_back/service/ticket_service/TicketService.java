@@ -31,7 +31,8 @@ public class TicketService {
     private final UserRepository userRepository;
     private final CompanyRepository companyRepository;
 
-    public TicketService(TicketRepository ticketRepository, UserRepository userRepository, CompanyRepository companyRepository) {
+    public TicketService(TicketRepository ticketRepository, UserRepository userRepository,
+            CompanyRepository companyRepository) {
         this.ticketRepository = ticketRepository;
         this.userRepository = userRepository;
         this.companyRepository = companyRepository;
@@ -63,7 +64,6 @@ public class TicketService {
         long totalMediumPriorityTickets = priorityCounts.getOrDefault(TicketPriority.MEDIA, 0L);
         long totalLowPriorityTickets = priorityCounts.getOrDefault(TicketPriority.BAIXA, 0L);
 
-
         return new DashboardStatsDTO(
                 statusCounts,
                 priorityCounts,
@@ -73,12 +73,12 @@ public class TicketService {
                 totalUrgentTickets,
                 totalHighPriorityTickets,
                 totalMediumPriorityTickets,
-                totalLowPriorityTickets
-        );
+                totalLowPriorityTickets);
     }
 
     public TicketModel openTicket(TicketOpenRequest request) {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
         User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
@@ -97,7 +97,8 @@ public class TicketService {
         User requester;
         if (request.getRequesterId() != null) {
             requester = userRepository.findById(request.getRequesterId())
-                    .orElseThrow(() -> new RuntimeException("Requester not found with id: " + request.getRequesterId()));
+                    .orElseThrow(
+                            () -> new RuntimeException("Requester not found with id: " + request.getRequesterId()));
         } else {
             requester = currentUser;
         }
@@ -125,95 +126,70 @@ public class TicketService {
         TicketModel ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
 
-        // TODO: check if the user has permission to close the ticket
-        // For now, anyone can close any ticket
-
         ticket.setResolutionNotes(request.getResolutionNotes());
         ticket.setRating(request.getRating());
-        ticket.setStatus(com.faculdade.customer_service_back.model.ticket_model.TicketStatus.RESOLVED);
+        ticket.setStatus(TicketStatus.RESOLVED);
         ticket.setResolvedAt(java.time.LocalDateTime.now());
 
         return ticketRepository.save(ticket);
     }
 
-
-    public Optional<com.faculdade.customer_service_back.dto.ticket.TicketResponse> getTicketById(Long id) {
+    public Optional<TicketResponse> getTicketById(Long id) {
         return ticketRepository.findByIdWithDetails(id)
-                .map(com.faculdade.customer_service_back.dto.ticket.TicketResponse::new);
+                .map(TicketResponse::new);
     }
 
     public List<TicketResponse> getAllTickets() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        User currentUser = getCurrentUser();
         List<TicketModel> tickets = ticketRepository.findAllWithDetails();
-        
-        // Se for usuário de empresa, retornar apenas tickets da sua empresa
-        if (currentUser.getCompany() != null && 
-            !currentUser.getRoles().stream().anyMatch(role -> 
-                role.getName().equals(ERole.ROLE_MODERATOR) ||
-                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
-                role.getName().equals(ERole.ROLE_TECH_USER))) {
-            return tickets.stream()
-                    .filter(ticket -> ticket.getCompany() != null && 
-                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
-                    .map(TicketResponse::new)
-                    .collect(java.util.stream.Collectors.toList());
-        }
-        
-        return tickets.stream()
-                .map(TicketResponse::new)
-                .collect(java.util.stream.Collectors.toList());
+        return filterTicketsForUser(tickets, currentUser);
     }
 
     public List<TicketResponse> getOpenTickets() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        User currentUser = getCurrentUser();
         List<TicketModel> openTickets = ticketRepository.findOpenTicketsWithDetails();
-        
-        // Se for usuário de empresa, filtrar apenas tickets da sua empresa
-        if (currentUser.getCompany() != null && 
-            !currentUser.getRoles().stream().anyMatch(role -> 
-                role.getName().equals(ERole.ROLE_MODERATOR) ||
-                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
-                role.getName().equals(ERole.ROLE_TECH_USER))) {
-            return openTickets.stream()
-                    .filter(ticket -> ticket.getCompany() != null && 
-                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
-                    .map(TicketResponse::new)
-                    .collect(java.util.stream.Collectors.toList());
-        }
-        
-        return openTickets.stream()
-                .map(TicketResponse::new)
-                .collect(java.util.stream.Collectors.toList());
+        return filterTicketsForUser(openTickets, currentUser);
     }
 
     public List<TicketResponse> getResolvedTickets() {
-        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        User currentUser = userRepository.findByIdWithCompany(userDetails.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
+        User currentUser = getCurrentUser();
         List<TicketModel> resolvedTickets = ticketRepository.findResolvedTicketsWithDetails();
-        
-        // Se for usuário de empresa, filtrar apenas tickets da sua empresa
-        if (currentUser.getCompany() != null && 
-            !currentUser.getRoles().stream().anyMatch(role -> 
-                role.getName().equals(ERole.ROLE_MODERATOR) ||
-                role.getName().equals(ERole.ROLE_COMPANY_USER) ||
-                role.getName().equals(ERole.ROLE_TECH_USER))) {
-            return resolvedTickets.stream()
-                    .filter(ticket -> ticket.getCompany() != null && 
-                            ticket.getCompany().getId().equals(currentUser.getCompany().getId()))
+        return filterTicketsForUser(resolvedTickets, currentUser);
+    }
+
+    private User getCurrentUser() {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        return userRepository.findByIdWithCompany(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
+
+    private List<TicketResponse> filterTicketsForUser(List<TicketModel> tickets, User user) {
+        // Se for Moderador ou Técnico, vê tudo
+        boolean canSeeAll = user.getRoles().stream().anyMatch(role -> role.getName().equals(ERole.ROLE_MODERATOR) ||
+                role.getName().equals(ERole.ROLE_TECH_USER));
+
+        if (canSeeAll) {
+            return tickets.stream()
                     .map(TicketResponse::new)
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
         }
-        
-        return resolvedTickets.stream()
+
+        // Se for usuário de empresa (ROLE_COMPANY_USER ou apenas vinculado a uma
+        // empresa), vê apenas tickets da empresa
+        if (user.getCompany() != null) {
+            return tickets.stream()
+                    .filter(ticket -> ticket.getCompany() != null &&
+                            ticket.getCompany().getId().equals(user.getCompany().getId()))
+                    .map(TicketResponse::new)
+                    .collect(Collectors.toList());
+        }
+
+        // Fallback: se não tem empresa e não é admin/tech, retorna apenas seus próprios
+        // tickets
+        return tickets.stream()
+                .filter(ticket -> ticket.getOpenedBy().getId().equals(user.getId()))
                 .map(TicketResponse::new)
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
     }
 }

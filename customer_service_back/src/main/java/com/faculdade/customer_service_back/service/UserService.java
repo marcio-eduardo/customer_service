@@ -59,9 +59,11 @@ public class UserService {
         }
 
         Role userRole = getRoleByName(strRole);
+        roles.add(userRole);
+        user.setRoles(roles);
         
         // Se for company_user, associar empresa
-        if (strRole.equalsIgnoreCase("company_user")) {
+        if (userRole.getName().equals(ERole.ROLE_COMPANY_USER)) {
             if (request.getCompanyId() == null) {
                 throw new IllegalArgumentException("O ID da empresa é obrigatório para usuários da empresa.");
             }
@@ -70,9 +72,6 @@ public class UserService {
             user.setCompany(company);
         }
         
-        roles.add(userRole);
-        user.setRoles(roles);
-
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);
     }
@@ -82,6 +81,8 @@ public class UserService {
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
+
+
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -121,22 +122,24 @@ public class UserService {
         if (request.getRole() != null && !request.getRole().isEmpty()) {
             Set<Role> roles = new HashSet<>();
             Role userRole = getRoleByName(request.getRole());
+            roles.add(userRole);
+            user.setRoles(roles);
             
             // Se for company_user, exigir empresa
-            if (request.getRole().equalsIgnoreCase("company_user")) {
+            if (userRole.getName().equals(ERole.ROLE_COMPANY_USER)) {
                 if (request.getCompanyId() == null) {
-                    throw new IllegalArgumentException("O ID da empresa é obrigatório para usuários da empresa.");
-                }
-                Company company = companyRepository.findById(request.getCompanyId())
+                     if(user.getCompany() == null) {
+                        throw new IllegalArgumentException("O ID da empresa é obrigatório para usuários da empresa.");
+                     }
+                } else {
+                     Company company = companyRepository.findById(request.getCompanyId())
                         .orElseThrow(() -> new RuntimeException("Empresa não encontrada."));
-                user.setCompany(company);
+                     user.setCompany(company);
+                }
             } else {
                 // Técnicos e moderadores não têm empresa
                 user.setCompany(null);
             }
-            
-            roles.add(userRole);
-            user.setRoles(roles);
         } else if (request.getCompanyId() != null) {
             // Atualizar apenas a empresa se fornecida (sem mudar role)
             Company company = companyRepository.findById(request.getCompanyId())
@@ -157,23 +160,38 @@ public class UserService {
     }
 
     private Role getRoleByName(String strRole) {
-        switch (strRole.toLowerCase()) {
-            case "company_user":
+        switch (strRole.toUpperCase()) {
+            case "COMPANY_USER":
                 return roleRepository.findByName(ERole.ROLE_COMPANY_USER)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_COMPANY_USER não encontrado."));
                 
-            case "tech":
-            case "tech_user":
+            case "TECH_USER":
                 return roleRepository.findByName(ERole.ROLE_TECH_USER)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_TECH_USER não encontrado."));
                 
-            case "mod":
-            case "moderator":
+            case "MODERATOR_USER":
                 return roleRepository.findByName(ERole.ROLE_MODERATOR)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_MODERATOR não encontrado."));
                 
             default:
-                throw new IllegalArgumentException("Papel '" + strRole + "' não é válido. Use: company_user, tech, ou moderator.");
+                throw new IllegalArgumentException("Papel '" + strRole + "' não é válido. Use: COMPANY_USER, TECH_USER, ou MODERATOR_USER.");
         }
+    }
+
+    public List<UserResponse> getAllTechUsers() {
+        List<User> techUsers = userRepository.findByRoles_Name(ERole.ROLE_TECH_USER);
+        return techUsers.stream()
+                .map(UserResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getUsersByCompany(Long companyId) {
+        if (!companyRepository.existsById(companyId)) {
+            throw new RuntimeException("Empresa não encontrada.");
+        }
+        List<User> users = userRepository.findAllByCompany_Id(companyId);
+        return users.stream()
+                .map(UserResponse::new)
+                .collect(Collectors.toList());
     }
 }

@@ -1,3 +1,5 @@
+import type { Company } from './Company';
+
 export interface User {
     id: number;
     username: string;
@@ -5,4 +7,6 @@ export interface User {
     roles: string[];
     companyId?: number;
     companyName?: string;
+    company?: Company;
+    cpf?: string;
 }

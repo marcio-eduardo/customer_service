@@ -1,7 +1,9 @@
 export function Footer() {
   return (
-        <footer className="text-sm font-bold fixed bottom-0 w-full text-gray-700 text-center py-4">
-          Painel do parceiro &copy; Trust Assist System - {new Date(). getFullYear()}
+        <footer className="w-full text-center p-4 border-t border-tas-accent/20 bg-tas-bg-card">
+          <p className="text-sm text-tas-text-secondary-on-card">
+            Painel do parceiro &copy; Trust Assist System - {new Date().getFullYear()}
+          </p>
         </footer>
   )
 }

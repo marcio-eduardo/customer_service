@@ -88,3 +88,49 @@
     - React Query para cache e gerenciamento de estado
     - Toast com duração estendida (5s) para erros de constraint
     - Botões de ação visíveis apenas para Moderadores
+- Criação de Guia Postman:
+  - Criado arquivo `postman.md` com um guia detalhado para popular o banco e testar o CRUD da API.
+  - O guia inclui a criação de 5 empresas, 15 usuários (Moderadores, Técnicos, Clientes) e 20 tickets, seguindo regras de negócio específicas.
+  - O documento serve como um roteiro de testes para as funcionalidades de Empresas, Usuários e Tickets.
+- Criação de Guia SQL:
+  - Criado arquivo `SQL.md` contendo os scripts SQL para popular o banco de dados com o mesmo conjunto de dados do guia Postman.
+  - O arquivo serve como uma alternativa para a população de dados diretamente no banco, sem a necessidade de usar a API.
+- Correção e Formatação do Guia Postman:
+  - Padronizadas todas as senhas para "123456" na seção de criação de usuários.
+  - Corrigido o payload para usar o campo `role` (string) em vez de `roles` (array).
+  - Adicionada observação no `postman.md` sobre a inconsistência do campo CPF (presente no frontend/DevLog, mas ausente no backend).
+  - Corrigida a indentação de todos os blocos JSON no arquivo `postman.md` para melhor legibilidade.
+- Refatoração Final da Convenção de Roles:
+  - Refatorado `UserService.java` para alinhar com a convenção da API, aceitando `COMPANY_USER`, `TECH_USER`, e `MODERATOR_USER`.
+  - Corrigido o `postman.md` para enviar os nomes de `role` corretos, garantindo consistência entre a documentação e o backend.
+- Correção de Endpoints de Tickets no Guia Postman:
+  - Corrigido o endpoint para fechamento de tickets no `postman.md`, adicionando o `{id}` na URL.
+  - Corrigida a rota de criação de tickets para `POST /api/tickets/open`.
+  - Corrigidas as rotas de listagem de tickets abertos/resolvidos para `GET /api/tickets/status/open` e `GET /api/tickets/status/resolved`.
+- Correção de Enum de Prioridade de Ticket:
+  - Identificado erro de desserialização do `TicketPriority` devido a valores incorretos (`MEDIUM` em vez de `MEDIA`).
+  - Corrigidos os valores de `priority` nos arquivos `postman.md` e `SQL.md` para usar os nomes corretos do enum em português (`BAIXA`, `MEDIA`, `ALTA`, `URGENTE`).
+- Correção de Erro de Serialização (Lazy Loading):
+  - Identificado erro `Type definition error: [simple type, class org.hibernate.proxy.pojo.bytebuddy.ByteBuddyInterceptor]` na criação e fechamento de tickets.
+  - Causa: Retorno direto da entidade JPA (`TicketModel`) com relações `FetchType.LAZY` do controller.
+  - Corrigido o `TicketController.java`: os métodos `openTicket` e `closeTicket` agora retornam o DTO `TicketResponse` para evitar a serialização de proxies do Hibernate.
+- Correção de Rota de Fechamento de Ticket (Frontend):
+  - Identificada inconsistência entre a navegação na `TicketDetailsPage` (que tentava acessar `/tickets/:id/fechar`) e a definição da rota.
+  - Padronizada a rota em `app.routes.tsx` para `/tickets/:id/encerrar`.
+  - Corrigida a chamada `navigate` na `TicketDetailsPage` para usar a rota `/tickets/:id/encerrar`, resolvendo o problema de acesso à página.
+- Refatoração da Página de Fechamento de Ticket (Frontend):
+  - Modificada `CloseTicketPage.tsx` para suportar dois cenários de navegação:
+    - Com ID na URL (`/tickets/:id/encerrar`): Carrega os detalhes do ticket automaticamente.
+    - Sem ID na URL (`/tickets/encerrar`): Exibe um campo de busca para o usuário digitar o ID.
+  - A lógica de submissão do formulário agora usa o endpoint `POST /api/tickets/{id}/close` e não inclui `closedByTechnicalId` no payload.
+  - Adicionado item "Encerrar" no dropdown "Chamados" do `NavigationBar.tsx`, apontando para a rota `/tickets/encerrar` e visível para Moderadores/Técnicos.
+- Correção de Bug no Frontend:
+  - Corrigido `ReferenceError: headerTitleClass is not defined` na `CloseTicketPage.tsx` ao adicionar as definições de classe de estilo que estavam faltando.
+- Implementação e Correção do Sistema de Temas e Estilização:
+  - Implementado sistema de temas com `ThemeContext` e `localStorage`.
+  - Adicionado seletor de temas ao menu "Configurações".
+  - Refatorada a `DashboardPage.tsx` para usar cores dinâmicas nos gráficos e corrigir o efeito de hover, alinhando ao `Estilos.md`.
+  - Implementada a fonte Poppins globalmente via `index.css` e `tailwind.config.js`.
+  - Removidas as classes `font-['Poppins']` de todos os componentes para herdar a fonte do `body`.
+  - Realizada varredura completa nas páginas e componentes para padronizar estilos e garantir consistência visual.
+  - Corrigido bug de importação na `DashboardPage` (`useTheme` importado do contexto errado).

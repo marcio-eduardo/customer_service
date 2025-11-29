@@ -24,7 +24,6 @@ export function ViewCompaniesPage() {
   const queryClient = useQueryClient();
   const isModerator = user?.roles?.includes('ROLE_MODERATOR');
 
-  // Query para buscar empresas
   const { data: companies = [], isLoading, error } = useQuery<Company[]>({
     queryKey: ['companies'],
     queryFn: async () => {
@@ -33,7 +32,6 @@ export function ViewCompaniesPage() {
     },
   });
 
-  // Mutation para atualizar empresa
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: any }) => {
       const response = await api.put(`/api/companies/${id}`, data);
@@ -50,7 +48,6 @@ export function ViewCompaniesPage() {
     },
   });
 
-  // Mutation para deletar empresa
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
       await api.delete(`/api/companies/${id}`);
@@ -62,8 +59,6 @@ export function ViewCompaniesPage() {
     },
     onError: (error: any) => {
       const errorMessage = error.response?.data?.message || 'Erro ao excluir empresa';
-      
-      // Exibir mensagem mais clara para erros de constraint
       if (errorMessage.includes('usuário(s) vinculado(s)')) {
         toast.error(errorMessage, { duration: 5000 });
       } else {
@@ -85,10 +80,8 @@ export function ViewCompaniesPage() {
 
   const handleEditSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!editingCompany) return;
 
-    // Validar CNPJ se foi alterado
     if (editFormData.cnpj) {
       const cnpjNumerico = removeNonNumeric(editFormData.cnpj);
       if (!validateCNPJ(cnpjNumerico)) {
@@ -97,7 +90,6 @@ export function ViewCompaniesPage() {
       }
     }
 
-    // Preparar dados para envio (sem formatação)
     const updateData: any = {};
     if (editFormData.name) updateData.name = editFormData.name;
     if (editFormData.cnpj) updateData.cnpj = removeNonNumeric(editFormData.cnpj);
@@ -115,30 +107,25 @@ export function ViewCompaniesPage() {
   };
 
   const handleCnpjChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatCNPJ(e.target.value);
-    setEditFormData({ ...editFormData, cnpj: formatted });
+    setEditFormData({ ...editFormData, cnpj: formatCNPJ(e.target.value) });
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const formatted = formatPhone(e.target.value);
-    setEditFormData({ ...editFormData, phone: formatted });
+    setEditFormData({ ...editFormData, phone: formatPhone(e.target.value) });
   };
 
   const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  
-  const headerTitleClass = 'text-tas-primary'; 
+  const headerTitleClass = 'text-tas-primary';
   const headerSubtitleClass = 'text-tas-text-secondary-on-card';
-
-  const sectionCardBgClasses = 'bg-tas-bg-card'; 
-  
+  const sectionCardBgClasses = 'bg-tas-bg-card';
   const companyNameTextClasses = 'text-tas-primary font-semibold';
   const companyDetailTextClasses = 'text-tas-text-on-card';
-  const companyLabelTextClasses = 'text-tas-text-on-card font-medium';
-  
+  const companyLabelTextClasses = 'text-tas-text-secondary-on-card font-medium';
   const errorTextClass = 'bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium';
   const loadingTextClass = 'text-tas-text-secondary-on-card italic text-center py-4';
   const buttonPrimaryClasses = 'inline-flex items-center px-6 py-3 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors shadow-md';
+  const modalInputClasses = "w-full px-4 py-2 bg-tas-bg-page border border-tas-accent/20 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-secondary";
 
   return (
     <>
@@ -166,7 +153,7 @@ export function ViewCompaniesPage() {
             </div>
           </header>
 
-          <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
+          <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8 border border-black/10`}>
             {isLoading && <p className={loadingTextClass}>A carregar empresas...</p>}
             {error && <p className={errorTextClass}>Erro ao carregar empresas</p>}
 
@@ -177,7 +164,7 @@ export function ViewCompaniesPage() {
             {!isLoading && !error && companies.length > 0 && (
               <ul className="space-y-6">
                 {companies.map((company) => (
-                  <li key={company.id} className={`bg-tas-bg-card p-4 sm:p-6 rounded-lg shadow-md border border-gray-700 transition-shadow hover:shadow-lg`}>
+                  <li key={company.id} className={`bg-tas-bg-page p-4 sm:p-6 rounded-lg shadow-md border border-tas-accent/10 transition-shadow hover:shadow-lg`}>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
                         <h3 className={`text-xl ${companyNameTextClasses} mb-1`}>{company.name}</h3>
@@ -194,13 +181,13 @@ export function ViewCompaniesPage() {
                         <div className="flex gap-2 ml-4">
                           <button
                             onClick={() => handleEditClick(company)}
-                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            className="px-3 py-2 bg-tas-secondary text-tas-text-on-primary rounded-lg hover:bg-tas-secondary-hover transition-colors text-sm"
                           >
                             Editar
                           </button>
                           <button
                             onClick={() => setDeletingCompany(company)}
-                            className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                            className="px-3 py-2 bg-tas-status-error text-tas-text-on-primary rounded-lg hover:bg-red-700 transition-colors text-sm"
                           >
                             Excluir
                           </button>
@@ -215,80 +202,36 @@ export function ViewCompaniesPage() {
         </div>
       </div>
 
-      {/* Modal de Edição */}
       {editingCompany && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-tas-bg-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-tas-bg-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-black/10">
             <h2 className="text-2xl font-bold text-tas-primary mb-4">Editar Empresa</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
-                <label className="block text-tas-text-on-card font-medium mb-2">Nome*</label>
-                <input
-                  type="text"
-                  value={editFormData.name}
-                  onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
-                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
-                  required
-                />
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">Nome*</label>
+                <input type="text" value={editFormData.name} onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })} className={modalInputClasses} required />
               </div>
-
               <div>
-                <label className="block text-tas-text-on-card font-medium mb-2">CNPJ*</label>
-                <input
-                  type="text"
-                  value={editFormData.cnpj}
-                  onChange={handleCnpjChange}
-                  maxLength={18}
-                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
-                  required
-                />
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">CNPJ*</label>
+                <input type="text" value={editFormData.cnpj} onChange={handleCnpjChange} maxLength={18} className={modalInputClasses} required />
               </div>
-
               <div>
-                <label className="block text-tas-text-on-card font-medium mb-2">Email*</label>
-                <input
-                  type="email"
-                  value={editFormData.email}
-                  onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })}
-                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
-                  required
-                />
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">Email*</label>
+                <input type="email" value={editFormData.email} onChange={(e) => setEditFormData({ ...editFormData, email: e.target.value })} className={modalInputClasses} required />
               </div>
-
               <div>
-                <label className="block text-tas-text-on-card font-medium mb-2">Telefone</label>
-                <input
-                  type="text"
-                  value={editFormData.phone}
-                  onChange={handlePhoneChange}
-                  maxLength={15}
-                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
-                />
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">Telefone</label>
+                <input type="text" value={editFormData.phone} onChange={handlePhoneChange} maxLength={15} className={modalInputClasses} />
               </div>
-
               <div>
-                <label className="block text-tas-text-on-card font-medium mb-2">Endereço</label>
-                <textarea
-                  value={editFormData.address}
-                  onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })}
-                  rows={3}
-                  className="w-full px-4 py-2 bg-tas-bg-page border border-gray-600 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-primary"
-                />
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">Endereço</label>
+                <textarea value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} rows={3} className={modalInputClasses} />
               </div>
-
               <div className="flex gap-3 pt-4">
-                <button
-                  type="submit"
-                  disabled={updateMutation.isPending}
-                  className="flex-1 px-4 py-2 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50"
-                >
+                <button type="submit" disabled={updateMutation.isPending} className="flex-1 px-4 py-2 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50">
                   {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setEditingCompany(null)}
-                  className="flex-1 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
-                >
+                <button type="button" onClick={() => setEditingCompany(null)} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors">
                   Cancelar
                 </button>
               </div>
@@ -297,35 +240,22 @@ export function ViewCompaniesPage() {
         </div>
       )}
 
-      {/* Modal de Exclusão */}
       {deletingCompany && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-tas-bg-card rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-2xl font-bold text-red-500 mb-4">Confirmar Exclusão</h2>
+          <div className="bg-tas-bg-card rounded-lg p-6 max-w-md w-full border border-black/10">
+            <h2 className="text-2xl font-bold text-tas-status-error mb-4">Confirmar Exclusão</h2>
             <div className="text-tas-text-on-card mb-6">
-              <p className="mb-3">
-                Tem certeza que deseja excluir a empresa <strong>{deletingCompany.name}</strong>?
-              </p>
-              <div className="bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-3 text-sm">
-                <p className="text-yellow-400 font-medium mb-1">⚠️ Atenção:</p>
-                <p className="text-yellow-200">
-                  Não será possível excluir se houver usuários vinculados a esta empresa. 
-                  Remova ou transfira os usuários antes de prosseguir.
-                </p>
+              <p className="mb-3">Tem certeza que deseja excluir a empresa <strong>{deletingCompany.name}</strong>?</p>
+              <div className="bg-tas-status-warning/10 border border-tas-status-warning/20 rounded-lg p-3 text-sm">
+                <p className="text-tas-accent font-medium mb-1">⚠️ Atenção:</p>
+                <p className="text-tas-text-secondary-on-card">Não será possível excluir se houver usuários vinculados a esta empresa. Remova ou transfira os usuários antes de prosseguir.</p>
               </div>
             </div>
             <div className="flex gap-3">
-              <button
-                onClick={handleDeleteConfirm}
-                disabled={deleteMutation.isPending}
-                className="flex-1 px-4 py-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
+              <button onClick={handleDeleteConfirm} disabled={deleteMutation.isPending} className="flex-1 px-4 py-2 bg-tas-status-error text-tas-text-on-primary font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
                 {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
               </button>
-              <button
-                onClick={() => setDeletingCompany(null)}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white font-semibold rounded-lg hover:bg-gray-700 transition-colors"
-              >
+              <button onClick={() => setDeletingCompany(null)} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors">
                 Cancelar
               </button>
             </div>

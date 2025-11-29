@@ -30,12 +30,10 @@ export function LoginPage() {
     setIsLoading(true);
 
     if (!username || !password) {
-      toast.error('Por favor, preencha o nome de utilizador e a senha.');
+      toast.error('Por favor, preencha o nome de usuário e a senha.');
       setIsLoading(false);
       return;
     }
-
-    console.log("Attempting to log in with:", { username, password }); // Log credentials
 
     try {
       const response = await api.post<LoginApiResponse>('/api/auth/signin', {
@@ -60,7 +58,7 @@ export function LoginPage() {
     } catch (error: any) {
       console.error("Falha no login:", error);
       if (error.response && error.response.status === 401) {
-        toast.error('Nome de utilizador ou senha inválidos.');
+        toast.error('Nome de usuário ou senha inválidos.');
       } else if (error.response) {
         const apiErrorMessage = error.response.data?.message || 'Erro ao tentar fazer login. Tente novamente mais tarde.';
         toast.error(apiErrorMessage);
@@ -79,8 +77,8 @@ export function LoginPage() {
       <Helmet>
         <title>Login - TAS</title>
       </Helmet>
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 font-['Poppins'] bg-tas-bg-page">
-        <div className="p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-tas-bg-page">
+        <div className="p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card border border-black/10">
           <div className="flex justify-center mb-10 flex-col items-center gap-4">
             <div>
               <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
@@ -96,14 +94,14 @@ export function LoginPage() {
                 htmlFor="username"
                 className="block text-sm font-medium mb-1 text-tas-text-secondary-on-card"
               >
-                Nome de Utilizador
+                Nome de Usuário
               </label>
               <input
                 type="text"
                 id="username"
                 name="username"
-                placeholder="Seu nome de utilizador"
-                className="w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
+                placeholder="Seu nome de usuário"
+                className="w-full px-4 py-2.5 bg-tas-bg-page text-tas-text-on-card border-tas-accent/20 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 disabled={isLoading}
@@ -121,23 +119,24 @@ export function LoginPage() {
                 id="password"
                 name="password"
                 placeholder="Sua senha"
-                className="w-full px-4 py-2.5 bg-white text-tas-text-on-card border-gray-300 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
+                className="w-full px-4 py-2.5 bg-tas-bg-page text-tas-text-on-card border-tas-accent/20 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={isLoading}
               />
               <div className="text-right mt-1">
-                <a
-                  href="#"
-                  className="text-sm text-tas-secondary hover:text-tas-secondary-hover"
+                <button
+                  type="button"
+                  onClick={() => toast.info('Funcionalidade de recuperação de senha em desenvolvimento.')}
+                  className="text-sm text-tas-secondary hover:text-tas-secondary-hover underline"
                 >
                   Esqueceu a senha?
-                </a>
+                </button>
               </div>
             </div>
             <button
               type="submit"
-              className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors disabled:bg-gray-400 bg-tas-secondary hover:bg-tas-secondary-hover"
+              className="w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors disabled:bg-tas-secondary/50 bg-tas-secondary hover:bg-tas-secondary-hover"
               disabled={isLoading}
             >
               {isLoading ? 'A Entrar...' : 'Entrar'}

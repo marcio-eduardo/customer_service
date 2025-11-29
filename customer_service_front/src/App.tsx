@@ -7,6 +7,7 @@ import { Toaster } from 'sonner'
 import { queryClient } from './lib/react-query';
 import { AuthProvider } from './contexts/AuthContext';
 import { AppRouter } from './routes/app.routes'
+import { ThemeProvider } from './contexts/ThemeContext';
 //import { Footer } from './Components/footer';
 
 
@@ -18,9 +19,11 @@ import { AppRouter } from './routes/app.routes'
       <Helmet  titleTemplate='%s | TAS' defaultTitle='Trust Assist System'/> 
       <QueryClientProvider client={queryClient}>
         <Toaster richColors />
+        <ThemeProvider>
           <AuthProvider>       
             <RouterProvider router={AppRouter} />                  
           </AuthProvider>
+        </ThemeProvider>
       </QueryClientProvider>     
       
     </HelmetProvider>

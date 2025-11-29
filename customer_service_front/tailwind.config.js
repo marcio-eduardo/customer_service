@@ -4,34 +4,38 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
+  // Importante: Habilitar modo 'class' se fosse usar classes para dark mode, 
+  // mas aqui usaremos data-attributes para temas.
   theme: {
     extend: {
       colors: {
-        // Paleta Confiança Moderna (Light) - Final
-        'tas-primary': '#293B44',        // Azul da Navbar e elementos primários
-        'tas-primary-hover': '#22313A',  // Hover para o azul primário
+        // Mapeamento para Variáveis CSS (Suporte a múltiplos temas)
+        'tas-primary': 'var(--tas-primary)',
+        'tas-primary-hover': 'var(--tas-primary-hover)',
 
-        'tas-secondary': '#00875A',      // Verde Esmeralda
-        'tas-secondary-hover': '#007a50',// Hover para o verde secundário
+        'tas-secondary': 'var(--tas-secondary)',
+        'tas-secondary-hover': 'var(--tas-secondary-hover)',
 
-        'tas-accent': '#FFC107',         // Âmbar/Dourado (ATUALIZADO)
-        'tas-accent-hover': '#ebb206',   // Hover para o âmbar (ATUALIZADO)
+        'tas-accent': 'var(--tas-accent)',
+        'tas-accent-hover': 'var(--tas-accent-hover)',
 
-        'tas-bg-page': '#DFE0E1',        // Fundo da Página
-        'tas-bg-card': '#F2F2F2',        // Fundo dos Cards
+        'tas-bg-page': 'var(--tas-bg-page)',
+        'tas-bg-card': 'var(--tas-bg-card)',
 
-        'tas-text-on-card': '#212529',   // Texto principal nos cards
-        'tas-text-secondary-on-card': '#6C757D', // Texto secundário nos cards
-        
-        'tas-text-on-primary': '#FFFFFF', // Texto sobre fundos da cor primária (ATUALIZADO)
+        'tas-text-on-card': 'var(--tas-text-on-card)',
+        'tas-text-secondary': 'var(--tas-text-secondary)',
+        'tas-text-secondary-on-card': 'var(--tas-text-secondary)', // Ajustei o nome para bater com o CSS
+
+        'tas-text-on-primary': 'var(--tas-text-on-primary)',
 
         // Cores de Status
-        'tas-status-success': '#28A745',
-        'tas-status-warning': '#FF8C00',
-        'tas-status-error': '#DC3545',
-        'tas-status-info': '#17A2B8',
+        'tas-status-success': 'var(--tas-status-success)',
+        'tas-status-warning': 'var(--tas-status-warning)',
+        'tas-status-error': 'var(--tas-status-error)',
+        'tas-status-info': 'var(--tas-status-info)',
       },
       fontFamily: {
+        sans: ['Poppins', 'sans-serif'],
         inter: ['Inter', 'sans-serif'],
       },
     },

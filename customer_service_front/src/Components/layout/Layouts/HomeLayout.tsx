@@ -1,13 +1,15 @@
 import { Outlet } from "react-router-dom";
+import { Footer } from "../../footer";
 import { NavigationBar } from "../NavigationBar/NavigationBar";
 
 export function HomeLayout() {
   return (
-    <div>
+    <div className="min-h-screen flex flex-col bg-tas-bg-page">
       <NavigationBar />
-      <div>
+      <main className="flex-grow">
         <Outlet />
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

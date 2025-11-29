@@ -1,7 +1,118 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Você pode adicionar quaisquer estilos globais personalizados aqui, se necessário,
-   mas tente priorizar o uso de classes utilitárias do Tailwind ou
-   configurações no tailwind.config.js. */
+@layer base {
+    :root {
+        /* --- TEMA PADRÃO: Confiança Moderna (Original) --- */
+        --tas-primary: #293B44;
+        --tas-primary-hover: #22313A;
+        --tas-secondary: #00875A;
+        --tas-secondary-hover: #007a50;
+        --tas-accent: #FFC107;
+        --tas-accent-hover: #ebb206;
+        --tas-bg-page: #DFE0E1;
+        --tas-bg-card: #F2F2F2;
+        --tas-text-on-card: #212529;
+        --tas-text-secondary: #6C757D;
+        --tas-text-on-primary: #FFFFFF;
+
+        /* Cores de Status (Comuns a todos, mas podem ser sobrescritas) */
+        --tas-status-success: #28A745;
+        --tas-status-warning: #FF8C00;
+        --tas-status-error: #DC3545;
+        --tas-status-info: #17A2B8;
+    }
+
+    /* --- TEMA 1: Tech Blue --- */
+    [data-theme='techBlue'] {
+        --tas-primary: #0F172A;
+        --tas-primary-hover: #1E293B;
+        --tas-secondary: #3B82F6;
+        --tas-secondary-hover: #2563EB;
+        --tas-accent: #F43F5E;
+        --tas-accent-hover: #E11D48;
+        --tas-bg-page: #F1F5F9;
+        --tas-bg-card: #FFFFFF;
+        --tas-text-on-card: #1E293B;
+        --tas-text-secondary: #64748B;
+        --tas-text-on-primary: #FFFFFF;
+    }
+
+    /* --- TEMA 2: Forest Trust --- */
+    [data-theme='forest'] {
+        --tas-primary: #14532D;
+        --tas-primary-hover: #166534;
+        --tas-secondary: #15803D;
+        --tas-secondary-hover: #166534;
+        --tas-accent: #D97706;
+        --tas-accent-hover: #B45309;
+        --tas-bg-page: #ECFDF5;
+        --tas-bg-card: #FFFFFF;
+        --tas-text-on-card: #064E3B;
+        --tas-text-secondary: #047857;
+        --tas-text-on-primary: #FFFFFF;
+    }
+
+    /* --- TEMA 3: Modern Purple --- */
+    [data-theme='purple'] {
+        --tas-primary: #4C1D95;
+        --tas-primary-hover: #5B21B6;
+        --tas-secondary: #8B5CF6;
+        --tas-secondary-hover: #7C3AED;
+        --tas-accent: #06B6D4;
+        --tas-accent-hover: #0891B2;
+        --tas-bg-page: #F5F3FF;
+        --tas-bg-card: #FFFFFF;
+        --tas-text-on-card: #111827;
+        --tas-text-secondary: #6B7280;
+        --tas-text-on-primary: #FFFFFF;
+    }
+
+    /* --- TEMA 4: Warm Professional --- */
+    [data-theme='warm'] {
+        --tas-primary: #431407;
+        --tas-primary-hover: #7C2D12;
+        --tas-secondary: #EA580C;
+        --tas-secondary-hover: #C2410C;
+        --tas-accent: #0D9488;
+        --tas-accent-hover: #0F766E;
+        --tas-bg-page: #FFF7ED;
+        --tas-bg-card: #FFFFFF;
+        --tas-text-on-card: #1C1917;
+        --tas-text-secondary: #57534E;
+        --tas-text-on-primary: #FFFFFF;
+    }
+
+    /* --- TEMA 5: Slate Monochrome --- */
+    [data-theme='minimal'] {
+        --tas-primary: #000000;
+        --tas-primary-hover: #333333;
+        --tas-secondary: #475569;
+        --tas-secondary-hover: #334155;
+        --tas-accent: #000000;
+        --tas-accent-hover: #333333;
+        --tas-bg-page: #F8FAFC;
+        --tas-bg-card: #FFFFFF;
+        --tas-text-on-card: #0F172A;
+        --tas-text-secondary: #64748B;
+        --tas-text-on-primary: #FFFFFF;
+    }
+
+    /* Aplica transição suave nas cores ao trocar de tema */
+    body {
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Garante que elementos que usam as variáveis transitem suavemente */
+    *,
+    *::before,
+    *::after {
+        transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 150ms;
+        /* Ajuste para 300ms se quiser mais lento */
+    }
+}

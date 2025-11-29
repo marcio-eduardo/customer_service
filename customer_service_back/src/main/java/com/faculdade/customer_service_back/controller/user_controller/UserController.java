@@ -78,4 +78,22 @@ public class UserController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @GetMapping("/techs")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<List<UserResponse>> getTechUsers() {
+        List<UserResponse> users = userService.getAllTechUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/company/{companyId}")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<List<UserResponse>> getUsersByCompany(@PathVariable Long companyId) {
+        try {
+            List<UserResponse> users = userService.getUsersByCompany(companyId);
+            return ResponseEntity.ok(users);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

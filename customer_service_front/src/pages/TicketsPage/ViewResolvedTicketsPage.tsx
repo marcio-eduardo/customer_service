@@ -4,41 +4,34 @@ import { Helmet } from 'react-helmet-async';
 import { Link } from 'react-router-dom'; 
 import { toast } from 'sonner';
 import { api } from '../../lib/axios'; 
+import { User } from '../../types/User';
 
-// Interface para o modelo de Ticket
 interface Ticket {
   id: number;
   title: string;
   description: string;
   status: string; 
+  priority: string;
   createdAt: string; 
-  resolvedAt?: string | null; // Importante para chamados resolvidos
-  resolutionNotes?: string | null; // Importante para chamados resolvidos
-  technical?: { 
-    id: number;
-    name: string;
-  } | null;
-  closedByTechnical?: { // Técnico que fechou o chamado
-    id: number;
-    name: string;
-  } | null;
+  resolvedAt?: string | null;
+  resolutionNotes?: string | null;
+  openedBy: User;
+  assignedTo?: User | null;
 }
 
-// Função para formatar a data
 const formatDate = (dateString?: string | null) => {
   if (!dateString) return 'N/A';
-  try {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  } catch (e) {
-    console.warn("Erro ao formatar data:", dateString, e);
-    return dateString;
-  }
+  return new Date(dateString).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+};
+
+const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      OPEN: { label: 'Aberto', className: 'bg-tas-status-info text-tas-text-on-primary' },
+      IN_PROGRESS: { label: 'Em Progresso', className: 'bg-tas-status-warning text-tas-text-on-primary' },
+      RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success text-tas-text-on-primary' },
+    };
+    const config = statusMap[status] || { label: status, className: 'bg-gray-500 text-white' };
+    return <span className={`text-xs px-3 py-1 rounded-full font-semibold ${config.className}`}>{config.label}</span>;
 };
 
 export function ViewResolvedTicketsPage() {
@@ -55,16 +48,9 @@ export function ViewResolvedTicketsPage() {
         setResolvedTickets(response.data || []);
       } catch (err: any) {
         console.error("Falha ao buscar chamados resolvidos:", err);
-        if (err.response && err.response.status === 401) {
-          setError("Erro 401: Não autorizado. Verifique se está logado.");
-          toast.error("Sessão expirada ou não autorizado. Faça login novamente.");
-        } else if (err.response && err.response.status === 403) {
-          setError("Erro 403: Você não tem permissão para ver esta lista.");
-          toast.error("Você não tem permissão para acessar este recurso.");
-        } else {
-          setError(err.message || "Ocorreu um erro desconhecido ao buscar os chamados resolvidos.");
-          toast.error("Não foi possível carregar os chamados resolvidos.");
-        }
+        const errorMessage = err.response?.data?.message || "Ocorreu um erro desconhecido ao buscar os chamados resolvidos.";
+        setError(errorMessage);
+        toast.error(errorMessage);
         setResolvedTickets([]);
       } finally {
         setIsLoading(false);
@@ -74,22 +60,16 @@ export function ViewResolvedTicketsPage() {
     fetchResolvedTickets();
   }, []);
 
-  // Classes de estilo com a paleta "Confiança Moderna (Light) Final"
-  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card font-['Poppins']";
+  const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card";
   const contentContainerClasses = "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  
   const headerTitleClass = "text-tas-primary"; 
   const headerSubtitleClass = "text-tas-text-secondary-on-card"; 
-
   const cardBgClasses = "bg-tas-bg-card"; 
   const cardTitleTextClasses = "text-tas-primary font-semibold"; 
   const cardDetailTextClasses = "text-tas-text-secondary-on-card"; 
   const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium"; 
-  
-  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary"; 
+  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium"; 
   const loadingTextClass = "text-tas-text-secondary-on-card";
-
-  const statusTagClasses = "bg-tas-status-success text-tas-text-on-primary"; // Tag de status "RESOLVED"
   const buttonClasses = "bg-tas-secondary text-tas-text-on-primary hover:bg-tas-secondary-hover";
 
   return (
@@ -115,7 +95,7 @@ export function ViewResolvedTicketsPage() {
               </p>
             )}
             {error && (
-              <p className={`${errorTextClass} p-4 rounded-md text-center font-medium`}>
+              <p className={errorTextClass}>
                 {error}
               </p>
             )}
@@ -127,50 +107,42 @@ export function ViewResolvedTicketsPage() {
             {!isLoading && !error && resolvedTickets.length > 0 && (
               <div className="space-y-6">
                 {resolvedTickets.map((ticket) => (
-                  <div key={ticket.id} className={`${cardBgClasses} p-6 rounded-xl shadow-lg border border-gray-200`}>
-                    <div className="flex flex-col sm:flex-row justify-between items-start mb-2">
+                  <div key={ticket.id} className={`${cardBgClasses} p-6 rounded-xl shadow-lg border border-black/10 transition-transform hover:scale-[1.02] hover:shadow-xl`}>
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-4">
                       <h2 className={`text-xl ${cardTitleTextClasses} mb-1 sm:mb-0`}>
                         #{ticket.id}: {ticket.title}
                       </h2>
-                      <span className={`text-xs px-2 py-1 rounded-full font-medium ${statusTagClasses}`}>
-                        {ticket.status} 
-                      </span>
+                      {getStatusBadge(ticket.status)}
                     </div>
-                    <p className={`${cardDetailTextClasses} text-sm mb-1 leading-relaxed`}>
-                      <span className={cardLabelTextClasses}>Descrição:</span> {ticket.description}
-                    </p>
+                    
                     {ticket.resolutionNotes && (
-                       <p className={`${cardDetailTextClasses} text-sm mb-3 leading-relaxed bg-white/50 p-2 rounded-md border border-gray-100`}>
-                        <span className={cardLabelTextClasses}>Notas da Resolução:</span> {ticket.resolutionNotes}
-                      </p>
+                       <div className="mb-4 p-3 bg-green-900/10 border border-green-500/20 rounded-lg">
+                        <p className={`${cardLabelTextClasses} text-sm mb-1`}>Notas da Resolução:</p>
+                        <p className={`text-sm text-tas-text-on-card leading-relaxed`}>{ticket.resolutionNotes}</p>
+                      </div>
                     )}
-                    <div className="text-xs space-y-1">
-                      <p>
-                        <span className={cardLabelTextClasses}>Criado em:</span>{' '}
-                        <span className={cardDetailTextClasses}>{formatDate(ticket.createdAt)}</span>
-                      </p>
-                       {ticket.resolvedAt && (
-                        <p>
-                            <span className={cardLabelTextClasses}>Resolvido em:</span>{' '}
-                            <span className={cardDetailTextClasses}>{formatDate(ticket.resolvedAt)}</span>
-                        </p>
-                       )}
-                      {ticket.closedByTechnical && (
-                        <p>
-                            <span className={cardLabelTextClasses}>Fechado por:</span>{' '}
-                            <span className={cardDetailTextClasses}>{ticket.closedByTechnical.name}</span>
-                        </p>
-                      )}
-                       {ticket.technical && !ticket.closedByTechnical && ( // Mostra técnico original se não houver quem fechou
-                        <p>
-                            <span className={cardLabelTextClasses}>Técnico Original:</span>{' '}
-                            <span className={cardDetailTextClasses}>{ticket.technical.name}</span>
-                        </p>
-                       )}
+
+                    <div className="text-xs grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        <div>
+                            <p className={cardLabelTextClasses}>Criado em:</p>
+                            <p className={cardDetailTextClasses}>{formatDate(ticket.createdAt)}</p>
+                        </div>
+                        <div>
+                            <p className={cardLabelTextClasses}>Resolvido em:</p>
+                            <p className={cardDetailTextClasses}>{formatDate(ticket.resolvedAt)}</p>
+                        </div>
+                        <div>
+                            <p className={cardLabelTextClasses}>Aberto por:</p>
+                            <p className={cardDetailTextClasses}>{ticket.openedBy?.username ?? 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p className={cardLabelTextClasses}>Técnico Responsável:</p>
+                            <p className={cardDetailTextClasses}>{ticket.assignedTo?.username ?? 'N/A'}</p>
+                        </div>
                     </div>
-                    <div className="mt-4 flex justify-end space-x-3">
+                    <div className="mt-4 flex justify-end">
                       <Link 
-                        to={`/tickets/${ticket.id}`} // Link para detalhes do chamado (se existir essa rota)
+                        to={`/tickets/${ticket.id}`}
                         className={`text-xs px-3 py-1.5 rounded-md transition-colors ${buttonClasses}`}
                       >
                         Ver Detalhes

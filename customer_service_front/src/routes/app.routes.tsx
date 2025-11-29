@@ -35,7 +35,8 @@ export const AppRouter = createBrowserRouter([
       { path: '/tickets/novo', element: <CreateTicketPage /> },
       { path: '/tickets/abertos', element: <ViewOpenTicketsPage /> },
       { path: '/tickets/:id', element: <TicketDetailsPage /> },
-      { path: '/tickets/encerrar', element: <CloseTicketPage /> },
+      { path: '/tickets/:id/encerrar', element: <CloseTicketPage /> },
+      { path: '/tickets/encerrar', element: <CloseTicketPage /> }, // Rota estática para o menu
       { path: '/tickets/resolvidos', element: <ViewResolvedTicketsPage /> },
       { path: '/admin/criar-utilizador', element: <CreateUserPage /> },
     ]
