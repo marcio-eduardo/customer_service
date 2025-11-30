@@ -183,6 +183,7 @@
   - Corrigido bug no Dashboard onde estatísticas eram globais. Agora, usuários de empresa veem apenas dados de sua própria empresa.
   - **Bug Fix:** Corrigida permissão no `DashboardController` que bloqueava acesso de usuários de empresa (erro 403). Agora acessível a todos autenticados.
 - **Frontend:** Tela de Login agora força o tema "Tech Blue" por padrão, mantendo a identidade visual solicitada.
+- **UI:** Atualizado ícone da tela de login (`NuvemConfig-Wite.svg`) para usar a cor `--tas-secondary-hover` através de máscara CSS, permitindo coloração dinâmica de SVG rasterizado.
 
 ### [PLAN] Avaliação de Atendimento
 - Adicionada tarefa futura para permitir que clientes avaliem o atendimento após o encerramento do ticket.

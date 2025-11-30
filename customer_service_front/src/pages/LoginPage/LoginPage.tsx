@@ -6,8 +6,8 @@ import { api } from '../../lib/axios';
 import { toast } from 'sonner';
 import { Helmet } from 'react-helmet-async';
 
-import TASLogo from '../../assets/logo/TAS-logo.svg';
-import TrustAssisSystem from '../../assets/logo/TrustAssistSystem.svg';
+import TASLogo from '../../assets/logo/NuvemConfig-Wite.svg';
+
 
 interface LoginApiResponse {
   token: string;
@@ -85,11 +85,23 @@ export function LoginPage() {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-tas-bg-page">
         <div className="p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card border border-black/10">
           <div className="flex justify-center mb-10 flex-col items-center gap-4">
-            <div>
-              <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
+            <div className="flex items-center justify-center">
+              <div
+                className="h-16 w-24 bg-tas-secondary-hover"
+                style={{
+                  maskImage: `url(${TASLogo})`,
+                  WebkitMaskImage: `url(${TASLogo})`,
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskSize: 'contain',
+                  WebkitMaskSize: 'contain',
+                  maskPosition: 'center',
+                  WebkitMaskPosition: 'center'
+                }}
+              />
             </div>
             <div>
-              <img src={TrustAssisSystem} alt="Trust Assist System" className="h-10" />
+              <h1 className="text-2xl font-medium text-tas-text-secondary-on-card">Trust Assist System</h1>
             </div>
           </div>
 
