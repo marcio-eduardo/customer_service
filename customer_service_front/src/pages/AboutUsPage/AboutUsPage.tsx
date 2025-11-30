@@ -1,5 +1,5 @@
 // Localização: src/pages/AboutUsPage/AboutUsPage.tsx
-import React from 'react';
+
 import { Helmet } from 'react-helmet-async';
 
 // Ícones

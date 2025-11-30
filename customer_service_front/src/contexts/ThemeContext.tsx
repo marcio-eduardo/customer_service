@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
 type Theme = 'original' | 'techBlue' | 'forest' | 'purple' | 'warm' | 'minimal';
 
@@ -17,15 +17,15 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    
+
     // Limpa temas antigos para garantir que apenas um esteja ativo
     root.removeAttribute('data-theme');
-    
+
     // Adiciona o novo atributo de tema, exceto para o tema original que é o padrão
     if (theme !== 'original') {
       root.setAttribute('data-theme', theme);
     }
-    
+
     // Salva a preferência do tema no localStorage
     localStorage.setItem('tas-theme', theme);
   }, [theme]);

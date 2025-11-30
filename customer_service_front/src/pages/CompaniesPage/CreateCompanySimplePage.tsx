@@ -15,7 +15,7 @@ interface FormData {
 
 export function CreateCompanySimplePage() {
   const navigate = useNavigate();
-  
+
   const [formData, setFormData] = useState<FormData>({
     name: '',
     cnpj: '',
@@ -23,37 +23,37 @@ export function CreateCompanySimplePage() {
     phone: '',
     email: '',
   });
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
+
     // Aplicar máscara de CNPJ
     if (name === 'cnpj') {
       const formatted = formatCNPJ(value);
       setFormData(prev => ({ ...prev, [name]: formatted }));
       return;
     }
-    
+
     // Aplicar máscara de telefone
     if (name === 'phone') {
       const formatted = formatPhone(value);
       setFormData(prev => ({ ...prev, [name]: formatted }));
       return;
     }
-    
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim() || !formData.cnpj.trim() || !formData.email.trim()) {
       toast.error('Por favor, preencha todos os campos obrigatórios.');
       return;
     }
-    
+
     // Validar CNPJ
     if (!validateCNPJ(formData.cnpj)) {
       toast.error('CNPJ inválido. Por favor, verifique o número digitado.');
@@ -70,7 +70,7 @@ export function CreateCompanySimplePage() {
         phone: removeNonNumeric(formData.phone),
         address: formData.address,
       };
-      
+
       await api.post('/api/companies', payload);
       toast.success('Empresa criada com sucesso!');
       navigate('/companies/view');
@@ -94,7 +94,7 @@ export function CreateCompanySimplePage() {
   const labelTextClass = 'text-tas-text-on-card font-medium';
   const inputBaseClasses = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tas-secondary focus:border-transparent bg-white text-tas-text-on-card';
   const buttonPrimaryClasses = 'w-full sm:w-auto px-6 py-3 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
-  const buttonSecondaryClasses = 'w-full sm:w-auto px-6 py-3 bg-tas-primary-hover text-tas-text-on-primary font-semibold rounded-lg hover:bg-opacity-80 transition-colors';
+
 
   return (
     <>
@@ -195,13 +195,7 @@ export function CreateCompanySimplePage() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => navigate('/companies/view')}
-                  className={buttonSecondaryClasses}
-                >
-                  Cancelar
-                </button>
+
                 <button
                   type="submit"
                   disabled={isSubmitting}

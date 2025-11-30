@@ -1,18 +1,18 @@
 // src/pages/TicketsPage/ViewResolvedTicketsPage.tsx
 import { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom'; 
+import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { api } from '../../lib/axios'; 
-import { User } from '../../types/User';
+import { api } from '../../lib/axios';
+import type { User } from '../../types/User';
 
 interface Ticket {
   id: number;
   title: string;
   description: string;
-  status: string; 
+  status: string;
   priority: string;
-  createdAt: string; 
+  createdAt: string;
   resolvedAt?: string | null;
   resolutionNotes?: string | null;
   openedBy: User;
@@ -25,13 +25,13 @@ const formatDate = (dateString?: string | null) => {
 };
 
 const getStatusBadge = (status: string) => {
-    const statusMap: Record<string, { label: string; className: string }> = {
-      OPEN: { label: 'Aberto', className: 'bg-tas-status-info text-tas-text-on-primary' },
-      IN_PROGRESS: { label: 'Em Progresso', className: 'bg-tas-status-warning text-tas-text-on-primary' },
-      RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success text-tas-text-on-primary' },
-    };
-    const config = statusMap[status] || { label: status, className: 'bg-gray-500 text-white' };
-    return <span className={`text-xs px-3 py-1 rounded-full font-semibold ${config.className}`}>{config.label}</span>;
+  const statusMap: Record<string, { label: string; className: string }> = {
+    OPEN: { label: 'Aberto', className: 'bg-tas-status-info text-tas-text-on-primary' },
+    IN_PROGRESS: { label: 'Em Progresso', className: 'bg-tas-status-warning text-tas-text-on-primary' },
+    RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success text-tas-text-on-primary' },
+  };
+  const config = statusMap[status] || { label: status, className: 'bg-gray-500 text-white' };
+  return <span className={`text-xs px-3 py-1 rounded-full font-semibold ${config.className}`}>{config.label}</span>;
 };
 
 export function ViewResolvedTicketsPage() {
@@ -44,7 +44,7 @@ export function ViewResolvedTicketsPage() {
       setIsLoading(true);
       setError(null);
       try {
-        const response = await api.get<Ticket[]>('/api/tickets/status/resolved'); 
+        const response = await api.get<Ticket[]>('/api/tickets/status/resolved');
         setResolvedTickets(response.data || []);
       } catch (err: any) {
         console.error("Falha ao buscar chamados resolvidos:", err);
@@ -62,13 +62,13 @@ export function ViewResolvedTicketsPage() {
 
   const pageWrapperClasses = "min-h-screen pt-20 md:pt-24 bg-tas-bg-page text-tas-text-on-card";
   const contentContainerClasses = "max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
-  const headerTitleClass = "text-tas-primary"; 
-  const headerSubtitleClass = "text-tas-text-secondary-on-card"; 
-  const cardBgClasses = "bg-tas-bg-card"; 
-  const cardTitleTextClasses = "text-tas-primary font-semibold"; 
-  const cardDetailTextClasses = "text-tas-text-secondary-on-card"; 
-  const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium"; 
-  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium"; 
+  const headerTitleClass = "text-tas-primary";
+  const headerSubtitleClass = "text-tas-text-secondary-on-card";
+  const cardBgClasses = "bg-tas-bg-card";
+  const cardTitleTextClasses = "text-tas-primary font-semibold";
+  const cardDetailTextClasses = "text-tas-text-secondary-on-card";
+  const cardLabelTextClasses = "text-tas-text-secondary-on-card font-medium";
+  const errorTextClass = "bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium";
   const loadingTextClass = "text-tas-text-secondary-on-card";
   const buttonClasses = "bg-tas-secondary text-tas-text-on-primary hover:bg-tas-secondary-hover";
 
@@ -114,34 +114,34 @@ export function ViewResolvedTicketsPage() {
                       </h2>
                       {getStatusBadge(ticket.status)}
                     </div>
-                    
+
                     {ticket.resolutionNotes && (
-                       <div className="mb-4 p-3 bg-green-900/10 border border-green-500/20 rounded-lg">
+                      <div className="mb-4 p-3 bg-green-900/10 border border-green-500/20 rounded-lg">
                         <p className={`${cardLabelTextClasses} text-sm mb-1`}>Notas da Resolução:</p>
                         <p className={`text-sm text-tas-text-on-card leading-relaxed`}>{ticket.resolutionNotes}</p>
                       </div>
                     )}
 
                     <div className="text-xs grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <div>
-                            <p className={cardLabelTextClasses}>Criado em:</p>
-                            <p className={cardDetailTextClasses}>{formatDate(ticket.createdAt)}</p>
-                        </div>
-                        <div>
-                            <p className={cardLabelTextClasses}>Resolvido em:</p>
-                            <p className={cardDetailTextClasses}>{formatDate(ticket.resolvedAt)}</p>
-                        </div>
-                        <div>
-                            <p className={cardLabelTextClasses}>Aberto por:</p>
-                            <p className={cardDetailTextClasses}>{ticket.openedBy?.username ?? 'N/A'}</p>
-                        </div>
-                        <div>
-                            <p className={cardLabelTextClasses}>Técnico Responsável:</p>
-                            <p className={cardDetailTextClasses}>{ticket.assignedTo?.username ?? 'N/A'}</p>
-                        </div>
+                      <div>
+                        <p className={cardLabelTextClasses}>Criado em:</p>
+                        <p className={cardDetailTextClasses}>{formatDate(ticket.createdAt)}</p>
+                      </div>
+                      <div>
+                        <p className={cardLabelTextClasses}>Resolvido em:</p>
+                        <p className={cardDetailTextClasses}>{formatDate(ticket.resolvedAt)}</p>
+                      </div>
+                      <div>
+                        <p className={cardLabelTextClasses}>Aberto por:</p>
+                        <p className={cardDetailTextClasses}>{ticket.openedBy?.username ?? 'N/A'}</p>
+                      </div>
+                      <div>
+                        <p className={cardLabelTextClasses}>Técnico Responsável:</p>
+                        <p className={cardDetailTextClasses}>{ticket.assignedTo?.username ?? 'N/A'}</p>
+                      </div>
                     </div>
                     <div className="mt-4 flex justify-end">
-                      <Link 
+                      <Link
                         to={`/tickets/${ticket.id}`}
                         className={`text-xs px-3 py-1.5 rounded-md transition-colors ${buttonClasses}`}
                       >

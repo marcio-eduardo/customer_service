@@ -184,6 +184,12 @@
   - **Bug Fix:** Corrigida permissão no `DashboardController` que bloqueava acesso de usuários de empresa (erro 403). Agora acessível a todos autenticados.
 - **Frontend:** Tela de Login agora força o tema "Tech Blue" por padrão, mantendo a identidade visual solicitada.
 - **UI:** Atualizado ícone da tela de login (`NuvemConfig-Wite.svg`) para usar a cor `--tas-secondary-hover` através de máscara CSS, permitindo coloração dinâmica de SVG rasterizado.
+- **UI:** Adicionado efeito de hover na logo do `NavigationBar`, transitando da cor do texto (`--tas-text-on-primary`) para a cor secundária (`--tas-secondary`), alinhado com o comportamento dos links de texto.
+- **UX:** Melhorada a usabilidade do modal de edição de empresas em `ViewCompaniesPage.tsx`. Agora é possível fechar o modal clicando fora dele (backdrop) ou no botão "Cancelar".
+- **UI/UX:** Padronização dos modais de edição e exclusão em `ViewCompaniesPage` e `ViewUsersPage`. Botões "Cancelar" posicionados à esquerda e "Salvar/Excluir" à direita. Botão "Cancelar" estilizado com fundo da página (`bg-tas-bg-page`) e texto cinza (`text-tas-text-secondary`); ao passar o mouse, assume fundo cinza (`bg-tas-text-secondary`) e texto escuro (`text-tas-text-on-card`).
+- **UI:** Atualizado label do menu de "Criar Empresa" para "Adicionar Empresas" em `NavigationBar.tsx`.
+- **UX:** Removido botão "Cancelar" do formulário de criação de empresas em `CreateCompanySimplePage.tsx` para simplificar a interface.
+- **UI:** Padronizada a página de criação de usuários (`CreateUserPage.tsx`) para seguir o mesmo estilo visual e estrutura da criação de empresas (Header externo, Card interno, tipografia e cores consistentes).
 
 ### [PLAN] Avaliação de Atendimento
 - Adicionada tarefa futura para permitir que clientes avaliem o atendimento após o encerramento do ticket.

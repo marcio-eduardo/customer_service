@@ -127,6 +127,10 @@ export function ViewCompaniesPage() {
   const buttonPrimaryClasses = 'inline-flex items-center px-6 py-3 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors shadow-md';
   const modalInputClasses = "w-full px-4 py-2 bg-tas-bg-page border border-tas-accent/20 rounded-lg text-tas-text-on-card focus:outline-none focus:ring-2 focus:ring-tas-secondary";
 
+  const handleCloseModal = () => {
+    setEditingCompany(null);
+  };
+
   return (
     <>
       <Helmet>
@@ -163,7 +167,7 @@ export function ViewCompaniesPage() {
 
             {!isLoading && !error && companies.length > 0 && (
               <ul className="space-y-6">
-                {companies.map((company) => (
+                {companies.map((company: Company) => (
                   <li key={company.id} className={`bg-tas-bg-page p-4 sm:p-6 rounded-lg shadow-md border border-tas-accent/10 transition-shadow hover:shadow-lg`}>
                     <div className="flex justify-between items-start">
                       <div className="flex-1">
@@ -203,8 +207,14 @@ export function ViewCompaniesPage() {
       </div>
 
       {editingCompany && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-tas-bg-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-black/10">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={handleCloseModal}
+        >
+          <div
+            className="bg-tas-bg-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-black/10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-2xl font-bold text-tas-primary mb-4">Editar Empresa</h2>
             <form onSubmit={handleEditSubmit} className="space-y-4">
               <div>
@@ -228,11 +238,11 @@ export function ViewCompaniesPage() {
                 <textarea value={editFormData.address} onChange={(e) => setEditFormData({ ...editFormData, address: e.target.value })} rows={3} className={modalInputClasses} />
               </div>
               <div className="flex gap-3 pt-4">
+                <button type="button" onClick={handleCloseModal} className="flex-1 px-4 py-2 bg-tas-bg-page text-tas-text-secondary font-semibold rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors">
+                  Cancelar
+                </button>
                 <button type="submit" disabled={updateMutation.isPending} className="flex-1 px-4 py-2 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50">
                   {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
-                </button>
-                <button type="button" onClick={() => setEditingCompany(null)} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors">
-                  Cancelar
                 </button>
               </div>
             </form>
@@ -241,8 +251,14 @@ export function ViewCompaniesPage() {
       )}
 
       {deletingCompany && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-tas-bg-card rounded-lg p-6 max-w-md w-full border border-black/10">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+          onClick={() => setDeletingCompany(null)}
+        >
+          <div
+            className="bg-tas-bg-card rounded-lg p-6 max-w-md w-full border border-black/10"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-2xl font-bold text-tas-status-error mb-4">Confirmar Exclusão</h2>
             <div className="text-tas-text-on-card mb-6">
               <p className="mb-3">Tem certeza que deseja excluir a empresa <strong>{deletingCompany.name}</strong>?</p>
@@ -252,11 +268,11 @@ export function ViewCompaniesPage() {
               </div>
             </div>
             <div className="flex gap-3">
+              <button onClick={() => setDeletingCompany(null)} className="flex-1 px-4 py-2 bg-tas-bg-page text-tas-text-secondary font-semibold rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors">
+                Cancelar
+              </button>
               <button onClick={handleDeleteConfirm} disabled={deleteMutation.isPending} className="flex-1 px-4 py-2 bg-tas-status-error text-tas-text-on-primary font-semibold rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50">
                 {deleteMutation.isPending ? 'Excluindo...' : 'Excluir'}
-              </button>
-              <button onClick={() => setDeletingCompany(null)} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors">
-                Cancelar
               </button>
             </div>
           </div>

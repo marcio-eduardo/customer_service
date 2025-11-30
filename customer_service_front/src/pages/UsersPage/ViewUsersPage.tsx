@@ -136,6 +136,7 @@ export function ViewUsersPage() {
   const tabButtonBaseClasses = 'px-6 py-3 font-semibold rounded-t-lg transition-colors border-b-2';
   const tabButtonActiveClasses = 'bg-tas-bg-card text-tas-primary border-tas-primary';
   const tabButtonInactiveClasses = 'bg-transparent text-tas-text-secondary-on-card border-transparent hover:bg-tas-accent/10 hover:border-tas-accent/30';
+  const labelClasses = 'block text-tas-text-secondary-on-card font-medium mb-1';
 
   return (
     <>
@@ -197,8 +198,14 @@ export function ViewUsersPage() {
           )}
 
           {editingUser && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-tas-bg-card rounded-xl shadow-2xl max-w-md w-full p-6 border border-black/10">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+              onClick={() => setEditingUser(null)}
+            >
+              <div
+                className="bg-tas-bg-card rounded-xl shadow-2xl max-w-md w-full p-6 border border-black/10"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <h2 className="text-2xl font-bold text-tas-primary mb-4">Editar Usuário</h2>
                 <form onSubmit={handleEditSubmit} className="space-y-4">
                   <div>
@@ -231,7 +238,7 @@ export function ViewUsersPage() {
                     </div>
                   )}
                   <div className="flex gap-3 pt-4">
-                    <button type="button" onClick={() => setEditingUser(null)} disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors font-semibold disabled:opacity-50">Cancelar</button>
+                    <button type="button" onClick={() => setEditingUser(null)} disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-bg-page text-tas-text-secondary rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors font-semibold disabled:opacity-50">Cancelar</button>
                     <button type="submit" disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-secondary text-tas-text-on-primary rounded-lg hover:bg-tas-secondary-hover transition-colors font-semibold disabled:opacity-50">{isSubmitting ? 'Salvando...' : 'Salvar'}</button>
                   </div>
                 </form>
@@ -240,12 +247,18 @@ export function ViewUsersPage() {
           )}
 
           {deletingUser && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-tas-bg-card rounded-xl shadow-2xl max-w-md w-full p-6 border border-black/10">
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+              onClick={() => setDeletingUser(null)}
+            >
+              <div
+                className="bg-tas-bg-card rounded-xl shadow-2xl max-w-md w-full p-6 border border-black/10"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <h2 className="text-2xl font-bold text-tas-status-error mb-4">Confirmar Exclusão</h2>
                 <p className="text-tas-text-on-card mb-6">Tem certeza que deseja deletar o usuário <strong className="text-tas-primary">{deletingUser.username}</strong>? Esta ação não pode ser desfeita.</p>
                 <div className="flex gap-3">
-                  <button onClick={() => setDeletingUser(null)} disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-text-secondary-on-card/50 text-tas-text-on-primary rounded-lg hover:bg-tas-text-secondary-on-card/70 transition-colors font-semibold disabled:opacity-50">Cancelar</button>
+                  <button onClick={() => setDeletingUser(null)} disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-bg-page text-tas-text-secondary rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors font-semibold disabled:opacity-50">Cancelar</button>
                   <button onClick={handleDeleteConfirm} disabled={isSubmitting} className="flex-1 px-4 py-2 bg-tas-status-error text-tas-text-on-primary rounded-lg hover:bg-red-700 transition-colors font-semibold disabled:opacity-50">{isSubmitting ? 'Deletando...' : 'Deletar'}</button>
                 </div>
               </div>

@@ -3,7 +3,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
-import TASLogo from '../../assets/logo/NuvemConfig-2.svg';
+
 import type { Company } from '../../types/Company';
 import { getAllCompanies } from '../../services/companyService';
 
@@ -95,11 +95,14 @@ export function CreateUserPage() {
     }
   };
 
-  const pageWrapperClasses = "min-h-screen flex flex-col items-center justify-center p-4 bg-tas-bg-page";
-  const contentCardClasses = "p-8 sm:p-10 rounded-xl shadow-2xl w-full max-w-md bg-tas-bg-card border border-black/10";
-  const inputClasses = "w-full px-4 py-2.5 bg-tas-bg-page text-tas-text-on-card border border-tas-accent/20 rounded-lg shadow-sm transition-colors focus:ring-tas-secondary focus:border-tas-secondary disabled:opacity-50";
-  const labelClasses = "block text-sm font-medium mb-1 text-tas-text-secondary-on-card";
-  const buttonClasses = "w-full px-4 py-2.5 rounded-lg text-tas-text-on-primary font-semibold transition-colors bg-tas-secondary hover:bg-tas-secondary-hover disabled:bg-tas-secondary/50";
+  const pageWrapperClasses = `min-h-screen pt-16 font-['Poppins'] bg-tas-bg-page text-tas-text-on-card`;
+  const contentContainerClasses = "max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
+  const headerTitleClass = 'text-tas-primary';
+  const headerSubtitleClass = 'text-tas-text-secondary-on-card';
+  const sectionCardBgClasses = 'bg-tas-bg-card';
+  const labelTextClass = 'text-tas-text-on-card font-medium';
+  const inputBaseClasses = 'w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-tas-secondary focus:border-transparent bg-white text-tas-text-on-card disabled:opacity-50';
+  const buttonPrimaryClasses = 'w-full sm:w-auto px-6 py-3 bg-tas-secondary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-secondary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
   const shouldShowCompanyField = formData.role === 'COMPANY_USER';
 
@@ -109,108 +112,120 @@ export function CreateUserPage() {
         <title>Criar Usuário - TAS</title>
       </Helmet>
       <div className={pageWrapperClasses}>
-        <div className={contentCardClasses}>
-          <div className="flex justify-center mb-10 flex-col items-center gap-4">
-            <img src={TASLogo} alt="TAS Logo" className="h-16 w-auto" />
-            <h2 className="text-2xl font-bold text-tas-primary">
-              Criar Novo Usuário
-            </h2>
-          </div>
+        <div className={contentContainerClasses}>
+          <header className="mb-10 text-center">
+            <h1 className={`text-3xl lg:text-4xl font-bold ${headerTitleClass}`}>Criar Novo Usuário</h1>
+            <p className={`${headerSubtitleClass} mt-2 text-base lg:text-lg`}>
+              Cadastre um novo usuário no sistema.
+            </p>
+          </header>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="username" className={labelClasses}> Nome de Usuário <span className="text-red-500">*</span></label>
-              <input
-                type="text"
-                id="username"
-                name="username"
-                value={formData.username}
-                onChange={handleChange}
-                placeholder="Ex: joao.silva"
-                className={inputClasses}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className={labelClasses}> Email <span className="text-red-500">*</span></label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="email@exemplo.com"
-                className={inputClasses}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className={labelClasses}> Senha <span className="text-red-500">*</span></label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Senha com no mínimo 6 caracteres"
-                className={inputClasses}
-                required
-                disabled={isLoading}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="role" className={labelClasses}> Papel do Usuário <span className="text-red-500">*</span></label>
-              <select
-                id="role"
-                name="role"
-                value={formData.role}
-                onChange={handleChange}
-                className={inputClasses}
-                disabled={isLoading}
-              >
-                <option value="COMPANY_USER">Usuário de Empresa</option>
-                <option value="TECH_USER">Técnico</option>
-                <option value="MODERATOR_USER">Moderador</option>
-              </select>
-            </div>
-
-            {shouldShowCompanyField && (
+          <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
+            <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-                <label htmlFor="companyId" className={labelClasses}> Empresa <span className="text-red-500">*</span></label>
-                <select
-                  id="companyId"
-                  name="companyId"
-                  value={formData.companyId}
+                <label htmlFor="username" className={`block mb-2 ${labelTextClass}`}>
+                  Nome de Usuário <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="username"
+                  name="username"
+                  value={formData.username}
                   onChange={handleChange}
-                  className={inputClasses}
+                  placeholder="Ex: joao.silva"
+                  className={inputBaseClasses}
                   required
-                  disabled={isLoading || isFetchingCompanies}
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="email" className={`block mb-2 ${labelTextClass}`}>
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="email@exemplo.com"
+                  className={inputBaseClasses}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className={`block mb-2 ${labelTextClass}`}>
+                  Senha <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Senha com no mínimo 6 caracteres"
+                  className={inputBaseClasses}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div>
+                <label htmlFor="role" className={`block mb-2 ${labelTextClass}`}>
+                  Papel do Usuário <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  value={formData.role}
+                  onChange={handleChange}
+                  className={inputBaseClasses}
+                  disabled={isLoading}
                 >
-                  <option value="">{isFetchingCompanies ? 'Carregando empresas...' : 'Selecione uma empresa'}</option>
-                  {companies.map(company => (
-                    <option key={company.id} value={company.id}>
-                      {company.name}
-                    </option>
-                  ))}
+                  <option value="COMPANY_USER">Usuário de Empresa</option>
+                  <option value="TECH_USER">Técnico</option>
+                  <option value="MODERATOR_USER">Moderador</option>
                 </select>
               </div>
-            )}
 
-            <div className="pt-2">
-              <button
-                type="submit"
-                className={buttonClasses}
-                disabled={isLoading || isFetchingCompanies}
-              >
-                {isLoading ? 'Criando...' : 'Criar Usuário'}
-              </button>
-            </div>
-          </form>
+              {shouldShowCompanyField && (
+                <div>
+                  <label htmlFor="companyId" className={`block mb-2 ${labelTextClass}`}>
+                    Empresa <span className="text-red-500">*</span>
+                  </label>
+                  <select
+                    id="companyId"
+                    name="companyId"
+                    value={formData.companyId}
+                    onChange={handleChange}
+                    className={inputBaseClasses}
+                    required
+                    disabled={isLoading || isFetchingCompanies}
+                  >
+                    <option value="">{isFetchingCompanies ? 'Carregando empresas...' : 'Selecione uma empresa'}</option>
+                    {companies.map(company => (
+                      <option key={company.id} value={company.id}>
+                        {company.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-4 pt-4">
+                <button
+                  type="submit"
+                  className={buttonPrimaryClasses}
+                  disabled={isLoading || isFetchingCompanies}
+                >
+                  {isLoading ? 'Criando...' : 'Criar Usuário'}
+                </button>
+              </div>
+            </form>
+          </section>
         </div>
       </div>
     </>

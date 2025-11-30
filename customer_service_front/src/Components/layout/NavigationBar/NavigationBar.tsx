@@ -2,12 +2,12 @@ import { useState, type JSX, type KeyboardEvent } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useTheme } from '../../../contexts/ThemeContext'; // Importar useTheme
-import TASLogo from '../../../assets/logo/NuvemConfig-2.svg';
+import TASLogo from '../../../assets/logo/NuvemConfig-Wite.svg';
 
 // --- Ícones ---
 const HomeIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>;
 const SearchIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>;
-const UsersIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>;
+
 const ListChecksIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="m3 17 2 2 4-4"></path><path d="m3 7 2 2 4-4"></path><path d="M13 6h8"></path><path d="M13 12h8"></path><path d="M13 18h8"></path></svg>;
 const CogIcon = () => <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-6 h-6"><path d="M19.13 19.13A10 10 0 1 1 4.87 4.87L12 12l7.13 7.13zM12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path><path d="m12 4-.34 2.04M12 20l.34-2.04M4 12l2.04.34M20 12l-2.04-.34M6.34 6.34 7.76 8.24M17.66 17.66l-1.41-1.9M6.34 17.66l1.41-1.9M17.66 6.34l-1.41 1.9"></path></svg>;
 const MenuIcon = () => <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-6 h-6"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>;
@@ -156,7 +156,7 @@ export function NavigationBar() {
           condition: isModerator || isTechUser,
           items: [
             { type: 'fullwidth-link', path: '/companies/view', label: 'Listar Empresas', style: dropdownFullWidthLinkStyle, condition: true },
-            { type: 'fullwidth-link', path: '/companies/create', label: 'Criar Empresa', style: dropdownFullWidthLinkStyle, condition: isModerator },
+            { type: 'fullwidth-link', path: '/companies/create', label: 'Adicionar Empresas', style: dropdownFullWidthLinkStyle, condition: isModerator },
           ]
         },
         {
@@ -265,8 +265,20 @@ export function NavigationBar() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to={isCompanyUser ? "/tickets/abertos" : "/dashboard"} className="flex-shrink-0" onClick={handleLinkClick}>
-              <img src={TASLogo} alt="TAS Logo" className="h-10 w-auto" />
+            <Link to={isCompanyUser ? "/tickets/abertos" : "/dashboard"} className="flex-shrink-0 group" onClick={handleLinkClick}>
+              <div
+                className="h-10 w-16 bg-tas-text-on-primary group-hover:bg-tas-secondary transition-colors duration-200"
+                style={{
+                  maskImage: `url(${TASLogo})`,
+                  WebkitMaskImage: `url(${TASLogo})`,
+                  maskRepeat: 'no-repeat',
+                  WebkitMaskRepeat: 'no-repeat',
+                  maskSize: 'contain',
+                  WebkitMaskSize: 'contain',
+                  maskPosition: 'left',
+                  WebkitMaskPosition: 'left'
+                }}
+              />
             </Link>
             <Link
               to="/about"

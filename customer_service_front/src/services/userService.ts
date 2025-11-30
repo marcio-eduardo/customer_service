@@ -1,5 +1,5 @@
 import { api } from '../lib/axios';
-import { User } from '../types/User';
+import type { User } from '../types/User';
 
 export async function getUserDetails(userId: number): Promise<User> {
     const response = await api.get<User>(`/api/users/${userId}`);
