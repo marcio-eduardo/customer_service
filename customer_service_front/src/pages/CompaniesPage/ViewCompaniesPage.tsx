@@ -18,6 +18,7 @@ export function ViewCompaniesPage() {
     email: '',
     phone: '',
     address: '',
+    slaHours: 24,
   });
 
   const { user } = useAuth();
@@ -75,6 +76,7 @@ export function ViewCompaniesPage() {
       email: company.email || '',
       phone: formatPhone(company.phone || ''),
       address: company.address || '',
+      slaHours: company.slaHours || 24,
     });
   };
 
@@ -96,6 +98,7 @@ export function ViewCompaniesPage() {
     if (editFormData.email) updateData.email = editFormData.email;
     if (editFormData.phone) updateData.phone = removeNonNumeric(editFormData.phone);
     if (editFormData.address) updateData.address = editFormData.address;
+    if (editFormData.slaHours) updateData.slaHours = Number(editFormData.slaHours);
 
     updateMutation.mutate({ id: editingCompany.id, data: updateData });
   };
@@ -179,6 +182,7 @@ export function ViewCompaniesPage() {
                           <p><span className={companyLabelTextClasses}>Email:</span> <span className={companyDetailTextClasses}>{company.email || 'N/A'}</span></p>
                           <p><span className={companyLabelTextClasses}>Telefone:</span> <span className={companyDetailTextClasses}>{company.phone ? formatPhone(company.phone) : 'N/A'}</span></p>
                           <p><span className={companyLabelTextClasses}>Endereço:</span> <span className={companyDetailTextClasses}>{company.address || 'N/A'}</span></p>
+                          <p><span className={companyLabelTextClasses}>SLA:</span> <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-tas-status-info/10 text-tas-status-info border border-tas-status-info/20">{company.slaHours || 24}h</span></p>
                         </div>
                       </div>
                       {isModerator && (
@@ -232,6 +236,20 @@ export function ViewCompaniesPage() {
               <div>
                 <label className="block text-tas-text-secondary-on-card font-medium mb-1">Telefone</label>
                 <input type="text" value={editFormData.phone} onChange={handlePhoneChange} maxLength={15} className={modalInputClasses} />
+              </div>
+              <div>
+                <label className="block text-tas-text-secondary-on-card font-medium mb-1">SLA (Horas)*</label>
+                <select
+                  value={editFormData.slaHours}
+                  onChange={(e) => setEditFormData({ ...editFormData, slaHours: Number(e.target.value) })}
+                  className={modalInputClasses}
+                  required
+                >
+                  <option value={12}>12 Horas</option>
+                  <option value={24}>24 Horas</option>
+                  <option value={48}>48 Horas</option>
+                  <option value={72}>72 Horas</option>
+                </select>
               </div>
               <div>
                 <label className="block text-tas-text-secondary-on-card font-medium mb-1">Endereço</label>

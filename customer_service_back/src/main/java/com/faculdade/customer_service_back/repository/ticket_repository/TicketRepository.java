@@ -65,6 +65,18 @@ public interface TicketRepository extends JpaRepository<TicketModel, Long> {
                      "LEFT JOIN FETCH t.company " +
                      "LEFT JOIN FETCH t.openedBy " +
                      "LEFT JOIN FETCH t.assignedTo " +
+                     "WHERE (:status IS NULL OR t.status = :status) " +
+                     "AND (:companyId IS NULL OR t.company.id = :companyId) " +
+                     "AND (:techId IS NULL OR t.assignedTo.id = :techId) " +
+                     "ORDER BY t.createdAt DESC")
+       List<TicketModel> findWithFilters(@Param("status") TicketStatus status,
+                     @Param("companyId") Long companyId,
+                     @Param("techId") Long techId);
+
+       @Query("SELECT t FROM TicketModel t " +
+                     "LEFT JOIN FETCH t.company " +
+                     "LEFT JOIN FETCH t.openedBy " +
+                     "LEFT JOIN FETCH t.assignedTo " +
                      "WHERE t.id = :id")
        Optional<TicketModel> findByIdWithDetails(@Param("id") Long id);
 }

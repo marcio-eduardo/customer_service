@@ -20,6 +20,7 @@ interface Ticket {
   company: Company;
   openedBy: User;
   assignedTo?: User | null;
+  slaDueDate?: string | null;
 }
 
 const formatDate = (dateString?: string | null) => {
@@ -32,6 +33,8 @@ const getStatusBadge = (status: string) => {
     OPEN: { label: 'Aberto', className: 'bg-tas-status-info' },
     IN_PROGRESS: { label: 'Em Progresso', className: 'bg-tas-status-warning' },
     RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success' },
+    PAUSED: { label: 'Pausado', className: 'bg-gray-500' },
+    ESCALATED: { label: 'Escalado', className: 'bg-purple-600' },
   };
   const config = statusMap[status] || { label: status, className: 'bg-gray-500' };
   return <span className={`${config.className} text-tas-text-on-primary px-3 py-1 rounded-full text-xs font-semibold`}>{config.label}</span>;
@@ -61,6 +64,11 @@ export function TicketDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Modal State
+  const [isManageModalOpen, setIsManageModalOpen] = useState(false);
+  const [techs, setTechs] = useState<User[]>([]);
+  const [selectedTech, setSelectedTech] = useState<string>('');
+
   const isTechOrModerator = user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_MODERATOR', 'ROLE_TECH_USER'].includes(r));
 
   useEffect(() => {
@@ -85,17 +93,83 @@ export function TicketDetailsPage() {
     }
   }, [id]);
 
+  useEffect(() => {
+    if (isManageModalOpen) {
+      const fetchTechs = async () => {
+        try {
+          const response = await api.get<User[]>('/api/users/techs');
+          setTechs(response.data);
+        } catch (err) {
+          console.error('Erro ao carregar técnicos', err);
+          toast.error('Erro ao carregar lista de técnicos.');
+        }
+      };
+      fetchTechs();
+    }
+  }, [isManageModalOpen]);
+
+
   const handleAssignTicket = async () => {
     try {
       setIsLoading(true);
       await api.patch(`/api/tickets/${id}/assign`);
       toast.success('Você assumiu a responsabilidade deste chamado.');
-      // Recarregar os dados do ticket
       const response = await api.get<Ticket>(`/api/tickets/${id}`);
       setTicket(response.data);
     } catch (err: any) {
       console.error('Erro ao assumir ticket:', err);
       toast.error(err.response?.data?.message || 'Erro ao assumir chamado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleEscalateTicket = async () => {
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/escalate`);
+      toast.success('Ticket escalado para a gestão.');
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+    } catch (err: any) {
+      console.error('Erro ao escalar ticket:', err);
+      toast.error(err.response?.data?.message || 'Erro ao escalar chamado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePauseTicket = async () => {
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/pause`);
+      toast.success('Ticket pausado.');
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+      setIsManageModalOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao pausar ticket:', err);
+      toast.error(err.response?.data?.message || 'Erro ao pausar chamado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleReassignTicket = async () => {
+    if (!selectedTech) {
+      toast.error('Selecione um técnico para reatribuir.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/reassign`, selectedTech, { headers: { 'Content-Type': 'application/json' } });
+      toast.success('Ticket reatribuído com sucesso.');
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+      setIsManageModalOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao reatribuir ticket:', err);
+      toast.error(err.response?.data?.message || 'Erro ao reatribuir chamado.');
     } finally {
       setIsLoading(false);
     }
@@ -148,6 +222,14 @@ export function TicketDetailsPage() {
                       <div>
                         <p className={`text-sm ${labelClass}`}>Data de Resolução:</p>
                         <p className={valueClass}>{formatDate(ticket.resolvedAt)}</p>
+                      </div>
+                    )}
+                    {ticket.slaDueDate && ticket.status !== 'RESOLVED' && (
+                      <div>
+                        <p className={`text-sm ${labelClass}`}>Prazo SLA:</p>
+                        <p className={`${valueClass} font-semibold ${new Date(ticket.slaDueDate) < new Date() ? 'text-tas-status-error' : 'text-tas-status-success'}`}>
+                          {formatDate(ticket.slaDueDate)}
+                        </p>
                       </div>
                     )}
                     {ticket.status === 'RESOLVED' && (
@@ -209,20 +291,88 @@ export function TicketDetailsPage() {
                       >
                         Atender Ticket
                       </button>
-                    ) : ticket.status === 'IN_PROGRESS' ? (
-                      <button
-                        onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
-                        className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
-                      >
-                        Encerrar Ticket
-                      </button>
-                    ) : null}
+                    ) : (
+                      <>
+                        {user?.roles?.includes('ROLE_TECH_USER') && ticket.status === 'IN_PROGRESS' && (
+                          <button
+                            onClick={handleEscalateTicket}
+                            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                          >
+                            Escalar
+                          </button>
+                        )}
+                        {user?.roles?.includes('ROLE_MODERATOR') && (
+                          <button
+                            onClick={() => setIsManageModalOpen(true)}
+                            className="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                          >
+                            Gerenciar
+                          </button>
+                        )}
+                        <button
+                          onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
+                          className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
+                        >
+                          Encerrar Ticket
+                        </button>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
             )}
           </section>
         </div>
+
+        {/* Manage Modal */}
+        {isManageModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20">
+              <h3 className="text-xl font-bold text-tas-primary mb-4">Gerenciar Ticket</h3>
+
+              <div className="space-y-6">
+                <div>
+                  <p className="text-sm text-tas-text-secondary-on-card mb-2">Ações Rápidas</p>
+                  <button
+                    onClick={handlePauseTicket}
+                    className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                  >
+                    Pausar Ticket
+                  </button>
+                </div>
+
+                <div className="border-t border-tas-accent/10 pt-4">
+                  <p className="text-sm text-tas-text-secondary-on-card mb-2">Reatribuir Ticket</p>
+                  <select
+                    value={selectedTech}
+                    onChange={(e) => setSelectedTech(e.target.value)}
+                    className="w-full bg-tas-bg-page border border-tas-accent/20 rounded px-3 py-2 mb-3 text-tas-text-on-card"
+                  >
+                    <option value="">Selecione um técnico...</option>
+                    {techs.map(tech => (
+                      <option key={tech.id} value={tech.id}>{tech.username}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={handleReassignTicket}
+                    className="w-full py-2 bg-tas-primary text-tas-text-on-primary rounded hover:bg-tas-primary-hover transition-colors"
+                  >
+                    Confirmar Reatribuição
+                  </button>
+                </div>
+              </div>
+
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={() => setIsManageModalOpen(false)}
+                  className="text-tas-text-secondary-on-card hover:text-tas-primary transition-colors"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

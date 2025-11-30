@@ -5,14 +5,15 @@ import lombok.Data;
 
 @Data
 public class CompanyResponse {
-    
+
     private Long id;
     private String name;
     private String cnpj;
     private String address;
     private String phone;
     private String email;
-    
+    private Integer slaHours;
+
     public CompanyResponse(Company company) {
         this.id = company.getId();
         this.name = company.getName();
@@ -20,5 +21,6 @@ public class CompanyResponse {
         this.address = company.getAddress();
         this.phone = company.getPhone();
         this.email = company.getEmail();
+        this.slaHours = company.getSlaHours();
     }
 }

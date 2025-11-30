@@ -136,10 +136,7 @@ export function NavigationBar() {
       items: [
         { type: 'search', condition: isModerator || isTechUser },
         { type: 'fullwidth-link', path: '/tickets/novo', label: '+ Novo Chamado', style: dropdownFullWidthLinkStyle, condition: isModerator || isCompanyUser },
-        { type: 'fullwidth-link', path: '/tickets/abertos', label: 'Chamados Abertos', style: dropdownFullWidthLinkStyle, condition: true },
-        { type: 'fullwidth-link', path: '/tickets/em-atendimento', label: 'Em Atendimento', style: dropdownFullWidthLinkStyle, condition: isModerator || isTechUser },
-        { type: 'fullwidth-link', path: '/tickets/encerrar', label: 'Encerrar Chamado', style: dropdownFullWidthLinkStyle, condition: canManageTickets },
-        { type: 'fullwidth-link', path: '/tickets/resolvidos', label: 'Chamados Resolvidos', style: dropdownFullWidthLinkStyle, condition: true },
+        { type: 'fullwidth-link', path: '/tickets', label: 'Listar Chamados', style: dropdownFullWidthLinkStyle, condition: true },
       ]
     },
     {
@@ -265,7 +262,7 @@ export function NavigationBar() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to={isCompanyUser ? "/tickets/abertos" : "/dashboard"} className="flex-shrink-0 group" onClick={handleLinkClick}>
+            <Link to={isCompanyUser ? "/tickets" : "/dashboard"} className="flex-shrink-0 group" onClick={handleLinkClick}>
               <div
                 className="h-10 w-16 bg-tas-text-on-primary group-hover:bg-tas-secondary transition-colors duration-200"
                 style={{

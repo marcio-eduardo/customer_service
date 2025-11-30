@@ -25,7 +25,11 @@ public class Company {
     @Column(unique = true, nullable = false)
     private String email;
 
-    public Company() {}
+    @Column(nullable = false)
+    private Integer slaHours = 24; // Default value
+
+    public Company() {
+    }
 
     public Company(String name, String cnpj, String address, String phone, String email) {
         this.name = name;

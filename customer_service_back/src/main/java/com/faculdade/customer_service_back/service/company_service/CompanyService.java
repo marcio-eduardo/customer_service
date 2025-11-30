@@ -29,7 +29,7 @@ public class CompanyService {
         if (companyRepository.findByCnpj(request.getCnpj()).isPresent()) {
             throw new RuntimeException("Já existe uma empresa cadastrada com este CNPJ");
         }
-        
+
         // Validar se já existe empresa com mesmo email
         if (companyRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Já existe uma empresa cadastrada com este email");
@@ -40,7 +40,11 @@ public class CompanyService {
         company.setCnpj(request.getCnpj());
         company.setAddress(request.getAddress());
         company.setPhone(request.getPhone());
+        company.setPhone(request.getPhone());
         company.setEmail(request.getEmail());
+        if (request.getSlaHours() != null) {
+            company.setSlaHours(request.getSlaHours());
+        }
 
         Company savedCompany = companyRepository.save(company);
         return new CompanyResponse(savedCompany);
@@ -67,7 +71,7 @@ public class CompanyService {
         if (request.getName() != null) {
             company.setName(request.getName());
         }
-        
+
         if (request.getCnpj() != null) {
             // Validar se o novo CNPJ já existe em outra empresa
             companyRepository.findByCnpj(request.getCnpj()).ifPresent(existingCompany -> {
@@ -77,15 +81,15 @@ public class CompanyService {
             });
             company.setCnpj(request.getCnpj());
         }
-        
+
         if (request.getAddress() != null) {
             company.setAddress(request.getAddress());
         }
-        
+
         if (request.getPhone() != null) {
             company.setPhone(request.getPhone());
         }
-        
+
         if (request.getEmail() != null) {
             // Validar se o novo email já existe em outra empresa
             companyRepository.findByEmail(request.getEmail()).ifPresent(existingCompany -> {
@@ -94,6 +98,10 @@ public class CompanyService {
                 }
             });
             company.setEmail(request.getEmail());
+        }
+
+        if (request.getSlaHours() != null) {
+            company.setSlaHours(request.getSlaHours());
         }
 
         Company updatedCompany = companyRepository.save(company);
@@ -105,12 +113,13 @@ public class CompanyService {
         if (!companyRepository.existsById(id)) {
             throw new RuntimeException("Empresa não encontrada com id: " + id);
         }
-        
+
         Long userCount = userRepository.countByCompanyId(id);
         if (userCount > 0) {
-            throw new RuntimeException("Não é possível excluir esta empresa pois existem " + userCount + " usuário(s) vinculado(s). Remova ou transfira os usuários antes de excluir a empresa.");
+            throw new RuntimeException("Não é possível excluir esta empresa pois existem " + userCount
+                    + " usuário(s) vinculado(s). Remova ou transfira os usuários antes de excluir a empresa.");
         }
-        
+
         companyRepository.deleteById(id);
     }
 }

@@ -137,11 +137,11 @@ export function DashboardPage() {
           </header>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-            <Link to="/tickets/abertos" className="bg-tas-bg-card p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-2xl border border-black/10">
+            <Link to="/tickets?status=OPEN" className="bg-tas-bg-card p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-2xl border border-black/10">
               <h3 className="text-xl font-semibold text-tas-primary">Chamados Abertos</h3>
               <p className="text-5xl font-bold text-tas-status-info mt-2">{isLoadingData ? '...' : stats?.totalOpenTickets ?? 0}</p>
             </Link>
-            <Link to="/tickets/resolvidos" className="bg-tas-bg-card p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-2xl border border-black/10">
+            <Link to="/tickets?status=RESOLVED" className="bg-tas-bg-card p-6 rounded-xl shadow-lg text-center transition-transform hover:scale-105 block hover:shadow-2xl border border-black/10">
               <h3 className="text-xl font-semibold text-tas-primary">Chamados Resolvidos</h3>
               <p className="text-5xl font-bold text-tas-status-success mt-2">{isLoadingData ? '...' : stats?.totalResolvedTickets ?? 0}</p>
             </Link>

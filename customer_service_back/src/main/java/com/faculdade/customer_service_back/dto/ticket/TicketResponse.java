@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class TicketResponse {
-    
+
     private Long id;
     private String title;
     private String description;
@@ -19,40 +19,41 @@ public class TicketResponse {
     private LocalDateTime resolvedAt;
     private String resolutionNotes;
     private Integer rating;
-    
+    private LocalDateTime slaDueDate;
+
     // Company info
     private CompanyInfo company;
-    
+
     // User info
     private UserInfo openedBy;
     private UserInfo assignedTo;
-    
+
     @Data
     public static class CompanyInfo {
         private Long id;
         private String name;
         private String cnpj;
-        
+
         public CompanyInfo(Long id, String name, String cnpj) {
             this.id = id;
             this.name = name;
             this.cnpj = cnpj;
         }
     }
-    
+
     @Data
     public static class UserInfo {
         private Long id;
         private String username;
         private String email;
-        
+
         public UserInfo(Long id, String username, String email) {
             this.id = id;
             this.username = username;
             this.email = email;
         }
     }
-    
+
     public TicketResponse(TicketModel ticket) {
         this.id = ticket.getId();
         this.title = ticket.getTitle();
@@ -63,29 +64,27 @@ public class TicketResponse {
         this.resolvedAt = ticket.getResolvedAt();
         this.resolutionNotes = ticket.getResolutionNotes();
         this.rating = ticket.getRating();
-        
+        this.slaDueDate = ticket.getSlaDueDate();
+
         if (ticket.getCompany() != null) {
             this.company = new CompanyInfo(
-                ticket.getCompany().getId(),
-                ticket.getCompany().getName(),
-                ticket.getCompany().getCnpj()
-            );
+                    ticket.getCompany().getId(),
+                    ticket.getCompany().getName(),
+                    ticket.getCompany().getCnpj());
         }
-        
+
         if (ticket.getOpenedBy() != null) {
             this.openedBy = new UserInfo(
-                ticket.getOpenedBy().getId(),
-                ticket.getOpenedBy().getUsername(),
-                ticket.getOpenedBy().getEmail()
-            );
+                    ticket.getOpenedBy().getId(),
+                    ticket.getOpenedBy().getUsername(),
+                    ticket.getOpenedBy().getEmail());
         }
-        
+
         if (ticket.getAssignedTo() != null) {
             this.assignedTo = new UserInfo(
-                ticket.getAssignedTo().getId(),
-                ticket.getAssignedTo().getUsername(),
-                ticket.getAssignedTo().getEmail()
-            );
+                    ticket.getAssignedTo().getId(),
+                    ticket.getAssignedTo().getUsername(),
+                    ticket.getAssignedTo().getEmail());
         }
     }
 }

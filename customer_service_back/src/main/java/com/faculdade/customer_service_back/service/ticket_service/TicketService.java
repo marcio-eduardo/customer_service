@@ -125,6 +125,8 @@ public class TicketService {
         ticket.setPriority(request.getPriority() != null ? request.getPriority() : TicketPriority.MEDIA);
         ticket.setCompany(company);
         ticket.setOpenedBy(requester);
+        ticket.setSlaDueDate(calculateSlaDueDate(company, ticket.getPriority())); // SLA calculado na criação
+
         if (assignee != null) {
             ticket.setAssignedTo(assignee);
             ticket.setStatus(TicketStatus.IN_PROGRESS);
@@ -171,9 +173,105 @@ public class TicketService {
         ticket.setAssignedTo(currentUser);
         if (ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
+            // SLA já definido na criação, não recalcular
         }
 
         return ticketRepository.save(ticket);
+    }
+
+    public TicketModel pauseTicket(Long ticketId) {
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
+
+        if (ticket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new RuntimeException("Apenas chamados em atendimento podem ser pausados.");
+        }
+
+        ticket.setStatus(TicketStatus.PAUSED);
+        return ticketRepository.save(ticket);
+    }
+
+    public TicketModel escalateTicket(Long ticketId) {
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
+
+        if (ticket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new RuntimeException("Apenas chamados em atendimento podem ser escalados.");
+        }
+
+        ticket.setStatus(TicketStatus.ESCALATED);
+        ticket.setAssignedTo(null); // Devolve para a fila (sem dono)
+        return ticketRepository.save(ticket);
+    }
+
+    public TicketModel reassignTicket(Long ticketId, Long newTechId) {
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
+
+        User newTech = userRepository.findById(newTechId)
+                .orElseThrow(() -> new RuntimeException("Técnico não encontrado com ID: " + newTechId));
+
+        // Verifica se o usuário é um técnico ou moderador (quem pode receber chamados)
+        boolean canReceiveTicket = newTech.getRoles().stream()
+                .anyMatch(r -> r.getName().equals(ERole.ROLE_TECH_USER) || r.getName().equals(ERole.ROLE_MODERATOR));
+
+        if (!canReceiveTicket) {
+            throw new RuntimeException("O usuário selecionado não pode receber chamados.");
+        }
+
+        ticket.setAssignedTo(newTech);
+
+        // Se estava pausado ou escalado, volta para IN_PROGRESS
+        if (ticket.getStatus() == TicketStatus.PAUSED || ticket.getStatus() == TicketStatus.ESCALATED) {
+            ticket.setStatus(TicketStatus.IN_PROGRESS);
+        }
+
+        return ticketRepository.save(ticket);
+    }
+
+    public List<TicketResponse> searchTickets(TicketStatus status, Long companyId, Long techId) {
+        User currentUser = getCurrentUser();
+
+        // Se for usuário comum ou de empresa, forçar filtro de empresa
+        if (currentUser.getCompany() != null) {
+            companyId = currentUser.getCompany().getId();
+        } else if (!currentUser.getRoles().stream()
+                .anyMatch(r -> r.getName().equals(ERole.ROLE_MODERATOR) || r.getName().equals(ERole.ROLE_TECH_USER))) {
+            // Se não é mod/tech e não tem empresa, vê apenas os seus (implementação
+            // simplificada: retorna vazio ou apenas os abertos por ele)
+            // Para simplificar a busca com filtros, vamos restringir a busca para usuários
+            // comuns apenas aos seus tickets se necessário,
+            // mas o requisito principal é para a gestão. Vamos assumir que a busca é
+            // primariamente para gestão.
+            // Se for usuário comum, vamos delegar para a filtragem padrão ou lançar erro se
+            // tentar filtrar coisas que não pode.
+        }
+
+        List<TicketModel> tickets = ticketRepository.findWithFilters(status, companyId, techId);
+        return filterTicketsForUser(tickets, currentUser);
+    }
+
+    private java.time.LocalDateTime calculateSlaDueDate(Company company, TicketPriority priority) {
+        int slaHours = company.getSlaHours() != null ? company.getSlaHours() : 24;
+        int divisor = 1;
+
+        switch (priority) {
+            case URGENTE:
+                divisor = 4;
+                break;
+            case ALTA:
+                divisor = 3;
+                break;
+            case MEDIA:
+                divisor = 2;
+                break;
+            case BAIXA:
+                divisor = 1;
+                break;
+        }
+
+        long hoursToAdd = slaHours / divisor;
+        return java.time.LocalDateTime.now().plusHours(hoursToAdd);
     }
 
     public Optional<TicketResponse> getTicketById(Long id) {
@@ -233,5 +331,33 @@ public class TicketService {
                 .filter(ticket -> ticket.getOpenedBy().getId().equals(user.getId()))
                 .map(TicketResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    public void fixSlaDates() {
+        List<TicketModel> tickets = ticketRepository.findAll();
+        for (TicketModel ticket : tickets) {
+            if (ticket.getSlaDueDate() == null && ticket.getStatus() != TicketStatus.RESOLVED) {
+                // Se não tem SLA e não está resolvido, calcula baseado na data de criação
+                int slaHours = ticket.getCompany().getSlaHours() != null ? ticket.getCompany().getSlaHours() : 24;
+                int divisor = 1;
+                switch (ticket.getPriority()) {
+                    case URGENTE:
+                        divisor = 4;
+                        break;
+                    case ALTA:
+                        divisor = 3;
+                        break;
+                    case MEDIA:
+                        divisor = 2;
+                        break;
+                    case BAIXA:
+                        divisor = 1;
+                        break;
+                }
+                long hoursToAdd = slaHours / divisor;
+                ticket.setSlaDueDate(ticket.getCreatedAt().plusHours(hoursToAdd));
+                ticketRepository.save(ticket);
+            }
+        }
     }
 }

@@ -11,6 +11,7 @@ interface FormData {
   address: string;
   phone: string;
   email: string;
+  slaHours: number;
 }
 
 export function CreateCompanySimplePage() {
@@ -22,6 +23,7 @@ export function CreateCompanySimplePage() {
     address: '',
     phone: '',
     email: '',
+    slaHours: 24,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -69,6 +71,7 @@ export function CreateCompanySimplePage() {
         email: formData.email,
         phone: removeNonNumeric(formData.phone),
         address: formData.address,
+        slaHours: Number(formData.slaHours),
       };
 
       await api.post('/api/companies', payload);
@@ -160,6 +163,25 @@ export function CreateCompanySimplePage() {
                   className={inputBaseClasses}
                   placeholder="empresa@exemplo.com"
                 />
+              </div>
+
+              <div>
+                <label htmlFor="slaHours" className={`block mb-2 ${labelTextClass}`}>
+                  SLA (Horas) <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="slaHours"
+                  name="slaHours"
+                  value={formData.slaHours}
+                  onChange={handleChange as any}
+                  required
+                  className={inputBaseClasses}
+                >
+                  <option value={12}>12 Horas</option>
+                  <option value={24}>24 Horas</option>
+                  <option value={48}>48 Horas</option>
+                  <option value={72}>72 Horas</option>
+                </select>
               </div>
 
               <div>
