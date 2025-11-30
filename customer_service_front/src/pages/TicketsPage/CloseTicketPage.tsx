@@ -37,8 +37,8 @@ export function CloseTicketPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   const canCloseTickets = isAuthenticated && user?.roles && (
-    user.roles.includes('ROLE_ADMIN') || 
-    user.roles.includes('ROLE_MODERATOR') || 
+    user.roles.includes('ROLE_ADMIN') ||
+    user.roles.includes('ROLE_MODERATOR') ||
     user.roles.includes('ROLE_TECH_USER')
   );
 
@@ -66,8 +66,8 @@ export function CloseTicketPage() {
     setFetchError(null);
     try {
       const response = await api.get<Ticket>(`/api/tickets/${searchId}`);
-      if (response.data.status !== 'OPEN') {
-        toast.error(`O chamado #${searchId} já está ${response.data.status}. Somente chamados ABERTOS podem ser encerrados.`);
+      if (response.data.status !== 'IN_PROGRESS') {
+        toast.error(`O chamado #${searchId} está com status ${response.data.status}. Somente chamados EM ATENDIMENTO podem ser encerrados.`);
         setTicketToClose(null);
         return;
       }
@@ -147,40 +147,40 @@ export function CloseTicketPage() {
           <section className={formCardClasses}>
             {isFetchingTicket && <p className="text-center text-tas-text-secondary-on-card py-4">A carregar chamado...</p>}
             {fetchError && <p className="text-center text-tas-status-error bg-red-100 p-3 rounded-md">{fetchError}</p>}
-            
+
             {!ticketIdFromUrl && !isFetchingTicket && (
-                <div className="mb-6">
-                    <label htmlFor="ticketSearchId" className={labelClasses}>
-                        Buscar Chamado por ID:
-                    </label>
-                    <div className="flex">
-                        <input
-                            type="text"
-                            pattern="[0-9]*"
-                            inputMode="numeric"
-                            id="ticketSearchId"
-                            value={currentTicketSearchId}
-                            onChange={(e) => setCurrentTicketSearchId(e.target.value)}
-                            onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                    e.preventDefault();
-                                    handleSearchById(currentTicketSearchId);
-                                }
-                            }}
-                            className={searchInputClasses}
-                            placeholder="Digite o ID do chamado"
-                            disabled={isLoading}
-                        />
-                        <button
-                            type="button"
-                            onClick={() => handleSearchById(currentTicketSearchId)}
-                            className={`px-6 py-2.5 rounded-r-lg bg-tas-secondary text-tas-text-on-primary font-semibold transition-colors ${isLoading || !currentTicketSearchId.trim() ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-tas-secondary-hover'}`}
-                            disabled={isLoading || !currentTicketSearchId.trim()}
-                        >
-                            Buscar
-                        </button>
-                    </div>
+              <div className="mb-6">
+                <label htmlFor="ticketSearchId" className={labelClasses}>
+                  Buscar Chamado por ID:
+                </label>
+                <div className="flex">
+                  <input
+                    type="text"
+                    pattern="[0-9]*"
+                    inputMode="numeric"
+                    id="ticketSearchId"
+                    value={currentTicketSearchId}
+                    onChange={(e) => setCurrentTicketSearchId(e.target.value)}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSearchById(currentTicketSearchId);
+                      }
+                    }}
+                    className={searchInputClasses}
+                    placeholder="Digite o ID do chamado"
+                    disabled={isLoading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSearchById(currentTicketSearchId)}
+                    className={`px-6 py-2.5 rounded-r-lg bg-tas-secondary text-tas-text-on-primary font-semibold transition-colors ${isLoading || !currentTicketSearchId.trim() ? 'bg-gray-400 cursor-not-allowed' : 'hover:bg-tas-secondary-hover'}`}
+                    disabled={isLoading || !currentTicketSearchId.trim()}
+                  >
+                    Buscar
+                  </button>
                 </div>
+              </div>
             )}
 
             {(!isFetchingTicket && !fetchError && ticketToClose) && (

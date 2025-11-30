@@ -39,8 +39,18 @@ public class TicketService {
     }
 
     public DashboardStatsDTO getDashboardStats() {
-        List<StatusCount> statusCountsList = ticketRepository.countTicketsByStatus();
-        List<PriorityCount> priorityCountsList = ticketRepository.countTicketsByPriority();
+        User currentUser = getCurrentUser();
+        List<StatusCount> statusCountsList;
+        List<PriorityCount> priorityCountsList;
+
+        if (currentUser.getCompany() != null) {
+            Long companyId = currentUser.getCompany().getId();
+            statusCountsList = ticketRepository.countTicketsByStatusAndCompanyId(companyId);
+            priorityCountsList = ticketRepository.countTicketsByPriorityAndCompanyId(companyId);
+        } else {
+            statusCountsList = ticketRepository.countTicketsByStatus();
+            priorityCountsList = ticketRepository.countTicketsByPriority();
+        }
 
         Map<TicketStatus, Long> statusCounts = statusCountsList.stream()
                 .collect(Collectors.toMap(StatusCount::getStatus, StatusCount::getCount));
@@ -117,6 +127,7 @@ public class TicketService {
         ticket.setOpenedBy(requester);
         if (assignee != null) {
             ticket.setAssignedTo(assignee);
+            ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
 
         return ticketRepository.save(ticket);
@@ -126,10 +137,41 @@ public class TicketService {
         TicketModel ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
 
+        if (ticket.getStatus() != TicketStatus.IN_PROGRESS) {
+            throw new RuntimeException("Apenas chamados em atendimento podem ser encerrados.");
+        }
+
         ticket.setResolutionNotes(request.getResolutionNotes());
         ticket.setRating(request.getRating());
         ticket.setStatus(TicketStatus.RESOLVED);
         ticket.setResolvedAt(java.time.LocalDateTime.now());
+
+        return ticketRepository.save(ticket);
+    }
+
+    public List<TicketResponse> getInProgressTickets() {
+        User currentUser = getCurrentUser();
+        List<TicketModel> inProgressTickets = ticketRepository.findInProgressTicketsWithDetails();
+        return filterTicketsForUser(inProgressTickets, currentUser);
+    }
+
+    public TicketModel assignTicket(Long ticketId) {
+        UserDetailsImpl userDetails = (UserDetailsImpl) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        User currentUser = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
+
+        if (ticket.getAssignedTo() != null) {
+            throw new RuntimeException("Ticket already assigned to: " + ticket.getAssignedTo().getUsername());
+        }
+
+        ticket.setAssignedTo(currentUser);
+        if (ticket.getStatus() == TicketStatus.OPEN) {
+            ticket.setStatus(TicketStatus.IN_PROGRESS);
+        }
 
         return ticketRepository.save(ticket);
     }

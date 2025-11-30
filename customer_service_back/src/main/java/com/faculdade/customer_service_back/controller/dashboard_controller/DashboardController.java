@@ -23,7 +23,7 @@ public class DashboardController {
     }
 
     @GetMapping("/stats")
-    @PreAuthorize("hasAnyRole('ROLE_TECH_USER', 'ROLE_MODERATOR')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<DashboardStatsDTO> getDashboardStats() {
         DashboardStatsDTO stats = ticketService.getDashboardStats();
         return ResponseEntity.ok(stats);

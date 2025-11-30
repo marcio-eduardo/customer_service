@@ -135,18 +135,11 @@ export function NavigationBar() {
       condition: isModerator || isTechUser || isCompanyUser,
       items: [
         { type: 'search', condition: isModerator || isTechUser },
-        {
-          type: 'row', subItems: [
-            { path: '/tickets/novo', label: '+ Novo', style: dropdownButtonRowStyle, condition: isModerator || isCompanyUser },
-            { path: '/tickets/abertos', label: 'Abertos', style: dropdownButtonRowStyle, condition: true },
-          ],
-        },
-        {
-          type: 'row', subItems: [
-            { path: '/tickets/encerrar', label: 'Encerrar', style: dropdownButtonRowStyle, condition: canManageTickets },
-            { path: '/tickets/resolvidos', label: 'Resolvidos', style: dropdownButtonRowStyle, condition: true },
-          ],
-        },
+        { type: 'fullwidth-link', path: '/tickets/novo', label: '+ Novo Chamado', style: dropdownFullWidthLinkStyle, condition: isModerator || isCompanyUser },
+        { type: 'fullwidth-link', path: '/tickets/abertos', label: 'Chamados Abertos', style: dropdownFullWidthLinkStyle, condition: true },
+        { type: 'fullwidth-link', path: '/tickets/em-atendimento', label: 'Em Atendimento', style: dropdownFullWidthLinkStyle, condition: isModerator || isTechUser },
+        { type: 'fullwidth-link', path: '/tickets/encerrar', label: 'Encerrar Chamado', style: dropdownFullWidthLinkStyle, condition: canManageTickets },
+        { type: 'fullwidth-link', path: '/tickets/resolvidos', label: 'Chamados Resolvidos', style: dropdownFullWidthLinkStyle, condition: true },
       ]
     },
     {

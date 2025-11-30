@@ -41,6 +41,7 @@
 -   [x] **Implementação de Funcionalidades**
     -   [x] Implementar sistema de troca de temas com `ThemeContext` e `localStorage`.
     -   [x] Adicionar seletor de temas ao menu "Configurações" no `NavigationBar.tsx`.
+    -   [x] Implementar funcionalidade para técnicos assumirem chamados (`TicketDetailsPage.tsx`).
 -   [x] **Refatoração Geral de Estilização e UX**
     -   [x] Refatorar `DashboardPage` para alinhar com a identidade visual, traduzir textos e corrigir cores e hover dos gráficos.
     -   [x] Realizar varredura completa nas páginas e componentes para padronizar estilos de inputs, botões, cards e modais com as variáveis do tema.

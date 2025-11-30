@@ -1,7 +1,7 @@
-// src/pages/LoginPage/LoginPage.tsx
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import { api } from '../../lib/axios';
 import { toast } from 'sonner';
 import { Helmet } from 'react-helmet-async';
@@ -23,7 +23,12 @@ export function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   const auth = useAuth();
+  const { setTheme } = useTheme();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setTheme('techBlue');
+  }, [setTheme]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();

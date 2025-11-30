@@ -35,6 +35,13 @@ public class TicketController {
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
+    @PatchMapping("/{id}/assign")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<TicketResponse> assignTicket(@PathVariable Long id) {
+        TicketModel ticket = ticketService.assignTicket(id);
+        return ResponseEntity.ok(new TicketResponse(ticket));
+    }
+
     @GetMapping
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<List<TicketResponse>> getAllTickets() {
@@ -54,6 +61,13 @@ public class TicketController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<TicketResponse>> getOpenTickets() {
         List<TicketResponse> tickets = ticketService.getOpenTickets();
+        return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
+    }
+
+    @GetMapping("/status/in-progress")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<List<TicketResponse>> getInProgressTickets() {
+        List<TicketResponse> tickets = ticketService.getInProgressTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
     }
 

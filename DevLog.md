@@ -22,6 +22,7 @@
 - Refatoração do Frontend: Páginas de clientes PF/PJ removidas. Implementadas novas páginas de Empresas: `ViewCompaniesPage` (listar) e `CreateCompanySimplePage` (criar).
 - Atualizado NavigationBar: Substituído submenu "Clientes" por "Empresas" com opções "Listar Empresas" e "Criar Empresa".
 - Refatoração da CreateTicketPage: Implementada lógica de seleção dinâmica. Moderadores e Técnicos podem selecionar Empresa e Solicitante. Moderadores podem atribuir Técnico Responsável. Usuários de Empresa têm seus dados preenchidos automaticamente.
+
 - Reorganização do repositório: Arquivo CreateCompanyPage.tsx duplicado removido. Mantida apenas CreateCompanySimplePage.tsx em uso.
 - Padronização visual: Páginas de empresas (listar e criar) alinhadas com identidade TAS (fundo bg-tas-bg-page, cards bg-tas-bg-card, botões secondary).
 - Commits organizados: GlobalExceptionHandler, UserController, tipos Company, páginas de empresas, CreateUserPage, rotas e navegação.
@@ -133,4 +134,56 @@
   - Implementada a fonte Poppins globalmente via `index.css` e `tailwind.config.js`.
   - Removidas as classes `font-['Poppins']` de todos os componentes para herdar a fonte do `body`.
   - Realizada varredura completa nas páginas e componentes para padronizar estilos e garantir consistência visual.
+  - Realizada varredura completa nas páginas e componentes para padronizar estilos e garantir consistência visual.
   - Corrigido bug de importação na `DashboardPage` (`useTheme` importado do contexto errado).
+- Implementação de Atribuição de Chamado a Técnico:
+  - Backend:
+    - Adicionado método `assignTicket` no `TicketService.java` para atribuir o chamado ao usuário logado (técnico/moderador).
+    - Adicionado endpoint `PATCH /api/tickets/{id}/assign` no `TicketController.java`.
+    - Implementada validação para impedir reatribuição se o chamado já tiver responsável.
+    - Atualização automática do status para `IN_PROGRESS` ao assumir um chamado `OPEN`.
+  - Frontend:
+    - Atualizada `TicketDetailsPage.tsx` para incluir a função `handleAssignTicket` e o botão "Atender Ticket".
+    - O botão "Atender Ticket" é exibido apenas para Moderadores/Técnicos quando o chamado ainda não tem responsável.
+    - O botão "Encerrar Ticket" é exibido apenas após o chamado ser atribuído a um técnico.
+    - Adicionado feedback visual (toasts) de sucesso e erro.
+
+### [NEW] Listagem de Chamados em Atendimento
+- **Backend:**
+  - Adicionado método `findInProgressTicketsWithDetails` no `TicketRepository`.
+  - Adicionado método `getInProgressTickets` no `TicketService`.
+  - Criado endpoint `GET /api/tickets/status/in-progress` no `TicketController`.
+- **Frontend:**
+  - Criada página `ViewInProgressTicketsPage.tsx` para listar chamados com status `IN_PROGRESS`.
+  - Adicionada rota `/tickets/em-atendimento`.
+  - Adicionado item "Em Atendimento" no menu de navegação (visível apenas para Moderadores e Técnicos).
+
+### [MOD] Refatoração de UI
+- **NavigationBar:**
+  - O dropdown "Chamados" foi refatorado para exibir as opções em uma lista vertical única, melhorando a usabilidade.
+- **ViewOpenTicketsPage:**
+  - O layout foi atualizado para utilizar uma tabela, padronizando com a visualização de "Chamados em Atendimento".
+  - Adicionadas colunas para Empresa, Solicitante, Técnico e Prioridade.
+  - Títulos centralizados e container ajustado para largura total (`w-full`) para melhor aproveitamento de tela.
+  - Coluna de Prioridade estilizada para preencher toda a célula com a cor correspondente.
+
+### [PLAN] SLA (Service Level Agreement)
+- Adicionada tarefa futura para implementar regras de SLA (tempo de atendimento por cliente).
+
+## 30/11/2025
+
+### [FIX] Fluxo de Encerramento de Tickets
+- **Backend:** Adicionada validação no `TicketService` para impedir encerramento de tickets que não estejam `IN_PROGRESS`. Ajustado `openTicket` para definir status `IN_PROGRESS` se criado com técnico.
+- **Frontend:** 
+  - Botão "Encerrar Ticket" agora só aparece se o status for `IN_PROGRESS`.
+  - **Bug Fix:** Corrigida validação na página `CloseTicketPage.tsx` que incorretamente exigia status `OPEN`. Agora exige `IN_PROGRESS` conforme regra de negócio.
+
+### [FIX] Dashboard e Tema de Login
+- **Backend:** 
+  - Corrigido bug no Dashboard onde estatísticas eram globais. Agora, usuários de empresa veem apenas dados de sua própria empresa.
+  - **Bug Fix:** Corrigida permissão no `DashboardController` que bloqueava acesso de usuários de empresa (erro 403). Agora acessível a todos autenticados.
+- **Frontend:** Tela de Login agora força o tema "Tech Blue" por padrão, mantendo a identidade visual solicitada.
+
+### [PLAN] Avaliação de Atendimento
+- Adicionada tarefa futura para permitir que clientes avaliem o atendimento após o encerramento do ticket.
+

@@ -4,8 +4,8 @@ import { Helmet } from 'react-helmet-async';
 import { toast } from 'sonner';
 import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
-import { User } from '../../types/User';
-import { Company } from '../../types/Company';
+import type { User } from '../../types/User';
+import type { Company } from '../../types/Company';
 
 interface Ticket {
   id: number;
@@ -84,7 +84,23 @@ export function TicketDetailsPage() {
       fetchTicket();
     }
   }, [id]);
-  
+
+  const handleAssignTicket = async () => {
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/assign`);
+      toast.success('Você assumiu a responsabilidade deste chamado.');
+      // Recarregar os dados do ticket
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+    } catch (err: any) {
+      console.error('Erro ao assumir ticket:', err);
+      toast.error(err.response?.data?.message || 'Erro ao assumir chamado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const pageWrapperClasses = `min-h-screen pt-16 bg-tas-bg-page text-tas-text-on-card`;
   const contentContainerClasses = "max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8";
   const sectionCardBgClasses = 'bg-tas-bg-card';
@@ -179,19 +195,28 @@ export function TicketDetailsPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-tas-status-success mb-3">Solução</h3>
                     <div className="bg-tas-status-success/10 border border-tas-status-success/20 p-4 rounded-lg">
-                      <p className={`${value.class} whitespace-pre-wrap`}>{ticket.resolutionNotes}</p>
+                      <p className={`${valueClass} whitespace-pre-wrap`}>{ticket.resolutionNotes}</p>
                     </div>
                   </div>
                 )}
 
-                {isTechOrModerator && ticket.status === 'OPEN' && (
-                  <div className="pt-6 border-t border-tas-accent/20 text-right">
-                    <button
-                      onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
-                      className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
-                    >
-                      Encerrar Ticket
-                    </button>
+                {isTechOrModerator && ticket.status !== 'RESOLVED' && (
+                  <div className="pt-6 border-t border-tas-accent/20 flex justify-end gap-4">
+                    {!ticket.assignedTo ? (
+                      <button
+                        onClick={handleAssignTicket}
+                        className="px-6 py-3 bg-tas-primary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-primary-hover transition-colors"
+                      >
+                        Atender Ticket
+                      </button>
+                    ) : ticket.status === 'IN_PROGRESS' ? (
+                      <button
+                        onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
+                        className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
+                      >
+                        Encerrar Ticket
+                      </button>
+                    ) : null}
                   </div>
                 )}
               </div>
