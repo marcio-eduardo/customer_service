@@ -35,6 +35,7 @@ const getStatusBadge = (status: string) => {
     RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success' },
     PAUSED: { label: 'Pausado', className: 'bg-gray-500' },
     ESCALATED: { label: 'Escalado', className: 'bg-purple-600' },
+    CANCELED: { label: 'Cancelado', className: 'bg-red-600' },
   };
   const config = statusMap[status] || { label: status, className: 'bg-gray-500' };
   return <span className={`${config.className} text-tas-text-on-primary px-3 py-1 rounded-full text-xs font-semibold`}>{config.label}</span>;
@@ -124,13 +125,35 @@ export function TicketDetailsPage() {
     }
   };
 
+  const [isEscalateModalOpen, setIsEscalateModalOpen] = useState(false);
+  const [moderators, setModerators] = useState<User[]>([]);
+  const [selectedModerator, setSelectedModerator] = useState<string>('');
+
+  useEffect(() => {
+    if (isEscalateModalOpen) {
+      const fetchModerators = async () => {
+        try {
+          const response = await api.get<User[]>('/api/users/moderators');
+          setModerators(response.data);
+        } catch (err) {
+          console.error('Erro ao carregar moderadores', err);
+          toast.error('Erro ao carregar lista de moderadores.');
+        }
+      };
+      fetchModerators();
+    }
+  }, [isEscalateModalOpen]);
+
   const handleEscalateTicket = async () => {
+    if (!selectedModerator) {
+      toast.error('Selecione um moderador.');
+      return;
+    }
     try {
       setIsLoading(true);
-      await api.patch(`/api/tickets/${id}/escalate`);
+      await api.patch(`/api/tickets/${id}/escalate`, { moderatorId: Number(selectedModerator) });
       toast.success('Ticket escalado para a gestão.');
-      const response = await api.get<Ticket>(`/api/tickets/${id}`);
-      setTicket(response.data);
+      navigate('/tickets');
     } catch (err: any) {
       console.error('Erro ao escalar ticket:', err);
       toast.error(err.response?.data?.message || 'Erro ao escalar chamado.');
@@ -150,6 +173,25 @@ export function TicketDetailsPage() {
     } catch (err: any) {
       console.error('Erro ao pausar ticket:', err);
       toast.error(err.response?.data?.message || 'Erro ao pausar chamado.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelTicket = async () => {
+    if (!window.confirm('Tem certeza que deseja cancelar este ticket? Esta ação não pode ser desfeita.')) {
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/cancel`);
+      toast.success('Ticket cancelado.');
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+      setIsManageModalOpen(false);
+    } catch (err: any) {
+      console.error('Erro ao cancelar ticket:', err);
+      toast.error(err.response?.data?.message || 'Erro ao cancelar chamado.');
     } finally {
       setIsLoading(false);
     }
@@ -284,38 +326,44 @@ export function TicketDetailsPage() {
 
                 {isTechOrModerator && ticket.status !== 'RESOLVED' && (
                   <div className="pt-6 border-t border-tas-accent/20 flex justify-end gap-4">
-                    {!ticket.assignedTo ? (
+                    {/* Botão Atender: Apenas se não tiver dono e for TÉCNICO */}
+                    {!ticket.assignedTo && user?.roles?.includes('ROLE_TECH_USER') && (
                       <button
                         onClick={handleAssignTicket}
                         className="px-6 py-3 bg-tas-primary text-tas-text-on-primary font-semibold rounded-lg hover:bg-tas-primary-hover transition-colors"
                       >
                         Atender Ticket
                       </button>
-                    ) : (
-                      <>
-                        {user?.roles?.includes('ROLE_TECH_USER') && ticket.status === 'IN_PROGRESS' && (
-                          <button
-                            onClick={handleEscalateTicket}
-                            className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
-                          >
-                            Escalar
-                          </button>
-                        )}
-                        {user?.roles?.includes('ROLE_MODERATOR') && (
-                          <button
-                            onClick={() => setIsManageModalOpen(true)}
-                            className="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
-                          >
-                            Gerenciar
-                          </button>
-                        )}
-                        <button
-                          onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
-                          className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
-                        >
-                          Encerrar Ticket
-                        </button>
-                      </>
+                    )}
+
+                    {/* Botão Escalar: Apenas Tech, se tiver dono, em progresso e for o dono */}
+                    {ticket.assignedTo && user?.roles?.includes('ROLE_TECH_USER') && ticket.status === 'IN_PROGRESS' && ticket.assignedTo.id === user?.id && (
+                      <button
+                        onClick={() => setIsEscalateModalOpen(true)}
+                        className="px-6 py-3 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-700 transition-colors"
+                      >
+                        Escalar
+                      </button>
+                    )}
+
+                    {/* Botão Gerenciar: Apenas Moderador, SEMPRE visível (exceto resolvido) */}
+                    {user?.roles?.includes('ROLE_MODERATOR') && (
+                      <button
+                        onClick={() => setIsManageModalOpen(true)}
+                        className="px-6 py-3 bg-gray-500 text-white font-semibold rounded-lg hover:bg-gray-600 transition-colors"
+                      >
+                        Gerenciar
+                      </button>
+                    )}
+
+                    {/* Botão Encerrar: Apenas se tiver dono, não estiver escalado e for o dono */}
+                    {ticket.assignedTo && ticket.status !== 'ESCALATED' && ticket.assignedTo.id === user?.id && (
+                      <button
+                        onClick={() => navigate(`/tickets/${ticket.id}/encerrar`)}
+                        className="px-6 py-3 bg-tas-accent text-tas-primary font-semibold rounded-lg hover:bg-tas-accent-hover transition-colors"
+                      >
+                        Encerrar Ticket
+                      </button>
                     )}
                   </div>
                 )}
@@ -333,12 +381,20 @@ export function TicketDetailsPage() {
               <div className="space-y-6">
                 <div>
                   <p className="text-sm text-tas-text-secondary-on-card mb-2">Ações Rápidas</p>
-                  <button
-                    onClick={handlePauseTicket}
-                    className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
-                  >
-                    Pausar Ticket
-                  </button>
+                  <div className="flex flex-col gap-2">
+                    <button
+                      onClick={handlePauseTicket}
+                      className="w-full py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+                    >
+                      Pausar Ticket
+                    </button>
+                    <button
+                      onClick={handleCancelTicket}
+                      className="w-full py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                    >
+                      Cancelar Ticket
+                    </button>
+                  </div>
                 </div>
 
                 <div className="border-t border-tas-accent/10 pt-4">
@@ -365,9 +421,45 @@ export function TicketDetailsPage() {
               <div className="mt-6 flex justify-end">
                 <button
                   onClick={() => setIsManageModalOpen(false)}
-                  className="text-tas-text-secondary-on-card hover:text-tas-primary transition-colors"
+                  className="px-4 py-2 bg-tas-bg-page text-tas-text-secondary rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors font-semibold"
                 >
                   Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Escalate Modal */}
+        {isEscalateModalOpen && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20">
+              <h3 className="text-xl font-bold text-tas-primary mb-4">Escalar Ticket</h3>
+              <p className="text-tas-text-on-card mb-4">Selecione um moderador para escalar este chamado:</p>
+
+              <select
+                value={selectedModerator}
+                onChange={(e) => setSelectedModerator(e.target.value)}
+                className="w-full bg-tas-bg-page border border-tas-accent/20 rounded px-3 py-2 mb-4 text-tas-text-on-card"
+              >
+                <option value="">Selecione um moderador...</option>
+                {moderators.map(mod => (
+                  <option key={mod.id} value={mod.id}>{mod.username}</option>
+                ))}
+              </select>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setIsEscalateModalOpen(false)}
+                  className="px-4 py-2 bg-tas-bg-page text-tas-text-secondary rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors font-semibold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleEscalateTicket}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+                >
+                  Confirmar Escalada
                 </button>
               </div>
             </div>

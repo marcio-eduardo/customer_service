@@ -16,6 +16,8 @@ public class UserDetailsImpl implements UserDetails {
 
     private Long id;
     private String username;
+    private String firstName;
+    private String lastName;
     private String email;
 
     @JsonIgnore // A password não deve ser serializada e enviada em respostas JSON
@@ -24,16 +26,19 @@ public class UserDetailsImpl implements UserDetails {
     // Coleção de permissões/papéis do utilizador
     private Collection<? extends GrantedAuthority> authorities;
 
-    public UserDetailsImpl(Long id, String username, String email, String password,
-                           Collection<? extends GrantedAuthority> authorities) {
+    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password,
+            Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.email = email;
         this.password = password;
         this.authorities = authorities;
     }
 
-    // Método estático para construir um UserDetailsImpl a partir de uma entidade User
+    // Método estático para construir um UserDetailsImpl a partir de uma entidade
+    // User
     public static UserDetailsImpl build(User user) {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority(role.getName().name()))
@@ -42,6 +47,8 @@ public class UserDetailsImpl implements UserDetails {
         return new UserDetailsImpl(
                 user.getId(),
                 user.getUsername(),
+                user.getFirstName(),
+                user.getLastName(),
                 user.getEmail(),
                 user.getPassword(),
                 authorities);
@@ -70,6 +77,14 @@ public class UserDetailsImpl implements UserDetails {
         return username;
     }
 
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
     // Os métodos abaixo podem ser personalizados conforme a lógica de negócio.
     // Por agora, vamos considerá-los sempre true.
     @Override
@@ -95,8 +110,10 @@ public class UserDetailsImpl implements UserDetails {
     // É uma boa prática sobrescrever equals() e hashCode()
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         UserDetailsImpl user = (UserDetailsImpl) o;
         return Objects.equals(id, user.id);
     }

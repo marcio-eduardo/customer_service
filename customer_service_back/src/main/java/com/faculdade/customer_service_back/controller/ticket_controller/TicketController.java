@@ -1,11 +1,14 @@
 package com.faculdade.customer_service_back.controller.ticket_controller;
 
+import com.faculdade.customer_service_back.dto.ticket.EscalationRequest;
 import com.faculdade.customer_service_back.dto.ticket.TicketCloseRequest;
 import com.faculdade.customer_service_back.dto.ticket.TicketOpenRequest;
 import com.faculdade.customer_service_back.dto.ticket.TicketResponse;
 import com.faculdade.customer_service_back.model.ticket_model.TicketModel;
 import com.faculdade.customer_service_back.model.ticket_model.TicketStatus;
 import com.faculdade.customer_service_back.service.ticket_service.TicketService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -52,8 +55,9 @@ public class TicketController {
 
     @PatchMapping("/{id}/escalate")
     @PreAuthorize("hasRole('ROLE_TECH_USER')")
-    public ResponseEntity<TicketResponse> escalateTicket(@PathVariable Long id) {
-        TicketModel ticket = ticketService.escalateTicket(id);
+    public ResponseEntity<TicketResponse> escalateTicket(@PathVariable Long id,
+            @RequestBody @Valid EscalationRequest request) {
+        TicketModel ticket = ticketService.escalateTicket(id, request.getModeratorId());
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
@@ -61,6 +65,13 @@ public class TicketController {
     @PreAuthorize("hasRole('ROLE_MODERATOR')")
     public ResponseEntity<TicketResponse> reassignTicket(@PathVariable Long id, @RequestBody Long newTechId) {
         TicketModel ticket = ticketService.reassignTicket(id, newTechId);
+        return ResponseEntity.ok(new TicketResponse(ticket));
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    public ResponseEntity<TicketResponse> cancelTicket(@PathVariable Long id) {
+        TicketModel ticket = ticketService.cancelTicket(id);
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
@@ -111,7 +122,7 @@ public class TicketController {
     }
 
     @PostMapping("/fix-slas")
-    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<Void> fixSlaDates() {
         ticketService.fixSlaDates();
         return ResponseEntity.ok().build();

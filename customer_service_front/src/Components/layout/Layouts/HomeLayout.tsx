@@ -6,7 +6,7 @@ export function HomeLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-tas-bg-page">
       <NavigationBar />
-      <main className="flex-grow">
+      <main className="flex-grow pb-20">
         <Outlet />
       </main>
       <Footer />

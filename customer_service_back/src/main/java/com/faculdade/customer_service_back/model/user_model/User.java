@@ -11,50 +11,59 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users",
-        uniqueConstraints = {
+@Table(name = "users", uniqueConstraints = {
                 @UniqueConstraint(columnNames = "username"),
                 @UniqueConstraint(columnNames = "email")
-        })
+})
 @Data
 public class User {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @NotBlank
-    @Size(max = 50)
-    @Column(nullable = false)
-    private String username;
+        @NotBlank
+        @Size(max = 50)
+        @Column(nullable = false)
+        private String username;
 
-    @NotBlank
-    @Size(max = 100)
-    @Email
-    @Column(nullable = false)
-    private String email;
+        @NotBlank
+        @Size(max = 50)
+        @Column(nullable = false)
+        private String firstName;
 
-    @NotBlank
-    @Size(max = 120)
-    @Column(nullable = false)
-    private String password;
+        @NotBlank
+        @Size(max = 50)
+        @Column(nullable = false)
+        private String lastName;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
+        @NotBlank
+        @Size(max = 100)
+        @Email
+        @Column(nullable = false)
+        private String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
-    private Company company;
+        @NotBlank
+        @Size(max = 120)
+        @Column(nullable = false)
+        private String password;
 
-    public User() {
-    }
+        @ManyToMany(fetch = FetchType.EAGER)
+        @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
+        private Set<Role> roles = new HashSet<>();
 
-    public User(String username, String email, String password) {
-        this.username = username;
-        this.email = email;
-        this.password = password;
-    }
+        @ManyToOne(fetch = FetchType.LAZY)
+        @JoinColumn(name = "company_id")
+        private Company company;
+
+        public User() {
+        }
+
+        public User(String username, String email, String password, String firstName, String lastName) {
+                this.username = username;
+                this.email = email;
+                this.password = password;
+                this.firstName = firstName;
+                this.lastName = lastName;
+        }
 }

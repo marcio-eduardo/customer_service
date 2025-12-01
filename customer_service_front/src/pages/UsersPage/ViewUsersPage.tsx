@@ -13,6 +13,8 @@ type TabType = 'company_user' | 'tech_user' | 'moderator';
 
 interface EditFormData {
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'COMPANY_USER' | 'TECH_USER' | 'MODERATOR_USER' | '';
@@ -29,7 +31,7 @@ export function ViewUsersPage() {
   const [deletingUser, setDeletingUser] = useState<User | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editFormData, setEditFormData] = useState<EditFormData>({
-    username: '', email: '', password: '', role: '', companyId: ''
+    username: '', firstName: '', lastName: '', email: '', password: '', role: '', companyId: ''
   });
   const { user } = useAuth();
   const isModerator = user?.roles?.includes('ROLE_MODERATOR');
@@ -58,18 +60,27 @@ export function ViewUsersPage() {
 
   const handleEditClick = (userToEdit: User) => {
     setEditingUser(userToEdit);
-    const userRole = userToEdit.roles.find(r => r.startsWith('ROLE_'))?.replace('ROLE_', '') as EditFormData['role'] || '';
+    const rawRole = userToEdit.roles.find(r => r.startsWith('ROLE_'))?.replace('ROLE_', '') || '';
+    const userRole = rawRole === 'MODERATOR' ? 'MODERATOR_USER' : rawRole as EditFormData['role'];
     setEditFormData({
       username: userToEdit.username,
+      firstName: userToEdit.firstName || '',
+      lastName: userToEdit.lastName || '',
       email: userToEdit.email,
       password: '',
       role: userRole,
-      companyId: userToEdit.company?.id || ''
+      companyId: userToEdit.companyId || ''
     });
   };
 
   const handleEditChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
+
+    if (name === 'role' && (value === 'MODERATOR_USER' || value === 'TECH_USER')) {
+      setEditFormData(prev => ({ ...prev, [name]: value, companyId: '' }));
+      return;
+    }
+
     setEditFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -85,6 +96,8 @@ export function ViewUsersPage() {
     try {
       const payload: any = {
         username: editFormData.username,
+        firstName: editFormData.firstName,
+        lastName: editFormData.lastName,
         email: editFormData.email,
         role: editFormData.role,
         companyId: editFormData.role === 'COMPANY_USER' ? Number(editFormData.companyId) : null,
@@ -177,11 +190,14 @@ export function ViewUsersPage() {
                       <li key={u.id} className={`bg-tas-bg-page p-4 sm:p-6 rounded-lg shadow-md border border-tas-accent/10`}>
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h3 className={`text-xl ${userNameTextClasses} mb-2`}>{u.username}</h3>
+                            <h3 className={`text-xl ${userNameTextClasses} mb-2`}>
+                              {u.firstName ? `${u.firstName} ${u.lastName}` : u.username}
+                              <span className="text-sm font-normal text-tas-text-secondary-on-card ml-2">({u.username})</span>
+                            </h3>
                             <div className="mt-3 text-sm space-y-1">
                               <p><span className={userLabelTextClasses}>Email:</span> <span className={userDetailTextClasses}>{u.email}</span></p>
                               {u.cpf && <p><span className={userLabelTextClasses}>CPF:</span> <span className={userDetailTextClasses}>{formatCPF(u.cpf)}</span></p>}
-                              {u.company && <p><span className={userLabelTextClasses}>Empresa:</span> <span className={userDetailTextClasses}>{u.company.name}</span></p>}
+                              {u.companyName && <p><span className={userLabelTextClasses}>Empresa:</span> <span className={userDetailTextClasses}>{u.companyName}</span></p>}
                             </div>
                           </div>
                           <div className="flex gap-2 ml-4">
@@ -212,6 +228,16 @@ export function ViewUsersPage() {
                     <label htmlFor="username" className={labelClasses}>Username</label>
                     <input type="text" id="username" name="username" value={editFormData.username} onChange={handleEditChange} required className={modalInputClasses} />
                   </div>
+                  <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label htmlFor="firstName" className={labelClasses}>Nome</label>
+                      <input type="text" id="firstName" name="firstName" value={editFormData.firstName} onChange={handleEditChange} required className={modalInputClasses} />
+                    </div>
+                    <div className="flex-1">
+                      <label htmlFor="lastName" className={labelClasses}>Sobrenome</label>
+                      <input type="text" id="lastName" name="lastName" value={editFormData.lastName} onChange={handleEditChange} required className={modalInputClasses} />
+                    </div>
+                  </div>
                   <div>
                     <label htmlFor="email" className={labelClasses}>Email</label>
                     <input type="email" id="email" name="email" value={editFormData.email} onChange={handleEditChange} required className={modalInputClasses} />
@@ -223,7 +249,8 @@ export function ViewUsersPage() {
                   <div>
                     <label htmlFor="role" className={labelClasses}>Papel</label>
                     <select id="role" name="role" value={editFormData.role} onChange={handleEditChange} required className={modalInputClasses}>
-                      <option value="COMPANY_USER">Usuário de Empresa</option>
+                      <option value="" disabled>Selecione um papel</option>
+                      <option value="COMPANY_USER">Cliente</option>
                       <option value="TECH_USER">Técnico</option>
                       <option value="MODERATOR_USER">Moderador</option>
                     </select>

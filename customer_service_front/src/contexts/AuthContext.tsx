@@ -7,6 +7,8 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from '
 interface User {
   id: number; // Backend envia Long, que é number em TS
   username: string; // O backend envia 'username'
+  firstName?: string;
+  lastName?: string;
   email: string;
   roles?: string[]; // Adicionar para guardar os papéis do utilizador
 }

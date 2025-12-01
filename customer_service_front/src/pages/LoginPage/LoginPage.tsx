@@ -13,6 +13,8 @@ interface LoginApiResponse {
   token: string;
   id: number;
   username: string;
+  firstName?: string;
+  lastName?: string;
   email: string;
   roles?: string[];
 }
@@ -51,6 +53,8 @@ export function LoginPage() {
       const userForContext = {
         id: userData.id,
         username: userData.username,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
         email: userData.email,
         roles: userData.roles || [],
       };

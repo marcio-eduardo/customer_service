@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/companies")
-@PreAuthorize("hasRole('MODERATOR')")
+@PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
 public class CompanyController {
 
     private final CompanyService companyService;
@@ -24,6 +24,7 @@ public class CompanyController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<CompanyResponse> createCompany(@Valid @RequestBody CompanyRequest request) {
         CompanyResponse response = companyService.createCompany(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -41,6 +42,7 @@ public class CompanyController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<CompanyResponse> updateCompany(
             @PathVariable Long id,
             @Valid @RequestBody UpdateCompanyRequest request) {
@@ -49,6 +51,7 @@ public class CompanyController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<Void> deleteCompany(@PathVariable Long id) {
         companyService.deleteCompany(id);
         return ResponseEntity.noContent().build();

@@ -46,6 +46,7 @@ const getStatusConfig = (status: string) => {
         RESOLVED: { label: 'Resolvido', className: 'bg-tas-status-success text-tas-text-on-primary' },
         PAUSED: { label: 'Pausado', className: 'bg-gray-500 text-white' },
         ESCALATED: { label: 'Escalado', className: 'bg-purple-600 text-white' },
+        CANCELED: { label: 'Cancelado', className: 'bg-red-600 text-white' },
     };
     return statusMap[status] || { label: status, className: 'bg-gray-500 text-white' };
 };
@@ -159,6 +160,7 @@ export function TicketsPage() {
                                 <option value="RESOLVED">Resolvido</option>
                                 <option value="PAUSED">Pausado</option>
                                 <option value="ESCALATED">Escalado</option>
+                                <option value="CANCELED">Cancelado</option>
                             </select>
                         </div>
                         <div className="flex-1 min-w-[200px]">

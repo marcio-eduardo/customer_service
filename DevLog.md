@@ -194,3 +194,44 @@
 ### [PLAN] Avaliação de Atendimento
 - Adicionada tarefa futura para permitir que clientes avaliem o atendimento após o encerramento do ticket.
 
+### [PLAN] Avaliação de Atendimento
+- Adicionada tarefa futura para permitir que clientes avaliem o atendimento após o encerramento do ticket.
+
+## 30/11/2025 (Noite)
+
+### [FEAT] Implementação de SLA (Service Level Agreement)
+- **Backend:**
+  - Adicionado campo `sla` na entidade `Company` e `dueDate` na entidade `Ticket`.
+  - Implementada lógica de cálculo de SLA baseada na prioridade do ticket e no SLA da empresa.
+  - Criado endpoint `POST /api/tickets/fix-slas` para corrigir tickets antigos sem data de vencimento.
+- **Frontend:**
+  - Adicionado campo de SLA nos formulários de criação e edição de empresas.
+  - Exibição do prazo de SLA e status (No Prazo/Atrasado) nos detalhes do ticket.
+
+### [FEAT] Gestão Avançada de Tickets
+- **Backend:**
+  - Unificação da listagem de tickets com endpoint `GET /api/tickets/search` suportando filtros por status, empresa e técnico.
+  - Implementados endpoints para Pausar, Reatribuir (`/reassign`) e Cancelar (`/cancel`) tickets.
+  - Endpoint de Escalada (`/escalate`) atualizado para permitir atribuir a um moderador específico.
+- **Frontend:**
+  - Criada página unificada `/tickets` com filtros dinâmicos na URL.
+  - Implementado modal de gerenciamento para Moderadores (Pausar, Reatribuir, Cancelar).
+  - Implementado fluxo de escalada para Técnicos, permitindo selecionar um Moderador.
+
+### [FEAT] Nome e Sobrenome do Usuário
+- **Backend:**
+  - Adicionados campos `firstName` e `lastName` na entidade `User`, DTOs e `UserDetailsImpl`.
+  - Atualizado `UserService` para processar esses campos na criação e atualização.
+  - Atualizado `AuthController` para retornar esses dados no login.
+- **Frontend:**
+  - Atualizado `AuthContext` e `LoginPage` para capturar e armazenar nome e sobrenome.
+  - `NavigationBar` atualizado para exibir "Nome Sobrenome" do usuário logado.
+  - Formulários de criação e edição de usuários atualizados com os novos campos.
+
+### [FIX] Correções Diversas
+- **Frontend:**
+  - Corrigido bug na `LoginPage` que não salvava os dados do usuário no contexto.
+  - Corrigido seletor de empresa na `ViewUsersPage` que não exibia a empresa atual do cliente.
+  - Ajustados labels e comportamento do seletor de papéis no modal de edição de usuários.
+  - Corrigido layout do Footer para evitar sobreposição de conteúdo.
+

@@ -48,12 +48,13 @@ public class UserService {
         User user = new User(
                 request.getUsername(),
                 request.getEmail(),
-                encoder.encode(request.getPassword())
-        );
+                encoder.encode(request.getPassword()),
+                request.getFirstName(),
+                request.getLastName());
 
         Set<Role> roles = new HashSet<>();
         String strRole = request.getRole();
-        
+
         if (strRole == null || strRole.isEmpty()) {
             throw new IllegalArgumentException("O papel do usuário é obrigatório.");
         }
@@ -61,7 +62,7 @@ public class UserService {
         Role userRole = getRoleByName(strRole);
         roles.add(userRole);
         user.setRoles(roles);
-        
+
         // Se for company_user, associar empresa
         if (userRole.getName().equals(ERole.ROLE_COMPANY_USER)) {
             if (request.getCompanyId() == null) {
@@ -71,7 +72,7 @@ public class UserService {
                     .orElseThrow(() -> new RuntimeException("Empresa não encontrada."));
             user.setCompany(company);
         }
-        
+
         User savedUser = userRepository.save(user);
         return new UserResponse(savedUser);
     }
@@ -81,8 +82,6 @@ public class UserService {
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }
-
-
 
     public UserResponse getUserById(Long id) {
         User user = userRepository.findById(id)
@@ -97,8 +96,8 @@ public class UserService {
 
         // Atualizar username se fornecido
         if (request.getUsername() != null && !request.getUsername().isEmpty()) {
-            if (!user.getUsername().equals(request.getUsername()) && 
-                userRepository.existsByUsername(request.getUsername())) {
+            if (!user.getUsername().equals(request.getUsername()) &&
+                    userRepository.existsByUsername(request.getUsername())) {
                 throw new IllegalArgumentException("Nome de utilizador já está em uso!");
             }
             user.setUsername(request.getUsername());
@@ -106,11 +105,21 @@ public class UserService {
 
         // Atualizar email se fornecido
         if (request.getEmail() != null && !request.getEmail().isEmpty()) {
-            if (!user.getEmail().equals(request.getEmail()) && 
-                userRepository.existsByEmail(request.getEmail())) {
+            if (!user.getEmail().equals(request.getEmail()) &&
+                    userRepository.existsByEmail(request.getEmail())) {
                 throw new IllegalArgumentException("Email já está em uso!");
             }
             user.setEmail(request.getEmail());
+        }
+
+        // Atualizar firstName se fornecido
+        if (request.getFirstName() != null && !request.getFirstName().isEmpty()) {
+            user.setFirstName(request.getFirstName());
+        }
+
+        // Atualizar lastName se fornecido
+        if (request.getLastName() != null && !request.getLastName().isEmpty()) {
+            user.setLastName(request.getLastName());
         }
 
         // Atualizar senha se fornecida
@@ -124,17 +133,17 @@ public class UserService {
             Role userRole = getRoleByName(request.getRole());
             roles.add(userRole);
             user.setRoles(roles);
-            
+
             // Se for company_user, exigir empresa
             if (userRole.getName().equals(ERole.ROLE_COMPANY_USER)) {
                 if (request.getCompanyId() == null) {
-                     if(user.getCompany() == null) {
+                    if (user.getCompany() == null) {
                         throw new IllegalArgumentException("O ID da empresa é obrigatório para usuários da empresa.");
-                     }
+                    }
                 } else {
-                     Company company = companyRepository.findById(request.getCompanyId())
-                        .orElseThrow(() -> new RuntimeException("Empresa não encontrada."));
-                     user.setCompany(company);
+                    Company company = companyRepository.findById(request.getCompanyId())
+                            .orElseThrow(() -> new RuntimeException("Empresa não encontrada."));
+                    user.setCompany(company);
                 }
             } else {
                 // Técnicos e moderadores não têm empresa
@@ -164,23 +173,31 @@ public class UserService {
             case "COMPANY_USER":
                 return roleRepository.findByName(ERole.ROLE_COMPANY_USER)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_COMPANY_USER não encontrado."));
-                
+
             case "TECH_USER":
                 return roleRepository.findByName(ERole.ROLE_TECH_USER)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_TECH_USER não encontrado."));
-                
+
             case "MODERATOR_USER":
                 return roleRepository.findByName(ERole.ROLE_MODERATOR)
                         .orElseThrow(() -> new RuntimeException("Papel ROLE_MODERATOR não encontrado."));
-                
+
             default:
-                throw new IllegalArgumentException("Papel '" + strRole + "' não é válido. Use: COMPANY_USER, TECH_USER, ou MODERATOR_USER.");
+                throw new IllegalArgumentException(
+                        "Papel '" + strRole + "' não é válido. Use: COMPANY_USER, TECH_USER, ou MODERATOR_USER.");
         }
     }
 
     public List<UserResponse> getAllTechUsers() {
         List<User> techUsers = userRepository.findByRoles_Name(ERole.ROLE_TECH_USER);
         return techUsers.stream()
+                .map(UserResponse::new)
+                .collect(Collectors.toList());
+    }
+
+    public List<UserResponse> getAllModerators() {
+        List<User> moderators = userRepository.findByRoles_Name(ERole.ROLE_MODERATOR);
+        return moderators.stream()
                 .map(UserResponse::new)
                 .collect(Collectors.toList());
     }

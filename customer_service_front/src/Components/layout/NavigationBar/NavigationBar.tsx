@@ -309,7 +309,35 @@ export function NavigationBar() {
               }
               return null;
             })}
-            {auth.isAuthenticated && (<button onClick={handleLogout} className={navItemBaseClasses} aria-label="Sair"> <LogOutIcon /> <span className="ml-2 hidden xl:inline">Sair</span> </button>)}
+            {auth.isAuthenticated && auth.user && (
+              <div className="relative group">
+                <button className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-tas-primary-hover/50 hover:bg-tas-primary-hover text-tas-text-on-primary transition-colors cursor-pointer border border-tas-accent/10 focus:outline-none">
+                  <div className="w-6 h-6 rounded-full bg-tas-secondary flex items-center justify-center text-tas-primary font-bold text-xs">
+                    {(auth.user.firstName || auth.user.username).charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm font-medium hidden xl:inline max-w-[150px] truncate">
+                    {auth.user.firstName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user.username}
+                  </span>
+                  <ChevronDownIcon className="ml-1 w-3 h-3" />
+                </button>
+
+                <div className="absolute right-0 top-full mt-1 w-48 rounded-md shadow-lg p-2 bg-tas-primary-hover ring-1 ring-black ring-opacity-5 invisible opacity-0 group-hover:opacity-100 group-hover:visible focus-within:opacity-100 focus-within:visible transition-all duration-150 z-50">
+                  <div className="px-2 py-2 border-b border-tas-accent/10 mb-1">
+                    <p className="text-xs text-tas-text-on-primary opacity-70">Logado como</p>
+                    <p className="text-sm font-semibold text-tas-text-on-primary truncate">
+                      {auth.user.firstName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user.username}
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left flex items-center px-2 py-2 text-sm text-red-400 hover:bg-tas-primary hover:text-red-300 rounded-md transition-colors"
+                  >
+                    <LogOutIcon />
+                    <span className="ml-2">Sair</span>
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
           <div className="md:hidden flex items-center">
             <button onClick={toggleMobileMenu} className={`${navTextClass} ${navHoverTextClass} p-2 rounded-md focus:outline-none`} aria-expanded={isMobileMenuOpen} aria-controls="mobile-menu-tas">

@@ -61,3 +61,11 @@
     -   [ ] Escrever testes de unidade para os services do backend.
     -   [ ] Escrever testes de integração para os controllers do backend.
     -   [ ] Escrever testes de componentes para o frontend.
+
+## Fase 4: Avaliação de Chamados
+
+-   [ ] **Implementar Avaliação de Chamados**
+    -   [ ] Backend: Adicionar campo de avaliação (Rating/Comentário) no Ticket.
+    -   [ ] Backend: Endpoint para avaliar ticket (apenas pelo criador/cliente).
+    -   [ ] Frontend: Componente de avaliação (Estrelas/Nota).
+    -   [ ] Frontend: Modal/Tela de avaliação após encerramento.

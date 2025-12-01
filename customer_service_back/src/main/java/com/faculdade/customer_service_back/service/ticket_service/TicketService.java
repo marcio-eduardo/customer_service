@@ -18,6 +18,7 @@ import com.faculdade.customer_service_back.repository.user_repository.UserReposi
 import com.faculdade.customer_service_back.security.services.UserDetailsImpl;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class TicketService {
 
     private final TicketRepository ticketRepository;
@@ -191,7 +193,7 @@ public class TicketService {
         return ticketRepository.save(ticket);
     }
 
-    public TicketModel escalateTicket(Long ticketId) {
+    public TicketModel escalateTicket(Long ticketId, Long moderatorId) {
         TicketModel ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
 
@@ -199,8 +201,29 @@ public class TicketService {
             throw new RuntimeException("Apenas chamados em atendimento podem ser escalados.");
         }
 
+        User currentUser = getCurrentUser();
+        if (ticket.getAssignedTo() == null || !ticket.getAssignedTo().getId().equals(currentUser.getId())) {
+            throw new RuntimeException("Você só pode escalar chamados que estão sob sua responsabilidade.");
+        }
+
+        User moderator = userRepository.findById(moderatorId)
+                .orElseThrow(() -> new RuntimeException("Moderador não encontrado com ID: " + moderatorId));
+
+        if (!moderator.getRoles().stream().anyMatch(r -> r.getName().equals(ERole.ROLE_MODERATOR))) {
+            throw new RuntimeException("O usuário selecionado não é um moderador.");
+        }
+
         ticket.setStatus(TicketStatus.ESCALATED);
-        ticket.setAssignedTo(null); // Devolve para a fila (sem dono)
+        ticket.setAssignedTo(moderator);
+        return ticketRepository.save(ticket);
+    }
+
+    public TicketModel cancelTicket(Long ticketId) {
+        TicketModel ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found with ID: " + ticketId));
+
+        ticket.setStatus(TicketStatus.CANCELED);
+        ticket.setAssignedTo(null); // Remove atribuição
         return ticketRepository.save(ticket);
     }
 
@@ -221,8 +244,10 @@ public class TicketService {
 
         ticket.setAssignedTo(newTech);
 
-        // Se estava pausado ou escalado, volta para IN_PROGRESS
-        if (ticket.getStatus() == TicketStatus.PAUSED || ticket.getStatus() == TicketStatus.ESCALATED) {
+        // Se estava pausado, escalado ou ABERTO, vai para IN_PROGRESS
+        if (ticket.getStatus() == TicketStatus.PAUSED ||
+                ticket.getStatus() == TicketStatus.ESCALATED ||
+                ticket.getStatus() == TicketStatus.OPEN) {
             ticket.setStatus(TicketStatus.IN_PROGRESS);
         }
 

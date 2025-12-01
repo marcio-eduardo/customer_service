@@ -23,9 +23,11 @@ public class TicketModel {
     @Column(nullable = false)
     private String description;
 
+    @Column(length = 50)
     @Enumerated(EnumType.STRING)
     private TicketStatus status;
 
+    @Column(length = 50)
     @Enumerated(EnumType.STRING)
     private TicketPriority priority;
 

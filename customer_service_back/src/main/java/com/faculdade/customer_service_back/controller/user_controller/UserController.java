@@ -33,7 +33,8 @@ public class UserController {
             return ResponseEntity.badRequest().body(new MessageResponse("Erro ao criar usuário: " + e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body(new MessageResponse("Erro interno ao criar usuário: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Erro interno ao criar usuário: " + e.getMessage()));
         }
     }
 
@@ -62,10 +63,12 @@ public class UserController {
             return ResponseEntity.badRequest().body(new MessageResponse("Erro: " + e.getMessage()));
         } catch (RuntimeException e) {
             e.printStackTrace();
-            return ResponseEntity.badRequest().body(new MessageResponse("Erro ao atualizar usuário: " + e.getMessage()));
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponse("Erro ao atualizar usuário: " + e.getMessage()));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body(new MessageResponse("Erro interno ao atualizar usuário: " + e.getMessage()));
+            return ResponseEntity.internalServerError()
+                    .body(new MessageResponse("Erro interno ao atualizar usuário: " + e.getMessage()));
         }
     }
 
@@ -83,6 +86,13 @@ public class UserController {
     @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
     public ResponseEntity<List<UserResponse>> getTechUsers() {
         List<UserResponse> users = userService.getAllTechUsers();
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/moderators")
+    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    public ResponseEntity<List<UserResponse>> getModerators() {
+        List<UserResponse> users = userService.getAllModerators();
         return ResponseEntity.ok(users);
     }
 

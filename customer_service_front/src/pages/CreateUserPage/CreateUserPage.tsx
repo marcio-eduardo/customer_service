@@ -9,6 +9,8 @@ import { getAllCompanies } from '../../services/companyService';
 
 interface CreateUserFormData {
   username: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   role: 'COMPANY_USER' | 'TECH_USER' | 'MODERATOR_USER';
@@ -18,6 +20,8 @@ interface CreateUserFormData {
 export function CreateUserPage() {
   const [formData, setFormData] = useState<CreateUserFormData>({
     username: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     role: 'COMPANY_USER',
@@ -69,6 +73,8 @@ export function CreateUserPage() {
     try {
       const payload = {
         username: formData.username,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
         role: formData.role,
@@ -80,6 +86,8 @@ export function CreateUserPage() {
       toast.success(`Usuário '${formData.username}' criado com sucesso!`);
       setFormData({
         username: '',
+        firstName: '',
+        lastName: '',
         email: '',
         password: '',
         role: 'COMPANY_USER',
@@ -122,6 +130,42 @@ export function CreateUserPage() {
 
           <section className={`${sectionCardBgClasses} shadow-xl rounded-xl p-6 md:p-8`}>
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label htmlFor="firstName" className={`block mb-2 ${labelTextClass}`}>
+                    Nome <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="Ex: João"
+                    className={inputBaseClasses}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="lastName" className={`block mb-2 ${labelTextClass}`}>
+                    Sobrenome <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Ex: Silva"
+                    className={inputBaseClasses}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+
               <div>
                 <label htmlFor="username" className={`block mb-2 ${labelTextClass}`}>
                   Nome de Usuário <span className="text-red-500">*</span>
