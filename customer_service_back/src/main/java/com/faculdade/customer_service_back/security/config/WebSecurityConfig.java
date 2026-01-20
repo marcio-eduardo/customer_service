@@ -95,15 +95,23 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        // PERMITIR TUDO (Apenas para portfólio/teste) ou configurar a variável
-        // FRONT_URL
-        configuration.setAllowedOrigins(Arrays.asList("*"));
-        // OU se quiser ser restrito:
-        // configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173",
-        // System.getenv("FRONT_URL")));
+
+        String frontUrl = System.getenv("FRONT_URL");
+        if (frontUrl != null && !frontUrl.isEmpty()) {
+            configuration.setAllowedOrigins(Arrays.asList(frontUrl));
+        } else {
+            configuration.setAllowedOrigins(Arrays.asList("*"));
+        }
 
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+
+        // Allow credentials if using specific origin (often needed for cookies/auth
+        // headers)
+        // If wildcard (*), credentials cannot be true.
+        if (frontUrl != null && !frontUrl.isEmpty()) {
+            configuration.setAllowCredentials(true);
+        }
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
