@@ -66,7 +66,9 @@ public class WebSecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/actuator/**", "/").permitAll() // Permitir Health Checks
 
                         // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**
                         // 1. Permitir que qualquer usuário autenticado abra um chamado
