@@ -54,7 +54,9 @@ public class RoleInitializer {
             User moderator = new User();
             moderator.setUsername("moderator");
             moderator.setEmail("moderator@tas.com");
-            moderator.setPassword(passwordEncoder.encode("moderator")); // Changed password to "modarator"
+            moderator.setPassword(passwordEncoder.encode("moderator"));
+            moderator.setFirstName("Owner");
+            moderator.setLastName("Moderator");
 
             Set<Role> roles = new HashSet<>();
             roles.add(moderatorRole);
