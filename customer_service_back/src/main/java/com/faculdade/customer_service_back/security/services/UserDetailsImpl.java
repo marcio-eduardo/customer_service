@@ -37,6 +37,10 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
+    public UserDetailsImpl(long l, String string, String string2, String string3, List<Object> emptyList) {
+        // TODO Auto-generated constructor stub
+    }
+
     // Método estático para construir um UserDetailsImpl a partir de uma entidade
     // User
     public static UserDetailsImpl build(User user) {

@@ -71,7 +71,8 @@ public class WebSecurityConfig {
                         // **ALTERAÇÕES APLICADAS AQUI PARA TICKETS**
                         // 1. Permitir que qualquer usuário autenticado abra um chamado
                         .requestMatchers(HttpMethod.POST, "/api/tickets/open").authenticated()
-                        // 2. Permitir que usuários autenticados vejam tickets (filtragem é feita no service)
+                        // 2. Permitir que usuários autenticados vejam tickets (filtragem é feita no
+                        // service)
                         .requestMatchers(HttpMethod.GET, "/api/tickets/status/open").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/status/resolved").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/{id}").authenticated()
@@ -81,8 +82,7 @@ public class WebSecurityConfig {
                         // 4. Regra geral para outros endpoints de tickets (fechar, etc)
                         .requestMatchers("/api/tickets/**").hasAnyRole("MODERATOR", "TECH_USER")
 
-                        .anyRequest().authenticated()
-                );
+                        .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
@@ -93,16 +93,12 @@ public class WebSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList(
-                "http://localhost:3000",
-                "http://localhost:4200",
-                "http://localhost:8081",
-                "http://localhost:5173"
-        ));
+        // PERMITIR TUDO (Apenas para portfólio/teste)
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type", "X-Requested-With", "accept", "Origin", "Access-Control-Request-Method", "Access-Control-Request-Headers"));
-        configuration.setExposedHeaders(Arrays.asList("Authorization"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Cache-Control", "Content-Type"));
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
