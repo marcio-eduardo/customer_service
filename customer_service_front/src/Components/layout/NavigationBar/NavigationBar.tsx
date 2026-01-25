@@ -63,8 +63,8 @@ export function NavigationBar() {
   const isTechUser = userRoles.includes('ROLE_TECH_USER');
   const isCompanyUser = userRoles.includes('ROLE_COMPANY_USER');
 
-  const canManageTickets = isTechUser || isModerator;
 
+  // const _canManageTickets = isTechUser || isModerator;
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
   const handleLinkClick = () => setIsMobileMenuOpen(false);
 

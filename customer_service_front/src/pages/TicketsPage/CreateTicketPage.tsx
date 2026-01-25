@@ -126,7 +126,7 @@ export function CreateTicketPage() {
     try {
       await api.post('/api/tickets/open', payload);
       toast.success('Chamado aberto com sucesso!');
-      navigate('/tickets/abertos');
+      navigate('/dashboard');
     } catch (error: any) {
       console.error("Falha ao abrir chamado:", error);
       const errorMessage = error.response?.data?.message || 'Ocorreu um erro ao abrir o chamado.';

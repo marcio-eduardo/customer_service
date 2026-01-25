@@ -3,8 +3,10 @@ import { Helmet } from 'react-helmet-async';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../lib/axios';
 import { useAuth } from '../../contexts/AuthContext';
+
 import type { Company } from '../../types/Company';
 import type { User } from '../../types/User';
+
 
 interface Ticket {
     id: number;
@@ -56,8 +58,8 @@ export function TicketsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const navigate = useNavigate();
-    const { user } = useAuth();
 
+    const { user } = useAuth();
     // Filters
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -70,24 +72,30 @@ export function TicketsPage() {
     const [companies, setCompanies] = useState<Company[]>([]);
     const [techs, setTechs] = useState<User[]>([]);
 
+    const isManager = user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_MODERATOR', 'ROLE_TECH_USER'].includes(r));
+
     useEffect(() => {
         const fetchFilters = async () => {
             try {
-                // Tenta corrigir SLAs antigos automaticamente ao carregar a página
-                await api.post('/api/tickets/fix-slas').catch(() => { });
+                // Tenta corrigir SLAs antigos automaticamente ao carregar a página (Apenas Managers)
+                if (isManager) {
+                    await api.post('/api/tickets/fix-slas').catch(() => { });
+                }
 
-                const [companiesRes, techsRes] = await Promise.all([
-                    api.get<Company[]>('/api/companies'),
-                    api.get<User[]>('/api/users/techs')
-                ]);
-                setCompanies(companiesRes.data);
-                setTechs(techsRes.data);
+                if (isManager) {
+                    const [companiesRes, techsRes] = await Promise.all([
+                        api.get<Company[]>('/api/companies'),
+                        api.get<User[]>('/api/users/techs')
+                    ]);
+                    setCompanies(companiesRes.data);
+                    setTechs(techsRes.data);
+                }
             } catch (err) {
                 console.error('Erro ao carregar filtros', err);
             }
         };
         fetchFilters();
-    }, []);
+    }, [isManager]);
 
     useEffect(() => {
         const fetchTickets = async () => {
