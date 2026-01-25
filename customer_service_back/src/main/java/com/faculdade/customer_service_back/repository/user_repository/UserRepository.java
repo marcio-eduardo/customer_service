@@ -13,18 +13,22 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUsername(String username);
 
+    Optional<User> findByUsernameIgnoreCase(String username);
+
     Optional<User> findByEmail(String email);
 
     Boolean existsByUsername(String username);
 
+    Boolean existsByUsernameIgnoreCase(String username);
+
     Boolean existsByEmail(String email);
 
     List<User> findByRoles_Name(ERole roleName);
-    
+
     Boolean existsByCompanyId(Long companyId);
-    
+
     Long countByCompanyId(Long companyId);
-    
+
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.company WHERE u.id = :id")
     Optional<User> findByIdWithCompany(@Param("id") Long id);
 

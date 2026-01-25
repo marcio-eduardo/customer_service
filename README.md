@@ -8,7 +8,7 @@ O sistema é composto por três serviços principais orquestrados via Docker Com
 
 1. **Backend (`customer_service_back`)**: Uma API robusta construída em Java com Spring Boot, responsável pela lógica de negócios, segurança e persistência de dados.
 2. **Frontend (`customer_service_front`)**: Uma interface de usuário moderna e responsiva construída com React e TypeScript, focada na experiência do usuário (UX).
-3. **Banco de Dados**: MySQL 8.0 para armazenamento relacional persistente.
+3. **Banco de Dados**: PostgreSQL para armazenamento relacional persistente.
 
 ## 🚀 Tecnologias Utilizadas
 
@@ -16,7 +16,7 @@ O sistema é composto por três serviços principais orquestrados via Docker Com
 
 - **Linguagem:** Java 21 (LTS)
 - **Framework:** Spring Boot 3.4.5
-- **Banco de Dados:** MySQL 8.0
+- **Banco de Dados:** PostgreSQL 16 (Render/Supabase compatible)
 - **Segurança:** Spring Security com autenticação Stateless via JWT (JSON Web Tokens).
 - **Arquitetura:** Padrão Controller-Service-Repository.
 - **Tratamento de Erros:** Global Exception Handler para respostas padronizadas.
@@ -50,7 +50,7 @@ O sistema implementa segurança baseada em papéis (Roles):
 - **ROLE_TECH_USER:** Técnicos. Podem visualizar todos os chamados, assumir tickets e encerrá-los.
 - **ROLE_MODERATOR:** Moderadores. Acesso total à gestão de tickets, empresas e usuários.
 - **ROLE_ADMIN:** Administradores do sistema.
-- **Fluxo de Login:** Autenticação JWT segura.
+- **Fluxo de Login:** Autenticação JWT segura com suporte a **login case-insensitive** (ignora maiúsculas/minúsculas no nome de usuário).
 
 ### 🎫 Gestão de Tickets (Chamados)
 
@@ -116,7 +116,7 @@ O sistema implementa segurança baseada em papéis (Roles):
    docker-compose up --build
    ```
 
-   *Isso irá baixar as imagens do MySQL, compilar o Backend (Maven) e o Frontend (Node/Vite) e iniciar os containers.*
+   *Isso irá baixar as imagens do PostgreSQL, compilar o Backend (Maven) e o Frontend (Node/Vite) e iniciar os containers.*
 
 3. **Acesse a aplicação:**
 

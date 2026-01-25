@@ -262,7 +262,7 @@ export function NavigationBar() {
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <Link to={isCompanyUser ? "/tickets" : "/dashboard"} className="flex-shrink-0 group" onClick={handleLinkClick}>
+            <Link to="/dashboard" className="flex-shrink-0 group" onClick={handleLinkClick}>
               <div
                 className="h-10 w-16 bg-tas-text-on-primary group-hover:bg-tas-secondary transition-colors duration-200"
                 style={{

@@ -16,10 +16,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     private UserRepository userRepository; // Injecção do nosso UserRepository
 
     @Override
-    @Transactional // Garante que as operações com a entidade (como carregar roles LAZY) ocorram dentro de uma transação
+    @Transactional // Garante que as operações com a entidade (como carregar roles LAZY) ocorram
+                   // dentro de uma transação
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         // Busca o utilizador no banco de dados pelo nome de utilizador
-        User user = userRepository.findByUsername(username)
+        User user = userRepository.findByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilizador não encontrado com o nome: " + username));
 
         // Constrói e retorna um UserDetailsImpl com base na entidade User encontrada

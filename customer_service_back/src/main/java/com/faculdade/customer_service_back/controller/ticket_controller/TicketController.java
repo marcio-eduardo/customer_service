@@ -33,28 +33,28 @@ public class TicketController {
     }
 
     @PostMapping("/{id}/close")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<TicketResponse> closeTicket(@PathVariable Long id, @RequestBody TicketCloseRequest request) {
         TicketModel ticket = ticketService.closeTicket(id, request);
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
     @PatchMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<TicketResponse> assignTicket(@PathVariable Long id) {
         TicketModel ticket = ticketService.assignTicket(id);
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
     @PatchMapping("/{id}/pause")
-    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<TicketResponse> pauseTicket(@PathVariable Long id) {
         TicketModel ticket = ticketService.pauseTicket(id);
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
     @PatchMapping("/{id}/escalate")
-    @PreAuthorize("hasRole('ROLE_TECH_USER')")
+    @PreAuthorize("hasRole('TECH_USER')")
     public ResponseEntity<TicketResponse> escalateTicket(@PathVariable Long id,
             @RequestBody @Valid EscalationRequest request) {
         TicketModel ticket = ticketService.escalateTicket(id, request.getModeratorId());
@@ -62,14 +62,14 @@ public class TicketController {
     }
 
     @PatchMapping("/{id}/reassign")
-    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<TicketResponse> reassignTicket(@PathVariable Long id, @RequestBody Long newTechId) {
         TicketModel ticket = ticketService.reassignTicket(id, newTechId);
         return ResponseEntity.ok(new TicketResponse(ticket));
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('ROLE_MODERATOR')")
+    @PreAuthorize("hasRole('MODERATOR')")
     public ResponseEntity<TicketResponse> cancelTicket(@PathVariable Long id) {
         TicketModel ticket = ticketService.cancelTicket(id);
         return ResponseEntity.ok(new TicketResponse(ticket));
@@ -86,7 +86,7 @@ public class TicketController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<List<TicketResponse>> getAllTickets() {
         List<TicketResponse> tickets = ticketService.getAllTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
@@ -108,7 +108,7 @@ public class TicketController {
     }
 
     @GetMapping("/status/in-progress")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<List<TicketResponse>> getInProgressTickets() {
         List<TicketResponse> tickets = ticketService.getInProgressTickets();
         return tickets.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(tickets);
@@ -122,7 +122,7 @@ public class TicketController {
     }
 
     @PostMapping("/fix-slas")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<Void> fixSlaDates() {
         ticketService.fixSlaDates();
         return ResponseEntity.ok().build();

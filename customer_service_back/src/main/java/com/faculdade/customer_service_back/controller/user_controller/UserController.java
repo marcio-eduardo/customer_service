@@ -83,21 +83,21 @@ public class UserController {
     }
 
     @GetMapping("/techs")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<List<UserResponse>> getTechUsers() {
         List<UserResponse> users = userService.getAllTechUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/moderators")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<List<UserResponse>> getModerators() {
         List<UserResponse> users = userService.getAllModerators();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/company/{companyId}")
-    @PreAuthorize("hasAnyRole('ROLE_MODERATOR', 'ROLE_TECH_USER')")
+    @PreAuthorize("hasAnyRole('MODERATOR', 'TECH_USER')")
     public ResponseEntity<List<UserResponse>> getUsersByCompany(@PathVariable Long companyId) {
         try {
             List<UserResponse> users = userService.getUsersByCompany(companyId);

@@ -12,7 +12,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     // Tenta obter o tema do localStorage, ou usa 'original' como padrão
-    return (localStorage.getItem('tas-theme') as Theme) || 'original';
+    return (localStorage.getItem('tas-theme-v1') as Theme) || 'original';
   });
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     }
 
     // Salva a preferência do tema no localStorage
-    localStorage.setItem('tas-theme', theme);
+    localStorage.setItem('tas-theme-v1', theme);
   }, [theme]);
 
   const setTheme = (newTheme: Theme) => {

@@ -37,7 +37,7 @@ public class UserService {
 
     @Transactional
     public UserResponse createUser(CreateUserRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByUsernameIgnoreCase(request.getUsername())) {
             throw new IllegalArgumentException("Nome de utilizador já está em uso!");
         }
 
@@ -97,7 +97,7 @@ public class UserService {
         // Atualizar username se fornecido
         if (request.getUsername() != null && !request.getUsername().isEmpty()) {
             if (!user.getUsername().equals(request.getUsername()) &&
-                    userRepository.existsByUsername(request.getUsername())) {
+                    userRepository.existsByUsernameIgnoreCase(request.getUsername())) {
                 throw new IllegalArgumentException("Nome de utilizador já está em uso!");
             }
             user.setUsername(request.getUsername());
