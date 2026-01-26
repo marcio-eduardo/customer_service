@@ -24,6 +24,22 @@ interface Ticket {
   };
 }
 
+// Mapas de tradução
+const statusMap: { [key: string]: string } = {
+  OPEN: 'Aberto',
+  IN_PROGRESS: 'Em Progresso',
+  RESOLVED: 'Resolvido',
+  CANCELED: 'Cancelado',
+  PAUSED: 'Pausado',
+  ESCALATED: 'Escalado',
+};
+
+const priorityMap: { [key: string]: string } = {
+  URGENTE: 'Urgente',
+  ALTA: 'Alta',
+  MEDIA: 'Média',
+  BAIXA: 'Baixa',
+};
 export function CloseTicketPage() {
   const navigate = useNavigate();
   const { id: ticketIdFromUrl } = useParams<{ id: string }>(); // Obter ID da URL
@@ -105,7 +121,7 @@ export function CloseTicketPage() {
       await api.post(`/api/tickets/${ticketId}/close`, { resolutionNotes });
       toast.success(`Chamado #${ticketId} encerrado com sucesso!`);
       // Redireciona para a página de tickets resolvidos ou dashboard
-      navigate('/tickets/resolvidos');
+      navigate('/dashboard');
     } catch (error: any) {
       console.error("Falha ao encerrar chamado:", error);
       const errorMessage = error.response?.data?.message || error.message || 'Ocorreu um erro ao encerrar o chamado.';
@@ -194,8 +210,8 @@ export function CloseTicketPage() {
                   </p>
                   <p><span className="font-medium">Empresa:</span> {ticketToClose.company.name}</p>
                   <p><span className="font-medium">Aberto por:</span> {ticketToClose.openedBy.username}</p>
-                  <p><span className="font-medium">Status:</span> {ticketToClose.status}</p>
-                  <p><span className="font-medium">Prioridade:</span> {ticketToClose.priority}</p>
+                  <p><span className="font-medium">Status:</span> {statusMap[ticketToClose.status] || ticketToClose.status}</p>
+                  <p><span className="font-medium">Prioridade:</span> {priorityMap[ticketToClose.priority] || ticketToClose.priority}</p>
                 </div>
 
                 <div>

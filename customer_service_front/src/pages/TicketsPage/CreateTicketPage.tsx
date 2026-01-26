@@ -213,15 +213,17 @@ export function CreateTicketPage() {
                   <input type="text" id="title" name="title" value={formData.title} onChange={handleChange} className={inputBaseClasses} placeholder="Ex: Problema ao acessar o sistema" required disabled={isLoading} />
                 </div>
 
-                <div>
-                  <label htmlFor="priority" className={labelClasses}>Prioridade</label>
-                  <select id="priority" name="priority" value={formData.priority} onChange={handleChange} className={inputBaseClasses} disabled={isLoading}>
-                    <option value="BAIXA">Baixa</option>
-                    <option value="MEDIA">Média</option>
-                    <option value="ALTA">Alta</option>
-                    <option value="URGENTE">Urgente</option>
-                  </select>
-                </div>
+                {user?.roles?.includes('ROLE_MODERATOR') && (
+                  <div>
+                    <label htmlFor="priority" className={labelClasses}>Prioridade</label>
+                    <select id="priority" name="priority" value={formData.priority} onChange={handleChange} className={inputBaseClasses} disabled={isLoading}>
+                      <option value="BAIXA">Baixa</option>
+                      <option value="MEDIA">Média</option>
+                      <option value="ALTA">Alta</option>
+                      <option value="URGENTE">Urgente</option>
+                    </select>
+                  </div>
+                )}
 
                 <div>
                   <label htmlFor="description" className={labelClasses}>Descrição Detalhada <span className="text-red-500">*</span></label>

@@ -69,6 +69,7 @@ export function TicketDetailsPage() {
   const [isManageModalOpen, setIsManageModalOpen] = useState(false);
   const [techs, setTechs] = useState<User[]>([]);
   const [selectedTech, setSelectedTech] = useState<string>('');
+  const [newPriority, setNewPriority] = useState<string>(''); // Novo state para prioridade
 
   const isTechOrModerator = user?.roles?.some(r => ['ROLE_ADMIN', 'ROLE_MODERATOR', 'ROLE_TECH_USER'].includes(r));
 
@@ -226,6 +227,28 @@ export function TicketDetailsPage() {
   const errorTextClass = 'bg-tas-status-error text-tas-text-on-primary p-4 rounded-md text-center font-medium';
   const loadingTextClass = 'text-tas-text-secondary-on-card italic text-center py-4';
 
+
+  const handleChangePriority = async () => {
+    if (!newPriority) {
+      toast.error('Selecione uma nova prioridade.');
+      return;
+    }
+    try {
+      setIsLoading(true);
+      await api.patch(`/api/tickets/${id}/priority`, { priority: newPriority });
+      toast.success('Prioridade alterada com sucesso.');
+      const response = await api.get<Ticket>(`/api/tickets/${id}`);
+      setTicket(response.data);
+      setIsManageModalOpen(false);
+      setNewPriority('');
+    } catch (err: any) {
+      console.error('Erro ao alterar prioridade:', err);
+      toast.error(err.response?.data?.message || 'Erro ao alterar prioridade.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -374,8 +397,14 @@ export function TicketDetailsPage() {
 
         {/* Manage Modal */}
         {isManageModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20">
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setIsManageModalOpen(false)}
+          >
+            <div
+              className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-xl font-bold text-tas-primary mb-4">Gerenciar Ticket</h3>
 
               <div className="space-y-6">
@@ -396,44 +425,66 @@ export function TicketDetailsPage() {
                     </button>
                   </div>
                 </div>
+              </div>
 
-                <div className="border-t border-tas-accent/10 pt-4">
-                  <p className="text-sm text-tas-text-secondary-on-card mb-2">Reatribuir Ticket</p>
+              <div className="border-t border-tas-accent/10 pt-4">
+                <p className="text-sm text-tas-text-secondary-on-card mb-2">Alterar Prioridade</p>
+                <div className="flex gap-2">
                   <select
-                    value={selectedTech}
-                    onChange={(e) => setSelectedTech(e.target.value)}
-                    className="w-full bg-tas-bg-page border border-tas-accent/20 rounded px-3 py-2 mb-3 text-tas-text-on-card"
+                    value={newPriority}
+                    onChange={(e) => setNewPriority(e.target.value)}
+                    className="w-full bg-tas-bg-page border border-tas-accent/20 rounded px-3 py-2 text-tas-text-on-card"
                   >
-                    <option value="">Selecione um técnico...</option>
-                    {techs.map(tech => (
-                      <option key={tech.id} value={tech.id}>{tech.username}</option>
-                    ))}
+                    <option value="">Selecione...</option>
+                    <option value="BAIXA">Baixa</option>
+                    <option value="MEDIA">Média</option>
+                    <option value="ALTA">Alta</option>
+                    <option value="URGENTE">Urgente</option>
                   </select>
                   <button
-                    onClick={handleReassignTicket}
-                    className="w-full py-2 bg-tas-primary text-tas-text-on-primary rounded hover:bg-tas-primary-hover transition-colors"
+                    onClick={handleChangePriority}
+                    className="px-4 py-2 bg-tas-secondary text-tas-text-on-primary rounded hover:bg-tas-secondary-hover transition-colors"
                   >
-                    Confirmar Reatribuição
+                    Salvar
                   </button>
                 </div>
               </div>
 
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => setIsManageModalOpen(false)}
-                  className="px-4 py-2 bg-tas-bg-page text-tas-text-secondary rounded-lg hover:bg-tas-text-secondary hover:text-tas-text-on-card transition-colors font-semibold"
+              <div className="border-t border-tas-accent/10 pt-4">
+                <p className="text-sm text-tas-text-secondary-on-card mb-2">Reatribuir Ticket</p>
+                <select
+                  value={selectedTech}
+                  onChange={(e) => setSelectedTech(e.target.value)}
+                  className="w-full bg-tas-bg-page border border-tas-accent/20 rounded px-3 py-2 mb-3 text-tas-text-on-card"
                 >
-                  Cancelar
+                  <option value="">Selecione um técnico...</option>
+                  {techs.map(tech => (
+                    <option key={tech.id} value={tech.id}>{tech.username}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleReassignTicket}
+                  className="w-full py-2 bg-tas-primary text-tas-text-on-primary rounded hover:bg-tas-primary-hover transition-colors"
+                >
+                  Confirmar Reatribuição
                 </button>
               </div>
             </div>
+
+
           </div>
         )}
 
         {/* Escalate Modal */}
         {isEscalateModalOpen && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20">
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            onClick={() => setIsEscalateModalOpen(false)}
+          >
+            <div
+              className="bg-tas-bg-card rounded-lg shadow-xl max-w-md w-full p-6 border border-tas-accent/20"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h3 className="text-xl font-bold text-tas-primary mb-4">Escalar Ticket</h3>
               <p className="text-tas-text-on-card mb-4">Selecione um moderador para escalar este chamado:</p>
 

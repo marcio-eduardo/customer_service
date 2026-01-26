@@ -18,9 +18,12 @@ interface DashboardStats {
 
 // Mapeamento de chaves da API para labels e variáveis CSS
 const statusConfig: { [key: string]: { label: string; colorVar: string } } = {
-  OPEN: { label: 'Abertos', colorVar: '--tas-status-info' },
-  IN_PROGRESS: { label: 'Em Progresso', colorVar: '--tas-status-warning' },
-  RESOLVED: { label: 'Resolvidos', colorVar: '--tas-status-success' },
+  OPEN: { label: 'Aberto', colorVar: '--tas-status-info' },
+  IN_PROGRESS: { label: 'Em progresso', colorVar: '--tas-status-warning' },
+  RESOLVED: { label: 'Resolvido', colorVar: '--tas-status-success' },
+  CANCELED: { label: 'Cancelado', colorVar: '--tas-text-secondary' }, // Usando cinza/secondary para cancelado
+  PAUSED: { label: 'Pausado', colorVar: '--tas-status-warning' },
+  ESCALATED: { label: 'Escalado', colorVar: '--tas-status-error' },
 };
 
 const priorityConfig: { [key: string]: { label: string; colorVar: string } } = {
@@ -81,9 +84,22 @@ export function DashboardPage() {
       return { labels: [], data: [], colors: [] };
     }
     const rootStyle = getComputedStyle(document.documentElement);
-    const labels = Object.keys(counts).map(key => config[key]?.label || key);
-    const data = Object.values(counts);
-    const colors = Object.keys(counts).map(key => rootStyle.getPropertyValue(config[key]?.colorVar || '--tas-text-secondary').trim());
+
+    // Mapeia chaves para objetos com label e valor
+    const chartData = Object.keys(counts).map(key => ({
+      key,
+      label: config[key]?.label || key,
+      value: counts[key],
+      colorVar: config[key]?.colorVar || '--tas-text-secondary'
+    }));
+
+    // Ordena alfabeticamente pelo label
+    chartData.sort((a, b) => a.label.localeCompare(b.label));
+
+    const labels = chartData.map(item => item.label);
+    const data = chartData.map(item => item.value);
+    const colors = chartData.map(item => rootStyle.getPropertyValue(item.colorVar).trim());
+
     return { labels, data, colors };
   };
 
