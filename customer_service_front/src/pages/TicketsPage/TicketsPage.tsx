@@ -139,7 +139,7 @@ export function TicketsPage() {
                             <p className="mt-2 text-tas-text-secondary-on-card">Gerencie todos os chamados do sistema.</p>
                         </div>
                         <button
-                            onClick={() => navigate('/tickets/new')}
+                            onClick={() => navigate('/tickets/novo')}
                             className="bg-tas-primary text-tas-text-on-primary px-4 py-2 rounded-lg hover:bg-tas-primary-hover transition-colors font-medium"
                         >
                             Novo Chamado

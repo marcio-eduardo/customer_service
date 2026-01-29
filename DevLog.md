@@ -235,3 +235,10 @@
   - Ajustados labels e comportamento do seletor de papéis no modal de edição de usuários.
   - Corrigido layout do Footer para evitar sobreposição de conteúdo.
 
+## 29/01/2026
+
+### [FIX] Correção de Bug [Frontend]
+- **Novo Chamado:** Corrigido link do botão na `TicketsPage.tsx`.
+  - **Problema:** O botão direcionava para `/tickets/new`, causando conflito com a rota dinâmica `/tickets/:id` e erro de conversão no backend.
+  - **Correção:** Link ajustado para `/tickets/novo` (rota correta).
+
